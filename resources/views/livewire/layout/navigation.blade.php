@@ -30,9 +30,15 @@ new class extends Component
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
+                    @if(auth()->user()->isStudent())
+                        <x-nav-link :href="route('student.dashboard')" :active="request()->routeIs('student.dashboard')" wire:navigate>
+                            {{ __('Student Dashboard') }}
+                        </x-nav-link>
+                    @elseif(auth()->user()->isLecturer())
+                        <x-nav-link :href="route('lecturer.dashboard')" :active="request()->routeIs('lecturer.dashboard')" wire:navigate>
+                            {{ __('Lecturer Dashboard') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -52,6 +58,10 @@ new class extends Component
                     </x-slot>
 
                     <x-slot name="content">
+                        <div class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
+                            {{ ucfirst(auth()->user()->role) }}
+                        </div>
+
                         <x-dropdown-link :href="route('profile')" wire:navigate>
                             {{ __('Profile') }}
                         </x-dropdown-link>
@@ -81,9 +91,15 @@ new class extends Component
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
+            @if(auth()->user()->isStudent())
+                <x-responsive-nav-link :href="route('student.dashboard')" :active="request()->routeIs('student.dashboard')" wire:navigate>
+                    {{ __('Student Dashboard') }}
+                </x-responsive-nav-link>
+            @elseif(auth()->user()->isLecturer())
+                <x-responsive-nav-link :href="route('lecturer.dashboard')" :active="request()->routeIs('lecturer.dashboard')" wire:navigate>
+                    {{ __('Lecturer Dashboard') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
@@ -91,6 +107,7 @@ new class extends Component
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800 dark:text-gray-200" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
                 <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                <div class="font-medium text-xs text-gray-400">{{ ucfirst(auth()->user()->role) }}</div>
             </div>
 
             <div class="mt-3 space-y-1">

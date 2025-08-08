@@ -20,13 +20,28 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        // Get the authenticated user and redirect based on role
+        $user = auth()->user();
+
+        if ($user->role === 'student') {
+            $this->redirect(route('student.dashboard'), navigate: true);
+        } elseif ($user->role === 'lecturer') {
+            $this->redirect(route('lecturer.dashboard'), navigate: true);
+        } else {
+            // Fallback for users without a role
+            auth()->logout();
+            $this->addError('form.email', 'Invalid user role.');
+        }
     }
 }; ?>
 
 <div>
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
+
+    <p class="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+        {{ __('Enter your credentials below. Your role will be automatically detected.') }}
+    </p>
 
     <form wire:submit="login">
         <!-- Email Address -->
@@ -66,6 +81,15 @@ new #[Layout('layouts.guest')] class extends Component
             <x-primary-button class="ms-3">
                 {{ __('Log in') }}
             </x-primary-button>
+        </div>
+
+        <div class="text-center mt-4">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ __("Don't have an account?") }}
+                <a href="{{ route('register') }}" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300" wire:navigate>
+                    {{ __('Register here') }}
+                </a>
+            </p>
         </div>
     </form>
 </div>
