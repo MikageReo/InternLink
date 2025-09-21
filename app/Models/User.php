@@ -22,6 +22,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'studentID',
+        'lecturerID',
     ];
 
     /**
@@ -69,5 +71,21 @@ class User extends Authenticatable
     public function getDashboardRoute(): string
     {
         return $this->isStudent() ? 'student.dashboard' : 'lecturer.dashboard';
+    }
+
+    /**
+     * Get the student profile associated with this user
+     */
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'user_id', 'id');
+    }
+
+    /**
+     * Get the lecturer profile associated with this user
+     */
+    public function lecturer()
+    {
+        return $this->hasOne(Lecturer::class, 'user_id', 'id');
     }
 }

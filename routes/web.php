@@ -28,12 +28,16 @@ Route::get('/dashboard', function () {
 
 // Student routes
 Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
-    Route::view('/dashboard', 'student.dashboard')->name('dashboard');
+    Route::view('/dashboard', 'student.dashboard.studentPortal')->name('dashboard');
 });
 
 // Lecturer routes
 Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->name('lecturer.')->group(function () {
-    Route::view('/dashboard', 'lecturer.dashboard')->name('dashboard');
+    Route::view('/dashboard', 'lecturer.dashboard.lecturerPortal')->name('dashboard');
+    Route::view('/register-user', 'lecturer.dashboard.registerUser')->name('registerUser');
+    Route::post('/register-user', [App\Http\Controllers\ManageLoginController::class, 'registerUsers'])->name('registerUser.store');
+    Route::post('/register-student', [App\Http\Controllers\ManageLoginController::class, 'registerStudent'])->name('registerStudent');
+    Route::post('/register-lecturer', [App\Http\Controllers\ManageLoginController::class, 'registerLecturer'])->name('registerLecturer');
 });
 
 Route::view('profile', 'profile')

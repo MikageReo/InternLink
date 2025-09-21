@@ -24,13 +24,13 @@
                             </button>
                         </div>
 
-                        <!-- Student Management -->
+                        <!-- User Management -->
                         <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
-                            <h4 class="font-semibold text-green-800 dark:text-green-200 mb-2">Student Management</h4>
-                            <p class="text-green-600 dark:text-green-300 text-sm">View and manage student enrollments</p>
-                            <button class="mt-3 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
-                                Manage Students
-                            </button>
+                            <h4 class="font-semibold text-green-800 dark:text-green-200 mb-2">User Management</h4>
+                            <p class="text-green-600 dark:text-green-300 text-sm">View and manage user account</p>
+                            <a href="{{ route('lecturer.registerUser') }}" class="mt-3 inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
+                                Manage Users
+                            </a>
                         </div>
 
                         <!-- Assignment Management -->
