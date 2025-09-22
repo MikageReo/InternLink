@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\Lecturer;
+use App\Notifications\UserRegistrationNotification;
 
 class ManageLoginController extends Controller
 {
@@ -158,6 +159,7 @@ class ManageLoginController extends Controller
         $successCount = 0;
         $errorCount = 0;
         $errors = [];
+        $createdUsers = []; // Track created users for email notifications
 
         foreach ($csvData as $index => $row) {
             try {
@@ -182,7 +184,7 @@ class ManageLoginController extends Controller
                 DB::beginTransaction();
 
                 if ($roleType === 'student') {
-                    // ✅ Validate student
+                    // Validate student
                     $studentValidator = Validator::make($userData, [
                         'studentID' => 'required|string|unique:students,studentID',
                         'name' => 'required|string|max:255',
@@ -193,12 +195,20 @@ class ManageLoginController extends Controller
                     }
 
                     // Create User
+                    $defaultPassword = uniqid();
                     $user = User::create([
                         'name' => $userData['name'],
                         'email' => $userData['email'],
-                        'password' => Hash::make('password123'),
+                        'password' => Hash::make($defaultPassword),
                         'role' => 'student',
                     ]);
+
+                    // Store user info for email notification
+                    $createdUsers[] = [
+                        'user' => $user,
+                        'password' => $defaultPassword,
+                        'role' => 'student'
+                    ];
 
                     // Create Student
                     Student::create([
@@ -213,7 +223,7 @@ class ManageLoginController extends Controller
                         'status'    => 'active',
                     ]);
                 } else {
-                    // ✅ Validate lecturer
+                    // Validate lecturer
                     $lecturerValidator = Validator::make($userData, [
                         'lecturerID' => 'required|string|unique:lecturers,lecturerID',
                         'name'       => 'required|string|max:255',
@@ -224,12 +234,20 @@ class ManageLoginController extends Controller
                     }
 
                     // Create User
+                    $defaultPassword = uniqid();
                     $user = User::create([
                         'name' => $userData['name'],
                         'email' => $userData['email'],
-                        'password' => Hash::make('password123'),
+                        'password' => Hash::make($defaultPassword),
                         'role' => 'lecturer',
                     ]);
+
+                    // Store user info for email notification
+                    $createdUsers[] = [
+                        'user' => $user,
+                        'password' => $defaultPassword,
+                        'role' => 'lecturer'
+                    ];
 
                     // Create Lecturer
                     Lecturer::create([
@@ -261,9 +279,29 @@ class ManageLoginController extends Controller
             }
         }
 
+        // Send email notifications to all successfully created users
+        $emailCount = 0;
+        if (!empty($createdUsers)) {
+            foreach ($createdUsers as $userInfo) {
+                try {
+                    $userInfo['user']->notify(new UserRegistrationNotification(
+                        $userInfo['password'],
+                        $userInfo['role']
+                    ));
+                    $emailCount++;
+                } catch (\Exception $e) {
+                    Log::error('Failed to send email to ' . $userInfo['user']->email . ': ' . $e->getMessage());
+                }
+            }
+        }
+
+        // Prepare response message
         $message = "Registration completed! Successfully registered {$successCount} users.";
+        if ($emailCount > 0) {
+            $message .= " Email notifications sent to {$emailCount} users.";
+        }
         if ($errorCount > 0) {
-            $message .= " {$errorCount} users failed.";
+            $message .= " {$errorCount} users failed to register.";
         }
 
         return redirect()->route('lecturer.registerUser')
@@ -291,10 +329,11 @@ class ManageLoginController extends Controller
             DB::beginTransaction();
 
             // Create user record
+            $defaultPassword = uniqid();
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' => Hash::make('password123'), // Default password
+                'password' => Hash::make($defaultPassword),
                 'role' => 'student',
             ]);
 
@@ -315,8 +354,17 @@ class ManageLoginController extends Controller
 
             DB::commit();
 
+            // Send email notification
+            try {
+                $user->notify(new UserRegistrationNotification($defaultPassword, 'student'));
+                $emailMessage = ' Email notification sent to ' . $user->email . '.';
+            } catch (\Exception $e) {
+                Log::error('Failed to send email to ' . $user->email . ': ' . $e->getMessage());
+                $emailMessage = ' Note: Email notification failed to send.';
+            }
+
             return redirect()->route('lecturer.registerUser')
-                ->with('success', 'Student registered successfully! Default password: password123');
+                ->with('success', 'Student registered successfully!' . $emailMessage);
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->route('lecturer.registerUser')
@@ -346,10 +394,11 @@ class ManageLoginController extends Controller
             DB::beginTransaction();
 
             // Create user record
+            $defaultPassword = uniqid();
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' => Hash::make('password123'), // Default password
+                'password' => Hash::make($defaultPassword),
                 'role' => 'lecturer',
             ]);
 
@@ -375,8 +424,17 @@ class ManageLoginController extends Controller
 
             DB::commit();
 
+            // Send email notification
+            try {
+                $user->notify(new UserRegistrationNotification($defaultPassword, 'lecturer'));
+                $emailMessage = ' Email notification sent to ' . $user->email . '.';
+            } catch (\Exception $e) {
+                Log::error('Failed to send email to ' . $user->email . ': ' . $e->getMessage());
+                $emailMessage = ' Note: Email notification failed to send.';
+            }
+
             return redirect()->route('lecturer.registerUser')
-                ->with('success', 'Lecturer registered successfully! Default password: password123');
+                ->with('success', 'Lecturer registered successfully!' . $emailMessage);
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->route('lecturer.registerUser')
