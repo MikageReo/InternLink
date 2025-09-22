@@ -21,6 +21,8 @@ class Lecturer extends Model
         'state',
         'researchGroup',
         'department',
+        'semester',
+        'year',
         'studentQuota',
         'isAcademicAdvisor',
         'isSupervisorFaculty',

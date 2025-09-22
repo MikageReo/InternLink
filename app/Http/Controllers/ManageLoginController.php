@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
@@ -120,7 +122,7 @@ class ManageLoginController extends Controller
         $request->validate([
             'csv_file' => 'required|file|mimes:csv,txt|max:2048',
             'semester' => 'required|in:1,2',
-            'year' => 'required|integer|min:2020|max:2030',
+            'year' => 'required|integer|min:2020|max:2040',
         ]);
 
         $file = $request->file('csv_file');
@@ -128,8 +130,30 @@ class ManageLoginController extends Controller
         $year = $request->year;
 
         // Read CSV file
-        $csvData = array_map('str_getcsv', file($file->getRealPath()));
-        $header = array_shift($csvData); // Remove header row
+        try {
+            $csvData = array_map('str_getcsv', file($file->getRealPath()));
+
+            if (empty($csvData)) {
+                return redirect()->route('lecturer.registerUser')
+                    ->with('error', 'CSV file is empty or could not be read.');
+            }
+
+            $header = array_shift($csvData); // Get header row
+            $header = array_map('trim', $header);
+
+            // 🔹 Auto-detect file type by header
+            if (in_array('studentID', $header)) {
+                $roleType = 'student';
+            } elseif (in_array('lecturerID', $header)) {
+                $roleType = 'lecturer';
+            } else {
+                return redirect()->route('lecturer.registerUser')
+                    ->with('error', "CSV must contain either 'studentID' or 'lecturerID' column.");
+            }
+        } catch (\Exception $e) {
+            return redirect()->route('lecturer.registerUser')
+                ->with('error', 'Error reading CSV file: ' . $e->getMessage());
+        }
 
         $successCount = 0;
         $errorCount = 0;
@@ -142,126 +166,111 @@ class ManageLoginController extends Controller
                     continue;
                 }
 
+                // Trim whitespace from row data
+                $row = array_map('trim', $row);
+
                 // Map CSV columns to user data
                 $userData = array_combine($header, $row);
 
-                // Validate required fields
-                $validator = Validator::make($userData, [
-                    'name' => 'required|string|max:255',
-                    'email' => 'required|email|unique:users,email',
-                    'role' => 'required|in:student,lecturer',
-                ]);
-
-                if ($validator->fails()) {
+                // Check if array_combine failed
+                if ($userData === false) {
                     $errorCount++;
-                    $errors[] = "Row " . ($index + 2) . ": " . implode(', ', $validator->errors()->all());
+                    $errors[] = "Row " . ($index + 2) . ": Invalid number of columns.";
                     continue;
                 }
 
-                // Generate default password
-                $defaultPassword = 'password123';
+                DB::beginTransaction();
 
-                // Start database transaction
-                \DB::beginTransaction();
-
-                try {
-                    if ($userData['role'] === 'student') {
-                        // Validate student-specific fields
-                        $studentValidator = Validator::make($userData, [
-                            'studentID' => 'required|string|unique:students,studentID',
-                            'phone' => 'nullable|string',
-                            'address' => 'nullable|string',
-                            'nationality' => 'nullable|string',
-                            'program' => 'nullable|string',
-                        ]);
-
-                        if ($studentValidator->fails()) {
-                            throw new \Exception(implode(', ', $studentValidator->errors()->all()));
-                        }
-
-                        // Create student record
-                        $student = Student::create([
-                            'studentID' => $userData['studentID'],
-                            'phone' => $userData['phone'] ?? null,
-                            'address' => $userData['address'] ?? null,
-                            'nationality' => $userData['nationality'] ?? null,
-                            'program' => $userData['program'] ?? null,
-                            'status' => 'active',
-                        ]);
-
-                        // Create user record
-                        $user = User::create([
-                            'name' => $userData['name'],
-                            'email' => $userData['email'],
-                            'password' => Hash::make($defaultPassword),
-                            'role' => 'student',
-                            'studentID' => $student->studentID,
-                        ]);
-                    } else { // lecturer
-                        // Validate lecturer-specific fields
-                        $lecturerValidator = Validator::make($userData, [
-                            'lecturerID' => 'required|string|unique:lecturers,lecturerID',
-                            'staffGrade' => 'nullable|string',
-                            'role' => 'nullable|string',
-                            'position' => 'nullable|string',
-                            'state' => 'nullable|string',
-                            'researchGroup' => 'nullable|string',
-                            'department' => 'nullable|string',
-                        ]);
-
-                        if ($lecturerValidator->fails()) {
-                            throw new \Exception(implode(', ', $lecturerValidator->errors()->all()));
-                        }
-
-                        // Create lecturer record
-                        $lecturer = Lecturer::create([
-                            'lecturerID' => $userData['lecturerID'],
-                            'staffGrade' => $userData['staffGrade'] ?? null,
-                            'role' => $userData['role'] ?? null,
-                            'position' => $userData['position'] ?? null,
-                            'state' => $userData['state'] ?? null,
-                            'researchGroup' => $userData['researchGroup'] ?? null,
-                            'department' => $userData['department'] ?? null,
-                            'studentQuota' => 0,
-                            'isAcademicAdvisor' => false,
-                            'isSupervisorFaculty' => false,
-                            'isCommittee' => false,
-                            'isCoordinator' => false,
-                            'isAdmin' => false,
-                        ]);
-
-                        // Create user record
-                        $user = User::create([
-                            'name' => $userData['name'],
-                            'email' => $userData['email'],
-                            'password' => Hash::make($defaultPassword),
-                            'role' => 'lecturer',
-                            'lecturerID' => $lecturer->lecturerID,
-                        ]);
+                if ($roleType === 'student') {
+                    // ✅ Validate student
+                    $studentValidator = Validator::make($userData, [
+                        'studentID' => 'required|string|unique:students,studentID',
+                        'name' => 'required|string|max:255',
+                        'email' => 'required|email|unique:users,email',
+                    ]);
+                    if ($studentValidator->fails()) {
+                        throw new \Exception(implode(', ', $studentValidator->errors()->all()));
                     }
 
-                    \DB::commit();
-                    $successCount++;
-                } catch (\Exception $e) {
-                    \DB::rollback();
-                    throw $e;
+                    // Create User
+                    $user = User::create([
+                        'name' => $userData['name'],
+                        'email' => $userData['email'],
+                        'password' => Hash::make('password123'),
+                        'role' => 'student',
+                    ]);
+
+                    // Create Student
+                    Student::create([
+                        'studentID' => $userData['studentID'],
+                        'user_id'   => $user->id,
+                        'phone'     => $userData['phone'] ?? null,
+                        'address'   => $userData['address'] ?? null,
+                        'nationality' => $userData['nationality'] ?? null,
+                        'program'   => $userData['program'] ?? null,
+                        'semester'  => $semester,
+                        'year'      => $year,
+                        'status'    => 'active',
+                    ]);
+                } else {
+                    // ✅ Validate lecturer
+                    $lecturerValidator = Validator::make($userData, [
+                        'lecturerID' => 'required|string|unique:lecturers,lecturerID',
+                        'name'       => 'required|string|max:255',
+                        'email'      => 'required|email|unique:users,email',
+                    ]);
+                    if ($lecturerValidator->fails()) {
+                        throw new \Exception(implode(', ', $lecturerValidator->errors()->all()));
+                    }
+
+                    // Create User
+                    $user = User::create([
+                        'name' => $userData['name'],
+                        'email' => $userData['email'],
+                        'password' => Hash::make('password123'),
+                        'role' => 'lecturer',
+                    ]);
+
+                    // Create Lecturer
+                    Lecturer::create([
+                        'lecturerID' => $userData['lecturerID'],
+                        'user_id'    => $user->id,
+                        'staffGrade' => $userData['staffGrade'] ?? null,
+                        'role'       => $userData['role'] ?? null,
+                        'position'   => $userData['position'] ?? null,
+                        'state'      => $userData['state'] ?? null,
+                        'researchGroup' => $userData['researchGroup'] ?? null,
+                        'department' => $userData['department'] ?? null,
+                        'semester'   => $semester,
+                        'year'       => $year,
+                        'studentQuota' => 0,
+                        'isAcademicAdvisor'   => $userData['isAcademicAdvisor'] ?? 0,
+                        'isSupervisorFaculty' => $userData['isSupervisorFaculty'] ?? 0,
+                        'isCommittee'         => $userData['isCommittee'] ?? 0,
+                        'isCoordinator'       => $userData['isCoordinator'] ?? 0,
+                        'isAdmin'             => $userData['isAdmin'] ?? 0,
+                    ]);
                 }
+
+                DB::commit();
+                $successCount++;
             } catch (\Exception $e) {
+                DB::rollback();
                 $errorCount++;
                 $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
             }
         }
 
-        // Prepare response message
         $message = "Registration completed! Successfully registered {$successCount} users.";
         if ($errorCount > 0) {
-            $message .= " {$errorCount} users failed to register.";
+            $message .= " {$errorCount} users failed.";
         }
 
         return redirect()->route('lecturer.registerUser')
             ->with('success', $message)
-            ->with('errors', $errors);
+            ->with('csvErrors', $errors);
     }
+
 
     /**
      * Handle individual student registration
@@ -279,17 +288,7 @@ class ManageLoginController extends Controller
         ]);
 
         try {
-            \DB::beginTransaction();
-
-            // Create student record
-            $student = Student::create([
-                'studentID' => $request->studentID,
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'nationality' => $request->nationality,
-                'program' => $request->program,
-                'status' => 'active',
-            ]);
+            DB::beginTransaction();
 
             // Create user record
             $user = User::create([
@@ -297,16 +296,29 @@ class ManageLoginController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make('password123'), // Default password
                 'role' => 'student',
-                'studentID' => $student->studentID,
             ]);
 
-            \DB::commit();
+            // Create student record
+            $student = Student::create([
+                'studentID' => $request->studentID,
+                'user_id' => $user->id,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'nationality' => $request->nationality,
+                'program' => $request->program,
+                'semester' => $request->semester,
+                'year' => $request->year,
+                'status' => 'active',
+            ]);
+
+
+
+            DB::commit();
 
             return redirect()->route('lecturer.registerUser')
                 ->with('success', 'Student registered successfully! Default password: password123');
-
         } catch (\Exception $e) {
-            \DB::rollback();
+            DB::rollback();
             return redirect()->route('lecturer.registerUser')
                 ->with('error', 'Failed to register student: ' . $e->getMessage());
         }
@@ -322,6 +334,7 @@ class ManageLoginController extends Controller
             'email' => 'required|email|unique:users,email',
             'lecturerID' => 'required|string|unique:lecturers,lecturerID',
             'staffGrade' => 'nullable|string',
+            'role' => 'nullable|string',
             'position' => 'nullable|string',
             'state' => 'nullable|string',
             'researchGroup' => 'nullable|string',
@@ -330,16 +343,28 @@ class ManageLoginController extends Controller
         ]);
 
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
+
+            // Create user record
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make('password123'), // Default password
+                'role' => 'lecturer',
+            ]);
 
             // Create lecturer record
             $lecturer = Lecturer::create([
                 'lecturerID' => $request->lecturerID,
                 'staffGrade' => $request->staffGrade,
+                'user_id' => $user->id,
+                'role' => $request->role,
                 'position' => $request->position,
                 'state' => $request->state,
                 'researchGroup' => $request->researchGroup,
                 'department' => $request->department,
+                'semester' => $request->semester,
+                'year' => $request->year,
                 'studentQuota' => $request->studentQuota ?? 0,
                 'isAcademicAdvisor' => $request->has('isAcademicAdvisor'),
                 'isSupervisorFaculty' => $request->has('isSupervisorFaculty'),
@@ -348,22 +373,12 @@ class ManageLoginController extends Controller
                 'isAdmin' => $request->has('isAdmin'),
             ]);
 
-            // Create user record
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make('password123'), // Default password
-                'role' => 'lecturer',
-                'lecturerID' => $lecturer->lecturerID,
-            ]);
-
-            \DB::commit();
+            DB::commit();
 
             return redirect()->route('lecturer.registerUser')
                 ->with('success', 'Lecturer registered successfully! Default password: password123');
-
         } catch (\Exception $e) {
-            \DB::rollback();
+            DB::rollback();
             return redirect()->route('lecturer.registerUser')
                 ->with('error', 'Failed to register lecturer: ' . $e->getMessage());
         }

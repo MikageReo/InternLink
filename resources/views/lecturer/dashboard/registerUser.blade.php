@@ -38,11 +38,11 @@
                             </div>
                         @endif
 
-                        @if (session('errors') && count(session('errors')) > 0)
+                        @if (session('csvErrors') && count(session('csvErrors')) > 0)
                             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                                 <h4 class="font-semibold">Errors encountered:</h4>
                                 <ul class="list-disc list-inside mt-2">
-                                    @foreach (session('errors') as $error)
+                                    @foreach (session('csvErrors') as $error)
                                         <li class="text-sm">{{ $error }}</li>
                                     @endforeach
                                 </ul>
@@ -50,8 +50,8 @@
                         @endif
                     </div>
 
-                    <form action="{{ route('lecturer.registerUser') }}" method="POST" enctype="multipart/form-data"
-                        class="space-y-6">
+                    <form action="{{ route('lecturer.registerUser.store') }}" method="POST"
+                        enctype="multipart/form-data" class="space-y-6">
                         @csrf
 
                         <!-- CSV File Upload -->
@@ -81,7 +81,7 @@
                         <!-- Year Input -->
                         <div>
                             <x-input-label for="year" :value="__('Academic Year')" />
-                            <input id="year" type="number" name="year" min="2020" max="2030"
+                            <input id="year" type="number" name="year" min="2020" max="2050"
                                 value="{{ date('Y') }}" required
                                 class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" />
                             <x-input-error :messages="$errors->get('year')" class="mt-2" />
@@ -118,11 +118,14 @@
                         <div class="mb-4">
                             <h5 class="font-medium text-gray-700 dark:text-gray-300 mb-2">For Lecturers:</h5>
                             <div class="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                                <div>name,email,role,lecturerID,staffGrade,position,state,researchGroup,department</div>
-                                <div>Dr. Johnson,dr.johnson@example.com,lecturer,LEC001,Professor,Head of
-                                    Department,Selangor,AI Research,Computer Science</div>
-                                <div>Dr. Wilson,dr.wilson@example.com,lecturer,LEC002,Associate Professor,Lecturer,Kuala
-                                    Lumpur,Data Science,Information Technology</div>
+                                <div>
+                                    name,email,role,lecturerID,staffGrade,role,position,state,researchGroup,department,isAcademicAdvisor,isSupervisorFaculty,isCommittee,isCoordinator,isAdmin
+                                </div>
+                                <div>Dr. Johnson,dr.johnson@example.com,lecturer,LEC001,Role,Professor,Head of
+                                    Department,Selangor,AI Research,Computer Science,1,1,1,1,1</div>
+                                <div>Dr. Wilson,dr.wilson@example.com,lecturer,LEC002,Role,Associate
+                                    Professor,Lecturer,Kuala
+                                    Lumpur,Data Science,Information Technology,1,1,1,1,1</div>
                             </div>
                         </div>
 
@@ -200,6 +203,28 @@
                             <input id="student_program" type="text" name="program"
                                 class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
                         </div>
+
+                        <!-- Semester Selection -->
+                        <div>
+                            <x-input-label for="semester" :value="__('Semester')" />
+                            <select id="semester" name="semester" required
+                                class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                                <option value="">Select Semester</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('semester')" class="mt-2" />
+                        </div>
+
+                        <!-- Year Input -->
+                        <div>
+                            <x-input-label for="year" :value="__('Academic Year')" />
+                            <input id="year" type="number" name="year" min="2020" max="2050"
+                                value="{{ date('Y') }}" required
+                                class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" />
+                            <x-input-error :messages="$errors->get('year')" class="mt-2" />
+                        </div>
+
                     </div>
 
                     <div class="flex justify-end space-x-3 pt-4">
@@ -265,6 +290,12 @@
                         </div>
 
                         <div>
+                            <x-input-label for="lecturer_role" :value="__('Role')" />
+                            <input id="lecturer_role" type="text" name="role"
+                                class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                        </div>
+
+                        <div>
                             <x-input-label for="lecturer_position" :value="__('Position')" />
                             <input id="lecturer_position" type="text" name="position"
                                 class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
@@ -293,6 +324,27 @@
                             <input id="lecturer_studentQuota" type="number" name="studentQuota" min="0"
                                 value="0"
                                 class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                        </div>
+
+                        <!-- Semester Selection -->
+                        <div>
+                            <x-input-label for="semester" :value="__('Semester')" />
+                            <select id="semester" name="semester" required
+                                class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                                <option value="">Select Semester</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('semester')" class="mt-2" />
+                        </div>
+
+                        <!-- Year Input -->
+                        <div>
+                            <x-input-label for="year" :value="__('Academic Year')" />
+                            <input id="year" type="number" name="year" min="2020" max="2050"
+                                value="{{ date('Y') }}" required
+                                class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" />
+                            <x-input-error :messages="$errors->get('year')" class="mt-2" />
                         </div>
 
                         <!-- Role Flags -->

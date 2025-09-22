@@ -19,6 +19,8 @@ class Student extends Model
         'address',
         'nationality',
         'program',
+        'semester',
+        'year',
         'profilePhoto',
         'resume',
         'status',
