@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ManageUserController;
 
 // Redirect root to login page
 Route::get('/', function () {
@@ -35,9 +36,16 @@ Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name
 Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->name('lecturer.')->group(function () {
     Route::view('/dashboard', 'lecturer.dashboard.lecturerPortal')->name('dashboard');
     Route::view('/register-user', 'lecturer.dashboard.registerUser')->name('registerUser');
-    Route::post('/register-user', [App\Http\Controllers\ManageLoginController::class, 'registerUsers'])->name('registerUser.store');
-    Route::post('/register-student', [App\Http\Controllers\ManageLoginController::class, 'registerStudent'])->name('registerStudent');
-    Route::post('/register-lecturer', [App\Http\Controllers\ManageLoginController::class, 'registerLecturer'])->name('registerLecturer');
+
+    Route::controller(ManageUserController::class)->group(function () {
+        Route::post('/register-user', 'registerUsers')->name('registerUsers');
+        Route::post('/register-student', 'registerStudent')->name('registerStudent');
+        Route::post('/register-lecturer', 'registerLecturer')->name('registerLecturer');
+        Route::get('/view-users', 'showViewUsers')->name('viewUsers');
+        Route::post('/filter-users', 'filterUsers')->name('filterUsers');
+        Route::get('/manage-users', 'showManageUsers')->name('manageUsers');
+        Route::post('/manage-users', 'manageUsers')->name('manageUsers.filter');
+    });
 });
 
 Route::view('profile', 'profile')

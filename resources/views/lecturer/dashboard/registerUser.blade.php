@@ -99,45 +99,10 @@
                             </button>
                         </div>
                     </form>
-
-                    <!-- CSV Format Example -->
-                    <div class="mt-8 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">CSV Format Examples:</h4>
-
-                        <div class="mb-4">
-                            <h5 class="font-medium text-gray-700 dark:text-gray-300 mb-2">For Students:</h5>
-                            <div class="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                                <div>name,email,role,studentID,phone,address,nationality,program</div>
-                                <div>John Doe,john.doe@example.com,student,STU001,0123456789,123 Main
-                                    St,Malaysian,Computer Science</div>
-                                <div>Jane Smith,jane.smith@example.com,student,STU002,0123456790,456 Oak
-                                    Ave,Malaysian,Information Technology</div>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <h5 class="font-medium text-gray-700 dark:text-gray-300 mb-2">For Lecturers:</h5>
-                            <div class="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                                <div>
-                                    name,email,role,lecturerID,staffGrade,role,position,state,researchGroup,department,isAcademicAdvisor,isSupervisorFaculty,isCommittee,isCoordinator,isAdmin
-                                </div>
-                                <div>Dr. Johnson,dr.johnson@example.com,lecturer,LEC001,Role,Professor,Head of
-                                    Department,Selangor,AI Research,Computer Science,1,1,1,1,1</div>
-                                <div>Dr. Wilson,dr.wilson@example.com,lecturer,LEC002,Role,Associate
-                                    Professor,Lecturer,Kuala
-                                    Lumpur,Data Science,Information Technology,1,1,1,1,1</div>
-                            </div>
-                        </div>
-
-                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            Note: All fields except name, email, and role are optional. studentID is required for
-                            students, lecturerID is required for lecturers.
-                        </p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Student Registration Modal -->
     <div id="studentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
