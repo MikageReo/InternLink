@@ -115,7 +115,7 @@ class ManageUserController extends Controller
             $csvData = array_map('str_getcsv', file($file->getRealPath()));
 
             if (empty($csvData)) {
-                return redirect()->route('lecturer.registerUser')
+                return redirect()->route('lecturer.userDirectory')
                     ->with('error', 'CSV file is empty or could not be read.');
             }
 
@@ -128,11 +128,11 @@ class ManageUserController extends Controller
             } elseif (in_array('lecturerID', $header)) {
                 $roleType = 'lecturer';
             } else {
-                return redirect()->route('lecturer.registerUser')
+                return redirect()->route('lecturer.userDirectory')
                     ->with('error', "CSV must contain either 'studentID' or 'lecturerID' column.");
             }
         } catch (\Exception $e) {
-            return redirect()->route('lecturer.registerUser')
+            return redirect()->route('lecturer.userDirectory')
                 ->with('error', 'Error reading CSV file: ' . $e->getMessage());
         }
 
@@ -284,7 +284,7 @@ class ManageUserController extends Controller
             $message .= " {$errorCount} users failed to register.";
         }
 
-        return redirect()->route('lecturer.manageUsers')
+        return redirect()->route('lecturer.userDirectory')
             ->with('success', $message)
             ->with('csvErrors', $errors);
     }
@@ -343,11 +343,11 @@ class ManageUserController extends Controller
                 $emailMessage = ' Note: Email notification failed to send.';
             }
 
-            return redirect()->route('lecturer.manageUsers')
+            return redirect()->route('lecturer.userDirectory')
                 ->with('success', 'Student registered successfully!' . $emailMessage);
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->route('lecturer.manageUsers')
+            return redirect()->route('lecturer.userDirectory')
                 ->with('error', 'Failed to register student: ' . $e->getMessage());
         }
     }
@@ -413,27 +413,27 @@ class ManageUserController extends Controller
                 $emailMessage = ' Note: Email notification failed to send.';
             }
 
-            return redirect()->route('lecturer.manageUsers')
+            return redirect()->route('lecturer.userDirectory')
                 ->with('success', 'Lecturer registered successfully!' . $emailMessage);
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->route('lecturer.manageUsers')
+            return redirect()->route('lecturer.userDirectory')
                 ->with('error', 'Failed to register lecturer: ' . $e->getMessage());
         }
     }
 
     /**
-     * Show the manage users page (combined view and registration)
+     * Show the user directory page (combined view and registration)
      */
-    public function showManageUsers()
+    public function showUserDirectory()
     {
-        return view('lecturer.dashboard.manageUsers');
+        return view('lecturer.dashboard.userDirectory');
     }
 
     /**
-     * Handle filtering and displaying users in the combined page
+     * Handle filtering and displaying users in the user directory
      */
-    public function manageUsers(Request $request)
+    public function filterUserDirectory(Request $request)
     {
         $request->validate([
             'role' => 'required|in:student,lecturer',
@@ -469,6 +469,6 @@ class ManageUserController extends Controller
                 ->get();
         }
 
-        return view('lecturer.dashboard.manageUsers', compact('users', 'role', 'semester', 'year'));
+        return view('lecturer.dashboard.userDirectory', compact('users', 'role', 'semester', 'year'));
     }
 }

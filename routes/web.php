@@ -41,10 +41,8 @@ Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->na
         Route::post('/register-user', 'registerUsers')->name('registerUsers');
         Route::post('/register-student', 'registerStudent')->name('registerStudent');
         Route::post('/register-lecturer', 'registerLecturer')->name('registerLecturer');
-        Route::get('/view-users', 'showViewUsers')->name('viewUsers');
-        Route::post('/filter-users', 'filterUsers')->name('filterUsers');
-        Route::get('/manage-users', 'showManageUsers')->name('manageUsers');
-        Route::post('/manage-users', 'manageUsers')->name('manageUsers.filter');
+        Route::get('/user-directory', 'showUserDirectory')->name('userDirectory');
+        Route::post('/user-directory', 'filterUserDirectory')->name('userDirectory.filter');
     });
 });
 

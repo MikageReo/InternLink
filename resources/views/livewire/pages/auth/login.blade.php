@@ -39,9 +39,6 @@ new #[Layout('layouts.guest')] class extends Component
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <p class="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-        {{ __('Enter your credentials below. Your role will be automatically detected.') }}
-    </p>
 
     <form wire:submit="login">
         <!-- Email Address -->
@@ -61,14 +58,6 @@ new #[Layout('layouts.guest')] class extends Component
                             required autocomplete="current-password" />
 
             <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
-        </div>
-
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember" class="inline-flex items-center">
-                <input wire:model="form.remember" id="remember" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="remember">
-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
-            </label>
         </div>
 
         <div class="flex items-center justify-end mt-4">
