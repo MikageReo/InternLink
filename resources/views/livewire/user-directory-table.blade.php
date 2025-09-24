@@ -77,7 +77,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <div class="text-sm text-gray-500 dark:text-gray-400">
             @if ($role)
-                Showing {{ $users->count() }} of {{ $totalCount }} {{ $role }} users
+                Showing {{ $users->count() }} {{ $role }} users
             @else
                 Select filters to view users
             @endif
@@ -141,7 +141,7 @@
             <select wire:model.live="role"
                 class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
                             dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                <option value="">All Roles</option>
+                <option value="">Select</option>
                 <option value="student">Student</option>
                 <option value="lecturer">Lecturer</option>
             </select>
@@ -153,7 +153,6 @@
             <select wire:model.live="semester"
                 class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
                             dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                <option value="">All Semesters</option>
                 <option value="1">Semester 1</option>
                 <option value="2">Semester 2</option>
             </select>
