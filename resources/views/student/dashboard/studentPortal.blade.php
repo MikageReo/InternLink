@@ -53,14 +53,17 @@
                             </button>
                         </div>
 
-                        <!-- Library -->
-                        <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-lg">
-                            <h4 class="font-semibold text-indigo-800 dark:text-indigo-200 mb-2">Library</h4>
-                            <p class="text-indigo-600 dark:text-indigo-300 text-sm">Access library resources and
-                                materials</p>
-                            <button class="mt-3 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded text-sm">
-                                Access Library
-                            </button>
+                        <!-- Course Verification -->
+                        <div class="bg-teal-50 dark:bg-green-900/20 p-6 rounded-lg">
+                            <h4 class="font-semibold text-teal-800 dark:text-teal-200 mb-2">Course Verification</h4>
+                            <p class="text-teal-600 dark:text-teal-300 text-sm">Submit and track your course
+                                verification applications</p>
+                                <div class="mt-3">
+                            <a href="{{ route('student.courseVerification') }}"
+                                class="mt-3 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded text-sm inline-block">
+                                Manage Applications
+                            </a>
+                            </div>
                         </div>
 
                         <!-- Support -->

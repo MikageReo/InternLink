@@ -30,6 +30,7 @@ Route::get('/dashboard', function () {
 // Student routes
 Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
     Route::view('/dashboard', 'student.dashboard.studentPortal')->name('dashboard');
+    Route::view('/course-verification', 'student.dashboard.courseVerification')->name('courseVerification');
 });
 
 // Lecturer routes
