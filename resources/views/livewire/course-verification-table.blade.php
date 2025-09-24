@@ -442,7 +442,7 @@
                                 Current Credit <span class="text-red-500">*</span>
                             </label>
                             <input type="number" wire:model="currentCredit" id="currentCredit" min="0"
-                                max="130"
+                                max="118"
                                 class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Enter your current credit count">
                             @error('currentCredit')

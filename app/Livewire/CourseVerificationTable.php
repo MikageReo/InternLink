@@ -44,7 +44,7 @@ class CourseVerificationTable extends Component
     ];
 
     protected $rules = [
-        'currentCredit' => 'required|integer|min:0|max:130',
+        'currentCredit' => 'required|integer|min:0|max:118',
         'submittedFile' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB max
     ];
 
@@ -52,7 +52,7 @@ class CourseVerificationTable extends Component
         'currentCredit.required' => 'Current credit is required.',
         'currentCredit.integer' => 'Current credit must be a number.',
         'currentCredit.min' => 'Current credit cannot be negative.',
-        'currentCredit.max' => 'Current credit cannot exceed 130.',
+        'currentCredit.max' => 'Current credit cannot exceed 118.',
         'submittedFile.required' => 'Course file is required.',
         'submittedFile.file' => 'Please upload a valid file.',
         'submittedFile.mimes' => 'File must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',

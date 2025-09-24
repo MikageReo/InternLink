@@ -9,6 +9,9 @@ use App\Models\Student;
 use App\Models\Lecturer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\CourseVerificationStatusNotification;
 
 class LecturerCourseVerificationTable extends Component
 {
@@ -101,7 +104,17 @@ class LecturerCourseVerificationTable extends Component
                 $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer'])
                     ->findOrFail($id);
 
-                session()->flash('message', 'Application approved successfully!');
+                // Send email notification to student
+                try {
+                    $this->selectedApplication->student->user->notify(
+                        new CourseVerificationStatusNotification($this->selectedApplication)
+                    );
+                } catch (\Exception $e) {
+                    // Log email error but don't fail the approval process
+                    Log::error('Failed to send approval notification: ' . $e->getMessage());
+                }
+
+                session()->flash('message', 'Application approved successfully! Email notification sent to student.');
 
                 // Reset pagination to refresh the table
                 $this->resetPage();
@@ -139,7 +152,17 @@ class LecturerCourseVerificationTable extends Component
                 $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer'])
                     ->findOrFail($id);
 
-                session()->flash('message', 'Application rejected successfully!');
+                // Send email notification to student
+                try {
+                    $this->selectedApplication->student->user->notify(
+                        new CourseVerificationStatusNotification($this->selectedApplication)
+                    );
+                } catch (\Exception $e) {
+                    // Log email error but don't fail the rejection process
+                    Log::error('Failed to send rejection notification: ' . $e->getMessage());
+                }
+
+                session()->flash('message', 'Application rejected successfully! Email notification sent to student.');
 
                 // Reset pagination to refresh the table
                 $this->resetPage();
@@ -224,7 +247,7 @@ class LecturerCourseVerificationTable extends Component
             return;
         }
 
-        return Storage::disk('public')->download($filePath);
+        return response()->download(Storage::disk('public')->path($filePath));
     }
 
     public function render()
