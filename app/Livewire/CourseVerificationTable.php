@@ -29,12 +29,18 @@ class CourseVerificationTable extends Component
 
     // Student properties
     public $totalCreditRequired = 130; // Default total credit required
+    public $currentApplication = null; // Current student application
+    public $canApply = true; // Whether student can apply
 
     protected $queryString = [
         'search' => ['except' => ''],
         'sortField' => ['except' => 'applicationDate'],
         'sortDirection' => ['except' => 'desc'],
         'page' => ['except' => 1],
+    ];
+
+    protected $listeners = [
+        'application-status-updated' => 'refreshStatus',
     ];
 
     protected $rules = [
@@ -57,6 +63,48 @@ class CourseVerificationTable extends Component
     {
         // You can set the total credit required from a config or database
         $this->totalCreditRequired = 130;
+
+        // Check if student has existing application and determine if they can apply
+        $this->checkApplicationStatus();
+    }
+
+    public function checkApplicationStatus()
+    {
+        $student = Auth::user()->student;
+
+        if (!$student) {
+            $this->canApply = false;
+            return;
+        }
+
+        // Get the latest application for this student
+        $this->currentApplication = CourseVerification::where('studentID', $student->studentID)
+            ->orderBy('applicationDate', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$this->currentApplication) {
+            // No application exists, can apply
+            $this->canApply = true;
+        } else {
+            // Check the status of the latest application
+            switch ($this->currentApplication->status) {
+                case 'pending':
+                    // Cannot apply when pending
+                    $this->canApply = false;
+                    break;
+                case 'approved':
+                    // Cannot apply when approved (already verified)
+                    $this->canApply = false;
+                    break;
+                case 'rejected':
+                    // Can apply again when rejected
+                    $this->canApply = true;
+                    break;
+                default:
+                    $this->canApply = true;
+            }
+        }
     }
 
     public function updatingSearch()
@@ -82,6 +130,22 @@ class CourseVerificationTable extends Component
 
     public function openForm()
     {
+        // Re-check application status before opening form
+        $this->checkApplicationStatus();
+
+        if (!$this->canApply) {
+            if ($this->currentApplication) {
+                if ($this->currentApplication->status === 'pending') {
+                    session()->flash('error', 'You already have a pending application. Please wait for the result before applying again.');
+                } elseif ($this->currentApplication->status === 'approved') {
+                    session()->flash('error', 'Your course verification has already been approved. No further action needed.');
+                }
+            } else {
+                session()->flash('error', 'You are not eligible to apply at this time.');
+            }
+            return;
+        }
+
         $this->showForm = true;
         $this->resetForm();
     }
@@ -110,9 +174,24 @@ class CourseVerificationTable extends Component
             return;
         }
 
-        // Only allow editing if status is pending
-        if ($verification->status !== 'pending') {
-            session()->flash('error', 'You can only edit pending applications.');
+        // Re-check application status
+        $this->checkApplicationStatus();
+
+        // Only allow editing if it's the current application and status allows it
+        if (!$this->currentApplication || $this->currentApplication->courseVerificationID !== $id) {
+            session()->flash('error', 'You can only edit your latest application.');
+            return;
+        }
+
+        // Only allow editing if status is pending or rejected
+        if (!in_array($verification->status, ['pending', 'rejected'])) {
+            session()->flash('error', 'You can only edit pending or rejected applications.');
+            return;
+        }
+
+        // If status is approved, cannot edit
+        if ($verification->status === 'approved') {
+            session()->flash('error', 'You cannot edit an approved application.');
             return;
         }
 
@@ -123,6 +202,15 @@ class CourseVerificationTable extends Component
 
     public function submit()
     {
+        // Re-check application status before submitting
+        $this->checkApplicationStatus();
+
+        // If editing, allow submission. If new application, check if can apply
+        if (!$this->editingId && !$this->canApply) {
+            session()->flash('error', 'You cannot submit a new application at this time.');
+            return;
+        }
+
         $this->validate();
 
         try {
@@ -133,23 +221,18 @@ class CourseVerificationTable extends Component
                 return;
             }
 
-            // Get a lecturer for assignment (you might want to implement a better assignment logic)
-            $lecturer = Lecturer::where('isAcademicAdvisor', true)->first();
-            if (!$lecturer) {
-                $lecturer = Lecturer::first(); // Fallback to any lecturer
-            }
-
-            if (!$lecturer) {
-                session()->flash('error', 'No lecturer available for assignment.');
-                return;
-            }
-
             // Store the uploaded file
             $filePath = $this->submittedFile->store('course-verification-files', 'public');
 
             if ($this->editingId) {
                 // Update existing verification
                 $verification = CourseVerification::findOrFail($this->editingId);
+
+                // Ensure this is the current application
+                if (!$this->currentApplication || $this->currentApplication->courseVerificationID !== $this->editingId) {
+                    session()->flash('error', 'You can only edit your latest application.');
+                    return;
+                }
 
                 // Delete old file if new file is uploaded
                 if ($verification->submittedFile && $verification->submittedFile !== $filePath) {
@@ -161,23 +244,40 @@ class CourseVerificationTable extends Component
                     'submittedFile' => $filePath,
                     'status' => 'pending', // Reset status to pending when edited
                     'applicationDate' => now()->toDateString(),
+                    'lecturerID' => null, // Reset lecturer ID when resubmitted
                 ]);
 
                 session()->flash('message', 'Course verification application updated successfully!');
             } else {
+                // Check if student already has applications and get the latest one
+                $latestApplication = CourseVerification::where('studentID', $student->studentID)
+                    ->orderBy('applicationDate', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                if ($latestApplication) {
+                    // If latest application is not rejected, cannot create new one
+                    if ($latestApplication->status !== 'rejected') {
+                        session()->flash('error', 'You already have an application. You can only apply again after rejection.');
+                        return;
+                    }
+                }
+
                 // Create new verification
                 CourseVerification::create([
                     'currentCredit' => $this->currentCredit,
                     'submittedFile' => $filePath,
                     'status' => 'pending',
                     'applicationDate' => now()->toDateString(),
-                    'lecturerID' => $lecturer->lecturerID,
+                    'lecturerID' => null,
                     'studentID' => $student->studentID,
                 ]);
 
                 session()->flash('message', 'Course verification application submitted successfully!');
             }
 
+            // Refresh application status after submit
+            $this->checkApplicationStatus();
             $this->closeForm();
         } catch (\Exception $e) {
             session()->flash('error', 'An error occurred while processing your application: ' . $e->getMessage());
@@ -194,9 +294,18 @@ class CourseVerificationTable extends Component
             return;
         }
 
-        // Only allow deletion if status is pending
-        if ($verification->status !== 'pending') {
-            session()->flash('error', 'You can only delete pending applications.');
+        // Re-check application status
+        $this->checkApplicationStatus();
+
+        // Only allow deletion if it's the current application and status allows it
+        if (!$this->currentApplication || $this->currentApplication->courseVerificationID !== $id) {
+            session()->flash('error', 'You can only delete your latest application.');
+            return;
+        }
+
+        // Only allow deletion if status is pending or rejected
+        if (!in_array($verification->status, ['pending', 'rejected'])) {
+            session()->flash('error', 'You can only delete pending or rejected applications.');
             return;
         }
 
@@ -208,6 +317,9 @@ class CourseVerificationTable extends Component
 
             // Delete the record
             $verification->delete();
+
+            // Refresh application status after deletion
+            $this->checkApplicationStatus();
 
             session()->flash('message', 'Application deleted successfully!');
         } catch (\Exception $e) {
@@ -238,11 +350,56 @@ class CourseVerificationTable extends Component
             });
         }
 
-        // Apply sorting
+        // Apply sorting with priority for approved applications
         if ($this->sortField) {
-            if (in_array($this->sortField, ['currentCredit', 'status', 'applicationDate', 'created_at'])) {
-                $query->orderBy($this->sortField, $this->sortDirection);
+            if ($this->sortField === 'status') {
+                // Custom status ordering: approved first, then pending, then rejected
+                $query->orderByRaw(
+                    "
+                    CASE
+                        WHEN status = 'approved' THEN 1
+                        WHEN status = 'pending' THEN 2
+                        WHEN status = 'rejected' THEN 3
+                        ELSE 4
+                    END " . $this->sortDirection
+                );
+            } elseif ($this->sortField === 'applicationDate') {
+                // For application date, also prioritize approved, then sort by date
+                $query->orderByRaw(
+                    "
+                    CASE
+                        WHEN status = 'approved' THEN 1
+                        WHEN status = 'pending' THEN 2
+                        WHEN status = 'rejected' THEN 3
+                        ELSE 4
+                    END ASC,
+                    applicationDate " . $this->sortDirection
+                );
+            } elseif (in_array($this->sortField, ['currentCredit', 'created_at'])) {
+                // For other fields, still prioritize approved but sort by the field
+                $query->orderByRaw(
+                    "
+                    CASE
+                        WHEN status = 'approved' THEN 1
+                        WHEN status = 'pending' THEN 2
+                        WHEN status = 'rejected' THEN 3
+                        ELSE 4
+                    END ASC,
+                    " . $this->sortField . " " . $this->sortDirection
+                );
             }
+        } else {
+            // Default sorting: approved first, then by application date descending
+            $query->orderByRaw("
+                CASE
+                    WHEN status = 'approved' THEN 1
+                    WHEN status = 'pending' THEN 2
+                    WHEN status = 'rejected' THEN 3
+                    ELSE 4
+                END ASC,
+                applicationDate DESC,
+                created_at DESC
+            ");
         }
 
         return $query;
@@ -250,11 +407,22 @@ class CourseVerificationTable extends Component
 
     public function render()
     {
+        // Always refresh application status on each render to ensure latest data
+        $this->checkApplicationStatus();
+
         $verifications = $this->getFilteredVerifications()->paginate($this->perPage);
 
         return view('livewire.course-verification-table', [
             'verifications' => $verifications,
             'totalCreditRequired' => $this->totalCreditRequired,
+            'currentApplication' => $this->currentApplication,
+            'canApply' => $this->canApply,
         ]);
+    }
+
+    // Add method to refresh status when needed
+    public function refreshStatus()
+    {
+        $this->checkApplicationStatus();
     }
 }

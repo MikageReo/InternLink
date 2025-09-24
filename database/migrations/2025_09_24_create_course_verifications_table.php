@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('submittedFile');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->date('applicationDate');
-            $table->string('lecturerID');
+            $table->string('lecturerID')->nullable();
             $table->string('studentID');
             $table->timestamps();
 

@@ -54,4 +54,12 @@ class Lecturer extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+
+    /**
+     * Get the course verifications reviewed by this lecturer
+     */
+    public function courseVerifications(): HasMany
+    {
+        return $this->hasMany(CourseVerification::class, 'lecturerID', 'lecturerID');
+    }
 }

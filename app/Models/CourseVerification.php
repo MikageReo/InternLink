@@ -16,6 +16,7 @@ class CourseVerification extends Model
         'applicationDate',
         'lecturerID',
         'studentID',
+        'remarks',
     ];
 
     protected $casts = [

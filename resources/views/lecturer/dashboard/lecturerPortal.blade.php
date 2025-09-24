@@ -27,7 +27,8 @@
                         <!-- User Management -->
                         <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
                             <h4 class="font-semibold text-green-800 dark:text-green-200 mb-2">User Directory</h4>
-                            <p class="text-green-600 dark:text-green-300 text-sm">Comprehensive user management system</p>
+                            <p class="text-green-600 dark:text-green-300 text-sm">Comprehensive user management system
+                            </p>
                             <div class="mt-3">
                                 <a href="{{ route('lecturer.userDirectory') }}"
                                     class="mt-3 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
@@ -52,6 +53,19 @@
                             <button class="mt-3 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm">
                                 Manage Grades
                             </button>
+                        </div>
+
+                        <!-- Course Verification Management -->
+                        <div class="bg-teal-50 dark:bg-teal-900/20 p-6 rounded-lg">
+                            <h4 class="font-semibold text-teal-800 dark:text-teal-200 mb-2">Course Verification</h4>
+                            <p class="text-teal-600 dark:text-teal-300 text-sm">Review and approve student course
+                                verification applications</p>
+                            <div class="mt-3">
+                                <a href="{{ route('lecturer.courseVerificationManagement') }}"
+                                    class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded text-sm inline-block">
+                                    <i class="fas fa-check-circle mr-2"></i>Manage Applications
+                                </a>
+                            </div>
                         </div>
 
                         <!-- Schedule Management -->

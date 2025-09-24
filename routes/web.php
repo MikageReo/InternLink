@@ -37,6 +37,7 @@ Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name
 Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->name('lecturer.')->group(function () {
     Route::view('/dashboard', 'lecturer.dashboard.lecturerPortal')->name('dashboard');
     Route::view('/register-user', 'lecturer.dashboard.registerUser')->name('registerUser');
+    Route::view('/course-verification-management', 'lecturer.dashboard.courseVerificationManagement')->name('courseVerificationManagement');
 
     Route::controller(ManageUserController::class)->group(function () {
         Route::post('/register-user', 'registerUsers')->name('registerUsers');
