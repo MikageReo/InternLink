@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\CourseVerification;
 use App\Models\Student;
 use App\Models\Lecturer;
+use App\Models\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -65,7 +66,7 @@ class LecturerCourseVerificationTable extends Component
 
     public function viewApplication($id)
     {
-        $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer'])
+        $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'files'])
             ->findOrFail($id);
 
         // Load existing remarks if any
@@ -101,7 +102,7 @@ class LecturerCourseVerificationTable extends Component
 
             if ($updated) {
                 // Refresh the selected application to show updated status
-                $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer'])
+                $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'files'])
                     ->findOrFail($id);
 
                 // Send email notification to student
@@ -149,7 +150,7 @@ class LecturerCourseVerificationTable extends Component
 
             if ($updated) {
                 // Refresh the selected application to show updated status
-                $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer'])
+                $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'files'])
                     ->findOrFail($id);
 
                 // Send email notification to student
@@ -187,7 +188,7 @@ class LecturerCourseVerificationTable extends Component
 
     private function getFilteredApplications()
     {
-        $query = CourseVerification::with(['student.user', 'lecturer']);
+        $query = CourseVerification::with(['student.user', 'lecturer', 'files']);
 
         // Apply search filter
         if ($this->search) {
@@ -240,14 +241,16 @@ class LecturerCourseVerificationTable extends Component
         return $query;
     }
 
-    public function downloadFile($filePath)
+    public function downloadFile($fileId)
     {
-        if (!$filePath || !Storage::disk('public')->exists($filePath)) {
+        $file = File::find($fileId);
+
+        if (!$file || !Storage::disk('public')->exists($file->file_path)) {
             session()->flash('error', 'File not found.');
             return;
         }
 
-        return response()->download(Storage::disk('public')->path($filePath));
+        return response()->download(Storage::disk('public')->path($file->file_path), $file->original_name);
     }
 
     public function render()

@@ -352,8 +352,8 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex items-center space-x-2">
                                             <!-- View File -->
-                                            @if ($verification->submittedFile)
-                                                <a href="{{ Storage::url($verification->submittedFile) }}"
+                                            @if ($verification->files->count() > 0)
+                                                <a href="{{ $verification->files->first()->url }}"
                                                     target="_blank" class="text-blue-600 hover:text-blue-900 title"
                                                     title="View submitted file">
                                                     <i class="fa fa-file"></i>

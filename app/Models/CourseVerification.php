@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class CourseVerification extends Model
 {
@@ -11,7 +12,6 @@ class CourseVerification extends Model
 
     protected $fillable = [
         'currentCredit',
-        'submittedFile',
         'status',
         'applicationDate',
         'lecturerID',
@@ -37,5 +37,31 @@ class CourseVerification extends Model
     public function lecturer(): BelongsTo
     {
         return $this->belongsTo(Lecturer::class, 'lecturerID', 'lecturerID');
+    }
+
+    /**
+     * Get all files for this course verification.
+     */
+    public function files(): MorphMany
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
+
+    /**
+     * Get the first submitted file (for backward compatibility).
+     */
+    public function getSubmittedFileAttribute()
+    {
+        $file = $this->files()->first();
+        return $file ? $file->file_path : null;
+    }
+
+    /**
+     * Get the submitted file URL (for backward compatibility).
+     */
+    public function getSubmittedFileUrlAttribute()
+    {
+        $file = $this->files()->first();
+        return $file ? $file->url : null;
     }
 }

@@ -331,11 +331,11 @@
                                             class="text-blue-600 hover:text-blue-900 mr-3" title="View details">
                                             <i class="fa fa-eye"></i>
                                         </button>
-                                        @if ($application->submittedFile)
-                                            <a href="{{ Storage::url($application->submittedFile) }}" target="_blank"
+                                        @if ($application->files->count() > 0)
+                                            <button wire:click="downloadFile({{ $application->files->first()->id }})"
                                                 class="text-green-600 hover:text-green-900" title="Download file">
                                                 <i class="fa fa-download"></i>
-                                            </a>
+                                            </button>
                                         @endif
                                     </td>
                                 </tr>
@@ -443,22 +443,22 @@
                     </div>
 
                     <!-- Submitted File -->
-                    @if ($selectedApplication->submittedFile)
+                    @if ($selectedApplication->files->count() > 0)
                         <div class="bg-green-50 rounded-lg p-4">
                             <h4 class="text-md font-semibold text-gray-900 mb-3">Submitted Document</h4>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <i class="fa fa-file text-green-600 text-xl mr-3"></i>
                                     <div>
-                                        <p class="text-sm font-medium text-gray-900">Course Documentation</p>
-                                        <p class="text-xs text-gray-600">Click to download and review</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ $selectedApplication->files->first()->original_name ?? 'Course Documentation' }}</p>
+                                        <p class="text-xs text-gray-600">{{ $selectedApplication->files->first()->mime_type }} - {{ number_format($selectedApplication->files->first()->file_size / 1024, 1) }} KB</p>
                                     </div>
                                 </div>
-                                <a href="{{ Storage::url($selectedApplication->submittedFile) }}" target="_blank"
+                                <button wire:click="downloadFile({{ $selectedApplication->files->first()->id }})"
                                     class="inline-flex items-center px-3 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                     <i class="fa fa-download mr-2"></i>
                                     Download File
-                                </a>
+                                </button>
                             </div>
                         </div>
                     @endif
