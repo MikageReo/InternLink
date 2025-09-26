@@ -68,6 +68,31 @@
                             </div>
                         </div>
 
+                        <!-- Internship Placement Management (Committee & Coordinator Only) -->
+                        @if(Auth::user()->lecturer && (Auth::user()->lecturer->isCommittee || Auth::user()->lecturer->isCoordinator))
+                            <div class="bg-cyan-50 dark:bg-cyan-900/20 p-6 rounded-lg">
+                                <h4 class="font-semibold text-cyan-800 dark:text-cyan-200 mb-2">Internship Placement</h4>
+                                <p class="text-cyan-600 dark:text-cyan-300 text-sm">Review and approve student internship placement applications</p>
+                                <div class="mt-3">
+                                    <a href="{{ route('lecturer.placementApplications') }}"
+                                        class="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded text-sm inline-block">
+                                        🏢 Manage Applications
+                                    </a>
+                                </div>
+                            </div>
+                        @else
+                            <!-- Restricted Access Notice for Regular Lecturers -->
+                            <div class="bg-gray-50 dark:bg-gray-800/20 p-6 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                                <h4 class="font-semibold text-gray-500 dark:text-gray-400 mb-2">🔒 Internship Placement</h4>
+                                <p class="text-gray-400 dark:text-gray-500 text-sm">Access restricted to committee members and coordinators only</p>
+                                <div class="mt-3">
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                                        Contact admin for role assignment
+                                    </span>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Schedule Management -->
                         <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-lg">
                             <h4 class="font-semibold text-indigo-800 dark:text-indigo-200 mb-2">Class Schedule</h4>
