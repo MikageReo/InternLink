@@ -66,6 +66,18 @@
                             </div>
                         </div>
 
+                        <!-- Internship Placement -->
+                        <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-lg">
+                            <h4 class="font-semibold text-indigo-800 dark:text-indigo-200 mb-2">Internship Placement</h4>
+                            <p class="text-indigo-600 dark:text-indigo-300 text-sm">Apply for internship placements and manage your applications</p>
+                            <div class="mt-3">
+                                <a href="{{ route('student.placementApplications') }}"
+                                    class="mt-3 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded text-sm inline-block">
+                                    Manage Applications
+                                </a>
+                            </div>
+                        </div>
+
                         <!-- Support -->
                         <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg">
                             <h4 class="font-semibold text-red-800 dark:text-red-200 mb-2">Student Support</h4>
