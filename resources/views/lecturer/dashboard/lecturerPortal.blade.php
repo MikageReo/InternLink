@@ -80,10 +80,22 @@
                                     </a>
                                 </div>
                             </div>
+
+                            <!-- Request Defer Management (Committee & Coordinator Only) -->
+                            <div class="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-lg">
+                                <h4 class="font-semibold text-amber-800 dark:text-amber-200 mb-2">Request Defer</h4>
+                                <p class="text-amber-600 dark:text-amber-300 text-sm">Review and approve student defer requests</p>
+                                <div class="mt-3">
+                                    <a href="{{ route('lecturer.requestDefer') }}"
+                                        class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded text-sm inline-block">
+                                        📝 Manage Defer Requests
+                                    </a>
+                                </div>
+                            </div>
                         @else
                             <!-- Restricted Access Notice for Regular Lecturers -->
                             <div class="bg-gray-50 dark:bg-gray-800/20 p-6 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
-                                <h4 class="font-semibold text-gray-500 dark:text-gray-400 mb-2">🔒 Internship Placement</h4>
+                                <h4 class="font-semibold text-gray-500 dark:text-gray-400 mb-2">🔒 Internship Management</h4>
                                 <p class="text-gray-400 dark:text-gray-500 text-sm">Access restricted to committee members and coordinators only</p>
                                 <div class="mt-3">
                                     <span class="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">

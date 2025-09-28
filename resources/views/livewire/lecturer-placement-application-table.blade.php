@@ -8,7 +8,8 @@
                         <h1 class="text-3xl font-bold text-gray-900 mb-2">Internship Placement Applications</h1>
                         <p class="text-gray-600">Review and approve student internship placement applications</p>
                     </div>
-                    <button wire:click="toggleAnalytics" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <button wire:click="toggleAnalytics"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         {{ $showAnalytics ? 'Hide Analytics' : 'Show Analytics' }}
                     </button>
                 </div>
@@ -48,7 +49,8 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Approved</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['approved_applications'] }}</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['approved_applications'] }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -60,7 +62,8 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Rejected</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['rejected_applications'] }}</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['rejected_applications'] }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -98,13 +101,14 @@
                         <!-- Search -->
                         <div class="lg:col-span-2">
                             <input type="text" wire:model.live.debounce.300ms="search"
-                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                                   placeholder="Search applications, students, companies...">
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                placeholder="Search applications, students, companies...">
                         </div>
 
                         <!-- Status Filter -->
                         <div>
-                            <select wire:model.live="statusFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                            <select wire:model.live="statusFilter"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
                                 <option value="">All Status</option>
                                 <option value="Pending">Pending</option>
                                 <option value="Approved">Approved</option>
@@ -114,7 +118,8 @@
 
                         <!-- Role Filter -->
                         <div>
-                            <select wire:model.live="roleFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                            <select wire:model.live="roleFilter"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
                                 <option value="">All Applications</option>
                                 <option value="committee_pending">Committee Pending</option>
                                 <option value="coordinator_pending">Coordinator Pending</option>
@@ -123,7 +128,8 @@
 
                         <!-- Per Page -->
                         <div>
-                            <select wire:model.live="perPage" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                            <select wire:model.live="perPage"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
                                 <option value="10">10 per page</option>
                                 <option value="25">25 per page</option>
                                 <option value="50">50 per page</option>
@@ -137,14 +143,30 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Application Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    ID</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Student ID</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Company Name</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Position</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Application Date</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Remarks</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -154,7 +176,8 @@
                                         #{{ $application->applicationID }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">{{ $application->student->studentID }}</div>
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ $application->student->studentID }}</div>
                                         <div class="text-sm text-gray-500">{{ $application->student->user->name }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -170,27 +193,40 @@
                                         <div class="text-xs space-y-1">
                                             <div>
                                                 <span class="font-medium">Committee:</span>
-                                                <span class="inline-flex px-2 py-1 text-xs rounded-full
-                                                    {{ $application->committeeStatus === 'Approved' ? 'bg-green-100 text-green-800' :
-                                                       ($application->committeeStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs rounded-full
+                                                    {{ $application->committeeStatus === 'Approved'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : ($application->committeeStatus === 'Rejected'
+                                                            ? 'bg-red-100 text-red-800'
+                                                            : 'bg-yellow-100 text-yellow-800') }}">
                                                     {{ $application->committeeStatus }}
                                                 </span>
                                             </div>
                                             <div>
                                                 <span class="font-medium">Coordinator:</span>
-                                                <span class="inline-flex px-2 py-1 text-xs rounded-full
-                                                    {{ $application->coordinatorStatus === 'Approved' ? 'bg-green-100 text-green-800' :
-                                                       ($application->coordinatorStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs rounded-full
+                                                    {{ $application->coordinatorStatus === 'Approved'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : ($application->coordinatorStatus === 'Rejected'
+                                                            ? 'bg-red-100 text-red-800'
+                                                            : 'bg-yellow-100 text-yellow-800') }}">
                                                     {{ $application->coordinatorStatus }}
-                                                    @if($application->committeeStatus === 'Rejected' && $application->coordinatorStatus === 'Rejected' && !$application->coordinatorID)
-                                                        <span class="ml-1" title="Auto-rejected due to committee rejection">*</span>
+                                                    @if (
+                                                        $application->committeeStatus === 'Rejected' &&
+                                                            $application->coordinatorStatus === 'Rejected' &&
+                                                            !$application->coordinatorID)
+                                                        <span class="ml-1"
+                                                            title="Auto-rejected due to committee rejection">*</span>
                                                     @endif
                                                 </span>
                                             </div>
-                                            @if($application->studentAcceptance)
+                                            @if ($application->studentAcceptance)
                                                 <div>
                                                     <span class="font-medium">Student:</span>
-                                                    <span class="inline-flex px-2 py-1 text-xs rounded-full
+                                                    <span
+                                                        class="inline-flex px-2 py-1 text-xs rounded-full
                                                         {{ $application->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
                                                         {{ $application->studentAcceptance }}
                                                     </span>
@@ -199,7 +235,7 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
-                                        @if($application->remarks)
+                                        @if ($application->remarks)
                                             <div class="max-w-xs truncate" title="{{ $application->remarks }}">
                                                 {{ $application->remarks }}
                                             </div>
@@ -216,25 +252,36 @@
                                             </button>
 
                                             <!-- Committee Actions (Only for Committee Members) -->
-                                            @if($application->committeeStatus === 'Pending' && Auth::user()->lecturer->isCommittee)
-                                                <button wire:click="approveAsCommittee({{ $application->applicationID }})"
-                                                    class="text-green-600 hover:text-green-900" title="Approve as Committee">
+                                            @if ($application->committeeStatus === 'Pending' && Auth::user()->lecturer->isCommittee)
+                                                <button
+                                                    wire:click="approveAsCommittee({{ $application->applicationID }})"
+                                                    class="text-green-600 hover:text-green-900"
+                                                    title="Approve as Committee">
                                                     ✅
                                                 </button>
-                                                <button wire:click="rejectAsCommittee({{ $application->applicationID }})"
-                                                    class="text-red-600 hover:text-red-900" title="Reject as Committee">
+                                                <button
+                                                    wire:click="rejectAsCommittee({{ $application->applicationID }})"
+                                                    class="text-red-600 hover:text-red-900"
+                                                    title="Reject as Committee">
                                                     ❌
                                                 </button>
                                             @endif
 
                                             <!-- Coordinator Actions (Only for Coordinators) -->
-                                            @if($application->coordinatorStatus === 'Pending' && $application->committeeStatus === 'Approved' && Auth::user()->lecturer->isCoordinator)
-                                                <button wire:click="approveAsCoordinator({{ $application->applicationID }})"
-                                                    class="text-green-600 hover:text-green-900" title="Approve as Coordinator">
+                                            @if (
+                                                $application->coordinatorStatus === 'Pending' &&
+                                                    $application->committeeStatus === 'Approved' &&
+                                                    Auth::user()->lecturer->isCoordinator)
+                                                <button
+                                                    wire:click="approveAsCoordinator({{ $application->applicationID }})"
+                                                    class="text-green-600 hover:text-green-900"
+                                                    title="Approve as Coordinator">
                                                     ✅ Coord
                                                 </button>
-                                                <button wire:click="rejectAsCoordinator({{ $application->applicationID }})"
-                                                    class="text-red-600 hover:text-red-900" title="Reject as Coordinator">
+                                                <button
+                                                    wire:click="rejectAsCoordinator({{ $application->applicationID }})"
+                                                    class="text-red-600 hover:text-red-900"
+                                                    title="Reject as Coordinator">
                                                     ❌ Coord
                                                 </button>
                                             @endif
@@ -266,8 +313,9 @@
     <!-- Application Detail Modal -->
     @if ($showDetailModal && $selectedApplication)
         <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
-             wire:click="closeDetailModal"></div>
-        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
+            wire:click="closeDetailModal"></div>
+        <div
+            style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
             <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200">
@@ -309,8 +357,11 @@
                             <div class="space-y-2 text-sm">
                                 <p><strong>Position:</strong> {{ $selectedApplication->position }}</p>
                                 <p><strong>Method of Work:</strong> {{ $selectedApplication->methodOfWorkDisplay }}</p>
-                                <p><strong>Allowance:</strong> {{ $selectedApplication->allowance ? 'RM ' . number_format($selectedApplication->allowance, 2) : 'Not specified' }}</p>
-                                <p><strong>Duration:</strong> {{ $selectedApplication->startDate->format('M d, Y') }} - {{ $selectedApplication->endDate->format('M d, Y') }}</p>
+                                <p><strong>Allowance:</strong>
+                                    {{ $selectedApplication->allowance ? 'RM ' . number_format($selectedApplication->allowance, 2) : 'Not specified' }}
+                                </p>
+                                <p><strong>Duration:</strong> {{ $selectedApplication->startDate->format('M d, Y') }} -
+                                    {{ $selectedApplication->endDate->format('M d, Y') }}</p>
                             </div>
                         </div>
 
@@ -318,20 +369,24 @@
                         <div>
                             <h4 class="font-semibold text-gray-900 mb-3">Status Information</h4>
                             <div class="space-y-2 text-sm">
-                                <p><strong>Application Date:</strong> {{ $selectedApplication->applicationDate->format('M d, Y') }}</p>
+                                <p><strong>Application Date:</strong>
+                                    {{ $selectedApplication->applicationDate->format('M d, Y') }}</p>
                                 <p><strong>Committee Status:</strong>
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $selectedApplication->committeeStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($selectedApplication->committeeStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                    <span
+                                        class="px-2 py-1 text-xs rounded-full {{ $selectedApplication->committeeStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($selectedApplication->committeeStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                         {{ $selectedApplication->committeeStatus }}
                                     </span>
                                 </p>
                                 <p><strong>Coordinator Status:</strong>
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $selectedApplication->coordinatorStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($selectedApplication->coordinatorStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                    <span
+                                        class="px-2 py-1 text-xs rounded-full {{ $selectedApplication->coordinatorStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($selectedApplication->coordinatorStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                         {{ $selectedApplication->coordinatorStatus }}
                                     </span>
                                 </p>
-                                @if($selectedApplication->studentAcceptance)
+                                @if ($selectedApplication->studentAcceptance)
                                     <p><strong>Student Response:</strong>
-                                        <span class="px-2 py-1 text-xs rounded-full {{ $selectedApplication->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+                                        <span
+                                            class="px-2 py-1 text-xs rounded-full {{ $selectedApplication->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
                                             {{ $selectedApplication->studentAcceptance }}
                                         </span>
                                     </p>
@@ -342,21 +397,23 @@
                         <!-- Job Scope -->
                         <div class="md:col-span-2">
                             <h4 class="font-semibold text-gray-900 mb-3">Job Scope</h4>
-                            <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ $selectedApplication->jobscope }}</p>
+                            <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ $selectedApplication->jobscope }}
+                            </p>
                         </div>
 
                         <!-- Files -->
-                        @if($selectedApplication->files->count() > 0)
+                        @if ($selectedApplication->files->count() > 0)
                             <div class="md:col-span-2">
                                 <h4 class="font-semibold text-gray-900 mb-3">Submitted Files</h4>
                                 <div class="space-y-2">
-                                    @foreach($selectedApplication->files as $file)
+                                    @foreach ($selectedApplication->files as $file)
                                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                                             <div class="flex items-center space-x-3">
                                                 <span>📄</span>
                                                 <div>
                                                     <p class="text-sm font-medium">{{ $file->original_name }}</p>
-                                                    <p class="text-xs text-gray-500">{{ $file->mime_type }} • {{ number_format($file->file_size / 1024, 1) }} KB</p>
+                                                    <p class="text-xs text-gray-500">{{ $file->mime_type }} •
+                                                        {{ number_format($file->file_size / 1024, 1) }} KB</p>
                                                 </div>
                                             </div>
                                             <button wire:click="downloadFile({{ $file->id }})"
@@ -372,8 +429,7 @@
                         <!-- Remarks -->
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
-                            <textarea wire:model="remarks" rows="4"
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            <textarea wire:model="remarks" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                                 placeholder="Add your remarks here..."></textarea>
                         </div>
 
@@ -382,15 +438,17 @@
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                 <h5 class="text-sm font-medium text-blue-800 mb-2">Your Approval Permissions</h5>
                                 <div class="text-xs text-blue-700 space-y-1">
-                                    @if(Auth::user()->lecturer->isCommittee && Auth::user()->lecturer->isCoordinator)
+                                    @if (Auth::user()->lecturer->isCommittee && Auth::user()->lecturer->isCoordinator)
                                         <p>✅ You can approve/reject as <strong>Committee Member</strong></p>
-                                        <p>✅ You can approve/reject as <strong>Coordinator</strong> (after committee approval)</p>
+                                        <p>✅ You can approve/reject as <strong>Coordinator</strong> (after committee
+                                            approval)</p>
                                     @elseif(Auth::user()->lecturer->isCommittee)
                                         <p>✅ You can approve/reject as <strong>Committee Member</strong></p>
                                         <p>❌ You cannot approve as Coordinator (coordinator role required)</p>
                                     @elseif(Auth::user()->lecturer->isCoordinator)
                                         <p>❌ You cannot approve as Committee (committee role required)</p>
-                                        <p>✅ You can approve/reject as <strong>Coordinator</strong> (after committee approval)</p>
+                                        <p>✅ You can approve/reject as <strong>Coordinator</strong> (after committee
+                                            approval)</p>
                                     @endif
                                 </div>
                             </div>
@@ -400,12 +458,13 @@
 
                 <!-- Modal Footer -->
                 <div class="px-6 py-4 border-t border-gray-200 flex justify-between">
-                    <button wire:click="closeDetailModal" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <button wire:click="closeDetailModal"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Close
                     </button>
 
                     <div class="flex space-x-2">
-                        @if($selectedApplication->committeeStatus === 'Pending' && Auth::user()->lecturer->isCommittee)
+                        @if ($selectedApplication->committeeStatus === 'Pending' && Auth::user()->lecturer->isCommittee)
                             <button wire:click="rejectAsCommittee({{ $selectedApplication->applicationID }})"
                                 class="px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100">
                                 Reject as Committee
@@ -416,7 +475,10 @@
                             </button>
                         @endif
 
-                        @if($selectedApplication->coordinatorStatus === 'Pending' && $selectedApplication->committeeStatus === 'Approved' && Auth::user()->lecturer->isCoordinator)
+                        @if (
+                            $selectedApplication->coordinatorStatus === 'Pending' &&
+                                $selectedApplication->committeeStatus === 'Approved' &&
+                                Auth::user()->lecturer->isCoordinator)
                             <button wire:click="rejectAsCoordinator({{ $selectedApplication->applicationID }})"
                                 class="px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100">
                                 Reject as Coordinator
