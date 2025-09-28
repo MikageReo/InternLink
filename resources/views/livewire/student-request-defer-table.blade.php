@@ -14,7 +14,8 @@
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-yellow-800">
-                                <strong>Important:</strong> Defer requests incur a penalty fee regardless of approval status.
+                                <strong>Important:</strong> Defer requests incur a penalty fee regardless of approval
+                                status.
                                 Please consider all options before submitting.
                             </p>
                         </div>
@@ -64,13 +65,14 @@
                         <!-- Search -->
                         <div class="md:col-span-2">
                             <input type="text" wire:model.live.debounce.300ms="search"
-                                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                                   placeholder="Search requests...">
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                placeholder="Search requests...">
                         </div>
 
                         <!-- Status Filter -->
                         <div>
-                            <select wire:model.live="statusFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                            <select wire:model.live="statusFilter"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
                                 <option value="">All Status</option>
                                 <option value="Pending">Pending</option>
                                 <option value="Approved">Approved</option>
@@ -80,7 +82,8 @@
 
                         <!-- Per Page -->
                         <div>
-                            <select wire:model.live="perPage" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                            <select wire:model.live="perPage"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
                                 <option value="10">10 per page</option>
                                 <option value="25">25 per page</option>
                                 <option value="50">50 per page</option>
@@ -94,33 +97,47 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('deferID')" class="flex items-center space-x-1 hover:text-gray-700">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <button wire:click="sortBy('deferID')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
                                         <span>ID</span>
                                         <span>{{ $sortField === 'deferID' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
                                     </button>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('startDate')" class="flex items-center space-x-1 hover:text-gray-700">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Reason</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <button wire:click="sortBy('startDate')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
                                         <span>Start Date</span>
                                         <span>{{ $sortField === 'startDate' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
                                     </button>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('endDate')" class="flex items-center space-x-1 hover:text-gray-700">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <button wire:click="sortBy('endDate')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
                                         <span>End Date</span>
                                         <span>{{ $sortField === 'endDate' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
                                     </button>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('applicationDate')" class="flex items-center space-x-1 hover:text-gray-700">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <button wire:click="sortBy('applicationDate')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
                                         <span>Application Date</span>
                                         <span>{{ $sortField === 'applicationDate' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
                                     </button>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -147,17 +164,25 @@
                                         <div class="text-xs space-y-1">
                                             <div>
                                                 <span class="font-medium">Committee:</span>
-                                                <span class="inline-flex px-2 py-1 text-xs rounded-full
-                                                    {{ $request->committeeStatus === 'Approved' ? 'bg-green-100 text-green-800' :
-                                                       ($request->committeeStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs rounded-full
+                                                    {{ $request->committeeStatus === 'Approved'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : ($request->committeeStatus === 'Rejected'
+                                                            ? 'bg-red-100 text-red-800'
+                                                            : 'bg-yellow-100 text-yellow-800') }}">
                                                     {{ $request->committeeStatus }}
                                                 </span>
                                             </div>
                                             <div>
                                                 <span class="font-medium">Coordinator:</span>
-                                                <span class="inline-flex px-2 py-1 text-xs rounded-full
-                                                    {{ $request->coordinatorStatus === 'Approved' ? 'bg-green-100 text-green-800' :
-                                                       ($request->coordinatorStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs rounded-full
+                                                    {{ $request->coordinatorStatus === 'Approved'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : ($request->coordinatorStatus === 'Rejected'
+                                                            ? 'bg-red-100 text-red-800'
+                                                            : 'bg-yellow-100 text-yellow-800') }}">
                                                     {{ $request->coordinatorStatus }}
                                                 </span>
                                             </div>
@@ -175,7 +200,8 @@
                                             @else
                                                 <!-- View button - when any approval has been made -->
                                                 <button wire:click="view({{ $request->deferID }})"
-                                                    class="text-gray-600 hover:text-gray-900" title="View details (read-only)">
+                                                    class="text-gray-600 hover:text-gray-900"
+                                                    title="View details (read-only)">
                                                     👁️ View
                                                 </button>
                                             @endif
@@ -213,8 +239,9 @@
     <!-- Warning Modal -->
     @if ($showWarningModal)
         <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
-             wire:click="cancelRequest"></div>
-        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
+            wire:click="cancelRequest"></div>
+        <div
+            style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
             <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-red-50">
@@ -245,7 +272,8 @@
                                 <div class="ml-3">
                                     <h4 class="text-sm font-medium text-yellow-800">Financial Penalty</h4>
                                     <p class="text-sm text-yellow-700 mt-1">
-                                        Submitting a defer request will incur a <strong>penalty fee</strong> that must be paid regardless of whether your request is approved or rejected.
+                                        Submitting a defer request will incur a <strong>penalty fee</strong> that must
+                                        be paid regardless of whether your request is approved or rejected.
                                     </p>
                                 </div>
                             </div>
@@ -255,11 +283,16 @@
                         <div class="space-y-3">
                             <h4 class="font-medium text-gray-900">Before you proceed, please consider:</h4>
                             <ul class="list-disc list-inside space-y-2 text-sm text-gray-700">
-                                <li><strong>Penalty Fee:</strong> A non-refundable administrative fee will be charged upon submission</li>
-                                <li><strong>Academic Impact:</strong> Deferring may affect your graduation timeline and course sequence</li>
-                                <li><strong>Financial Aid:</strong> Your financial aid status may be affected by the deferment</li>
-                                <li><strong>Approval Not Guaranteed:</strong> The penalty applies even if your request is rejected</li>
-                                <li><strong>Alternative Options:</strong> Consider discussing alternatives with your academic advisor first</li>
+                                <li><strong>Penalty Fee:</strong> A non-refundable administrative fee will be charged
+                                    upon submission</li>
+                                <li><strong>Academic Impact:</strong> Deferring may affect your graduation timeline and
+                                    course sequence</li>
+                                <li><strong>Financial Aid:</strong> Your financial aid status may be affected by the
+                                    deferment</li>
+                                <li><strong>Approval Not Guaranteed:</strong> The penalty applies even if your request
+                                    is rejected</li>
+                                <li><strong>Alternative Options:</strong> Consider discussing alternatives with your
+                                    academic advisor first</li>
                             </ul>
                         </div>
 
@@ -272,7 +305,8 @@
                                 <div class="ml-3">
                                     <h4 class="text-sm font-medium text-blue-800">Recommendation</h4>
                                     <p class="text-sm text-blue-700 mt-1">
-                                        We strongly recommend consulting with your academic advisor or the internship coordinator before submitting a defer request to explore all available options.
+                                        We strongly recommend consulting with your academic advisor or the internship
+                                        coordinator before submitting a defer request to explore all available options.
                                     </p>
                                 </div>
                             </div>
@@ -282,7 +316,8 @@
                         <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                             <h4 class="text-sm font-medium text-gray-800 mb-2">Need Help?</h4>
                             <p class="text-sm text-gray-600">
-                                Contact the Academic Office or your assigned advisor for guidance before proceeding with your defer request.
+                                Contact the Academic Office or your assigned advisor for guidance before proceeding with
+                                your defer request.
                             </p>
                         </div>
                     </div>
@@ -292,7 +327,8 @@
                 <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-gray-600">
-                            <span class="font-medium">⚠️ Remember:</span> Penalty fees apply regardless of approval status
+                            <span class="font-medium">⚠️ Remember:</span> Penalty fees apply regardless of approval
+                            status
                         </div>
                         <div class="flex space-x-3">
                             <button wire:click="cancelRequest" type="button"
@@ -313,8 +349,9 @@
     <!-- Defer Request Form Modal -->
     @if ($showForm)
         <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
-             wire:click="closeForm"></div>
-        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
+            wire:click="closeForm"></div>
+        <div
+            style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
             <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200">
@@ -363,7 +400,8 @@
                             <input type="file" wire:model="applicationFiles" multiple
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm @error('applicationFiles.*') border-red-500 @enderror"
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                            <p class="text-xs text-gray-500 mt-1">Upload supporting documents (PDF, DOC, DOCX, JPG, PNG). Max 10MB each.</p>
+                            <p class="text-xs text-gray-500 mt-1">Upload supporting documents (PDF, DOC, DOCX, JPG,
+                                PNG). Max 10MB each.</p>
                             @error('applicationFiles.*')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -380,7 +418,8 @@
                                             </div>
                                         @endforeach
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1">Upload new files to replace existing ones.</p>
+                                    <p class="text-xs text-gray-500 mt-1">Upload new files to replace existing ones.
+                                    </p>
                                 </div>
                             @endif
                         </div>
@@ -394,7 +433,9 @@
                                         <div class="flex items-center space-x-2 text-sm text-gray-600">
                                             <span>📄</span>
                                             <span>{{ $file->getClientOriginalName() }}</span>
-                                            <span class="text-gray-400">({{ number_format($file->getSize() / 1024, 1) }} KB)</span>
+                                            <span
+                                                class="text-gray-400">({{ number_format($file->getSize() / 1024, 1) }}
+                                                KB)</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -421,8 +462,9 @@
     <!-- View Request Details Modal -->
     @if ($showViewModal && $viewingRequest)
         <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
-             wire:click="closeViewModal"></div>
-        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
+            wire:click="closeViewModal"></div>
+        <div
+            style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
             <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200">
@@ -449,7 +491,8 @@
                                 <p><strong>Request ID:</strong> #{{ $viewingRequest->deferID }}</p>
                                 <p><strong>Start Date:</strong> {{ $viewingRequest->startDate->format('M d, Y') }}</p>
                                 <p><strong>End Date:</strong> {{ $viewingRequest->endDate->format('M d, Y') }}</p>
-                                <p><strong>Application Date:</strong> {{ $viewingRequest->applicationDate->format('M d, Y') }}</p>
+                                <p><strong>Application Date:</strong>
+                                    {{ $viewingRequest->applicationDate->format('M d, Y') }}</p>
                             </div>
                         </div>
 
@@ -459,19 +502,22 @@
                             <div class="space-y-2 text-sm">
                                 <div class="flex items-center space-x-2">
                                     <span class="font-medium">Committee:</span>
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $viewingRequest->committeeStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($viewingRequest->committeeStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                    <span
+                                        class="px-2 py-1 text-xs rounded-full {{ $viewingRequest->committeeStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($viewingRequest->committeeStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                         {{ $viewingRequest->committeeStatus }}
                                     </span>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <span class="font-medium">Coordinator:</span>
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $viewingRequest->coordinatorStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($viewingRequest->coordinatorStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                    <span
+                                        class="px-2 py-1 text-xs rounded-full {{ $viewingRequest->coordinatorStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($viewingRequest->coordinatorStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                         {{ $viewingRequest->coordinatorStatus }}
                                     </span>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <span class="font-medium">Overall Status:</span>
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $viewingRequest->overall_status === 'Approved' ? 'bg-green-100 text-green-800' : ($viewingRequest->overall_status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                    <span
+                                        class="px-2 py-1 text-xs rounded-full {{ $viewingRequest->overall_status === 'Approved' ? 'bg-green-100 text-green-800' : ($viewingRequest->overall_status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                         {{ $viewingRequest->overall_status }}
                                     </span>
                                 </div>
@@ -479,15 +525,17 @@
                         </div>
 
                         <!-- Reviewer Information -->
-                        @if($viewingRequest->committee || $viewingRequest->coordinator)
+                        @if ($viewingRequest->committee || $viewingRequest->coordinator)
                             <div>
                                 <h4 class="font-semibold text-gray-900 mb-3">Reviewers</h4>
                                 <div class="space-y-2 text-sm">
-                                    @if($viewingRequest->committee)
-                                        <p><strong>Committee Member:</strong> {{ $viewingRequest->committee->user->name }}</p>
+                                    @if ($viewingRequest->committee)
+                                        <p><strong>Committee Member:</strong>
+                                            {{ $viewingRequest->committee->user->name }}</p>
                                     @endif
-                                    @if($viewingRequest->coordinator)
-                                        <p><strong>Coordinator:</strong> {{ $viewingRequest->coordinator->user->name }}</p>
+                                    @if ($viewingRequest->coordinator)
+                                        <p><strong>Coordinator:</strong> {{ $viewingRequest->coordinator->user->name }}
+                                        </p>
                                     @endif
                                 </div>
                             </div>
@@ -502,21 +550,22 @@
                         </div>
 
                         <!-- Files -->
-                        @if($viewingRequest->files->count() > 0)
+                        @if ($viewingRequest->files->count() > 0)
                             <div class="md:col-span-2">
                                 <h4 class="font-semibold text-gray-900 mb-3">Submitted Files</h4>
                                 <div class="space-y-2">
-                                    @foreach($viewingRequest->files as $file)
+                                    @foreach ($viewingRequest->files as $file)
                                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded border">
                                             <div class="flex items-center space-x-3">
                                                 <span>📄</span>
                                                 <div>
                                                     <p class="text-sm font-medium">{{ $file->original_name }}</p>
-                                                    <p class="text-xs text-gray-500">{{ $file->mime_type }} • {{ number_format($file->file_size / 1024, 1) }} KB</p>
+                                                    <p class="text-xs text-gray-500">{{ $file->mime_type }} •
+                                                        {{ number_format($file->file_size / 1024, 1) }} KB</p>
                                                 </div>
                                             </div>
                                             <a href="{{ $file->url }}" target="_blank"
-                                               class="text-blue-600 hover:text-blue-900 text-sm">
+                                                class="text-blue-600 hover:text-blue-900 text-sm">
                                                 View File
                                             </a>
                                         </div>
@@ -526,7 +575,7 @@
                         @endif
 
                         <!-- Remarks -->
-                        @if($viewingRequest->remarks)
+                        @if ($viewingRequest->remarks)
                             <div class="md:col-span-2">
                                 <h4 class="font-semibold text-gray-900 mb-3">Lecturer Remarks</h4>
                                 <div class="bg-blue-50 p-3 rounded border text-sm">
@@ -542,8 +591,10 @@
                                     <span class="text-yellow-600">ℹ️</span>
                                     <div class="text-sm text-yellow-800">
                                         <p class="font-medium mb-1">Editing Restrictions:</p>
-                                        @if($viewingRequest->committeeStatus !== 'Pending' || $viewingRequest->coordinatorStatus !== 'Pending')
-                                            <p>This request cannot be edited because it has been reviewed by committee or coordinator. You can only edit requests that are still pending review by both parties.</p>
+                                        @if ($viewingRequest->committeeStatus !== 'Pending' || $viewingRequest->coordinatorStatus !== 'Pending')
+                                            <p>This request cannot be edited because it has been reviewed by committee
+                                                or coordinator. You can only edit requests that are still pending review
+                                                by both parties.</p>
                                         @endif
                                     </div>
                                 </div>
@@ -554,7 +605,8 @@
 
                 <!-- Modal Footer -->
                 <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
-                    <button wire:click="closeViewModal" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <button wire:click="closeViewModal"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Close
                     </button>
                 </div>

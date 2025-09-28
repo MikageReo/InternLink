@@ -10,8 +10,10 @@ use App\Models\CourseVerification;
 use App\Models\Student;
 use App\Models\Lecturer;
 use App\Models\File;
+use App\Models\RequestJustification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 
 class StudentPlacementApplicationTable extends Component
@@ -47,6 +49,14 @@ class StudentPlacementApplicationTable extends Component
     public $applicationFiles = [];
     public $existingFiles = [];
 
+    // Change Request properties
+    public $showChangeRequestForm = false;
+    public $changeRequestApplicationID = null;
+    public $changeRequestReason = '';
+    public $changeRequestFiles = [];
+    public $viewingChangeRequests = false;
+    public $selectedApplicationForChange = null;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'sortField' => ['except' => 'applicationDate'],
@@ -55,19 +65,30 @@ class StudentPlacementApplicationTable extends Component
         'page' => ['except' => 1],
     ];
 
-    protected $rules = [
-        'companyName' => 'required|string|max:255',
-        'companyAddress' => 'required|string',
-        'companyEmail' => 'required|email|max:255',
-        'companyNumber' => 'required|string|max:20',
-        'allowance' => 'nullable|numeric|min:0',
-        'position' => 'required|string|max:255',
-        'jobscope' => 'required|string',
-        'methodOfWork' => 'required|in:WFO,WOS,WOC,WFH,WFO & WFH',
-        'startDate' => 'required|date|after:today',
-        'endDate' => 'required|date|after:startDate',
-        'applicationFiles.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB max per file
-    ];
+    protected function getPlacementApplicationRules()
+    {
+        return [
+            'companyName' => 'required|string|max:255',
+            'companyAddress' => 'required|string',
+            'companyEmail' => 'required|email|max:255',
+            'companyNumber' => 'required|string|max:20',
+            'allowance' => 'nullable|numeric|min:0',
+            'position' => 'required|string|max:255',
+            'jobscope' => 'required|string',
+            'methodOfWork' => 'required|in:WFO,WOS,WOC,WFH,WFO & WFH',
+            'startDate' => 'required|date',
+            'endDate' => 'required|date|after:startDate',
+            'applicationFiles.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB max per file
+        ];
+    }
+
+    protected function getChangeRequestRules()
+    {
+        return [
+            'changeRequestReason' => 'required|string|min:20|max:1000',
+            'changeRequestFiles.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+        ];
+    }
 
     protected $messages = [
         'companyName.required' => 'Company name is required.',
@@ -85,13 +106,18 @@ class StudentPlacementApplicationTable extends Component
         'applicationFiles.*.file' => 'Each uploaded item must be a file.',
         'applicationFiles.*.mimes' => 'Files must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',
         'applicationFiles.*.max' => 'Each file cannot exceed 10MB.',
+        'changeRequestReason.required' => 'Please provide a reason for the change request.',
+        'changeRequestReason.min' => 'Reason must be at least 20 characters.',
+        'changeRequestReason.max' => 'Reason must not exceed 1000 characters.',
+        'changeRequestFiles.*.mimes' => 'Supporting files must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',
+        'changeRequestFiles.*.max' => 'Each file must be less than 10MB.',
     ];
 
     public function mount()
     {
-        // Check if student has approved course verification
+        // Check if student can apply for internship placement
         if (!$this->canStudentApply()) {
-            session()->flash('error', 'You must have an approved course verification to apply for internship placement.');
+            $this->setCannotApplyErrorMessage();
         }
     }
 
@@ -124,12 +150,32 @@ class StudentPlacementApplicationTable extends Component
     public function openForm()
     {
         if (!$this->canStudentApply()) {
-            session()->flash('error', 'You must have an approved course verification to apply for internship placement.');
+            $this->setCannotApplyErrorMessage();
             return;
         }
 
         $this->showForm = true;
         $this->resetForm();
+    }
+
+    public function testSubmit()
+    {
+        \Log::info('Test submit method called');
+
+        // Test validation with current data
+        try {
+            $this->validate($this->getPlacementApplicationRules());
+            session()->flash('message', 'Test submit: Validation passed! Form data looks good.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $errorMessages = [];
+            foreach ($errors as $field => $messages) {
+                $errorMessages[] = $field . ': ' . implode(', ', $messages);
+            }
+            session()->flash('error', 'Validation errors: ' . implode(' | ', $errorMessages));
+        } catch (\Exception $e) {
+            session()->flash('error', 'Other error: ' . $e->getMessage());
+        }
     }
 
     public function closeForm()
@@ -156,6 +202,7 @@ class StudentPlacementApplicationTable extends Component
         ]);
         $this->editingId = null;
         $this->resetErrorBag();
+        $this->resetValidation();
     }
 
     public function view($id)
@@ -212,7 +259,36 @@ class StudentPlacementApplicationTable extends Component
 
     public function submit()
     {
-        $this->validate();
+        // Debug logging
+        \Log::info('Submit method called', [
+            'user_id' => Auth::id(),
+            'company_name' => $this->companyName,
+            'editing_id' => $this->editingId,
+            'all_form_data' => [
+                'companyName' => $this->companyName,
+                'companyEmail' => $this->companyEmail,
+                'companyAddress' => $this->companyAddress,
+                'position' => $this->position,
+                'startDate' => $this->startDate,
+                'endDate' => $this->endDate
+            ]
+        ]);
+
+        try {
+            $this->validate($this->getPlacementApplicationRules());
+            \Log::info('Validation passed');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed', [
+                'errors' => $e->errors(),
+                'message' => $e->getMessage()
+            ]);
+            // Re-throw validation exception so Livewire can handle it properly
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Other validation error', ['error' => $e->getMessage()]);
+            session()->flash('error', 'Validation error: ' . $e->getMessage());
+            return;
+        }
 
         try {
             $student = Auth::user()->student;
@@ -222,9 +298,9 @@ class StudentPlacementApplicationTable extends Component
                 return;
             }
 
-            // Check course verification requirement
+            // Check if student can apply for internship placement
             if (!$this->canStudentApply()) {
-                session()->flash('error', 'You must have an approved course verification to apply for internship placement.');
+                $this->setCannotApplyErrorMessage();
                 return;
             }
 
@@ -273,10 +349,13 @@ class StudentPlacementApplicationTable extends Component
 
                 $applicationData['applyCount'] = $lastApplication ? $lastApplication->applyCount + 1 : 1;
 
+                \Log::info('Creating new application with data', $applicationData);
                 $application = PlacementApplication::create($applicationData);
+                \Log::info('Application created successfully', ['application_id' => $application->applicationID]);
 
                 // Upload files
                 if (!empty($this->applicationFiles)) {
+                    \Log::info('Uploading files', ['file_count' => count($this->applicationFiles)]);
                     $this->uploadFiles($application);
                 }
 
@@ -285,6 +364,10 @@ class StudentPlacementApplicationTable extends Component
 
             $this->closeForm();
         } catch (\Exception $e) {
+            \Log::error('Submit method exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             session()->flash('error', 'An error occurred while processing your application: ' . $e->getMessage());
         }
     }
@@ -362,7 +445,64 @@ class StudentPlacementApplicationTable extends Component
             ->where('status', 'approved')
             ->exists();
 
-        return $approvedVerification;
+        if (!$approvedVerification) {
+            return false;
+        }
+
+        // Check if student has an accepted placement application
+        $hasAcceptedApplication = PlacementApplication::where('studentID', $student->studentID)
+            ->where('committeeStatus', 'Approved')
+            ->where('coordinatorStatus', 'Approved')
+            ->where('studentAcceptance', 'Accepted')
+            ->exists();
+
+        // If student has accepted application, they can only apply if they have approved change request
+        if ($hasAcceptedApplication) {
+            $hasApprovedChangeRequest = RequestJustification::whereHas('placementApplication', function($query) use ($student) {
+                $query->where('studentID', $student->studentID);
+            })
+            ->where('committeeStatus', 'Approved')
+            ->where('coordinatorStatus', 'Approved')
+            ->exists();
+
+            return $hasApprovedChangeRequest;
+        }
+
+        return true;
+    }
+
+    private function setCannotApplyErrorMessage()
+    {
+        $student = Auth::user()->student;
+
+        if (!$student) {
+            session()->flash('error', 'Student profile not found.');
+            return;
+        }
+
+        // Check course verification first
+        $approvedVerification = CourseVerification::where('studentID', $student->studentID)
+            ->where('status', 'approved')
+            ->exists();
+
+        if (!$approvedVerification) {
+            session()->flash('error', 'You must have an approved course verification before applying for internship placement.');
+            return;
+        }
+
+        // Check if student has accepted application
+        $hasAcceptedApplication = PlacementApplication::where('studentID', $student->studentID)
+            ->where('committeeStatus', 'Approved')
+            ->where('coordinatorStatus', 'Approved')
+            ->where('studentAcceptance', 'Accepted')
+            ->exists();
+
+        if ($hasAcceptedApplication) {
+            session()->flash('error', 'You already have an accepted placement application. You can only submit a new application if you have an approved change request.');
+            return;
+        }
+
+        session()->flash('error', 'You are not eligible to apply for internship placement at this time.');
     }
 
     private function getFilteredApplications()
@@ -374,7 +514,7 @@ class StudentPlacementApplicationTable extends Component
         }
 
         $query = PlacementApplication::forStudent($student->studentID)
-            ->with(['committee', 'coordinator', 'files']);
+            ->with(['committee', 'coordinator', 'files', 'changeRequests']);
 
         // Apply search filter
         if ($this->search) {
@@ -408,6 +548,177 @@ class StudentPlacementApplicationTable extends Component
         return $query;
     }
 
+    // Change Request Methods
+    public function openChangeRequestForm($applicationID)
+    {
+        $application = PlacementApplication::with(['student', 'changeRequests'])
+            ->findOrFail($applicationID);
+
+        // Check if this application belongs to the current student
+        if ($application->studentID !== Auth::user()->student->studentID) {
+            session()->flash('error', 'You can only request changes for your own applications.');
+            return;
+        }
+
+        // Check if application is approved and accepted
+        if ($application->overall_status !== 'Approved' || $application->studentAcceptance !== 'Accepted') {
+            session()->flash('error', 'You can only request changes for approved and accepted applications.');
+            return;
+        }
+
+        // Check if there's already a pending change request
+        $pendingChangeRequest = $application->changeRequests()
+            ->where(function ($q) {
+                $q->where('committeeStatus', 'Pending')
+                  ->orWhere('coordinatorStatus', 'Pending');
+            })
+            ->exists();
+
+        if ($pendingChangeRequest) {
+            session()->flash('error', 'You already have a pending change request for this application.');
+            return;
+        }
+
+        $this->changeRequestApplicationID = $applicationID;
+        $this->selectedApplicationForChange = $application;
+        $this->resetChangeRequestForm();
+        $this->showChangeRequestForm = true;
+    }
+
+    public function closeChangeRequestForm()
+    {
+        $this->showChangeRequestForm = false;
+        $this->resetChangeRequestForm();
+    }
+
+    private function resetChangeRequestForm()
+    {
+        $this->reset(['changeRequestReason', 'changeRequestFiles']);
+        $this->resetErrorBag();
+    }
+
+    public function submitChangeRequest()
+    {
+        $this->validate($this->getChangeRequestRules());
+
+        try {
+            $student = Auth::user()->student;
+
+            if (!$student) {
+                session()->flash('error', 'Student profile not found.');
+                return;
+            }
+
+            // Create the change request
+            $changeRequest = RequestJustification::create([
+                'applicationID' => $this->changeRequestApplicationID,
+                'reason' => $this->changeRequestReason,
+                'requestDate' => now()->format('Y-m-d'),
+            ]);
+
+            // Handle file uploads
+            if (!empty($this->changeRequestFiles)) {
+                \Log::info('Starting file upload for change request', [
+                    'change_request_id' => $changeRequest->justificationID,
+                    'files_to_upload' => count($this->changeRequestFiles)
+                ]);
+                $this->uploadChangeRequestFiles($changeRequest);
+
+                // Verify files were saved
+                $savedFiles = $changeRequest->files()->get();
+                \Log::info('Files saved verification', [
+                    'change_request_id' => $changeRequest->justificationID,
+                    'saved_files_count' => $savedFiles->count(),
+                    'file_details' => $savedFiles->map(function($file) {
+                        return [
+                            'id' => $file->id,
+                            'original_name' => $file->original_name,
+                            'file_path' => $file->file_path
+                        ];
+                    })->toArray()
+                ]);
+            }
+
+            session()->flash('message', 'Change request submitted successfully! You will be notified once it has been reviewed.');
+            $this->closeChangeRequestForm();
+            $this->resetPage();
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred: ' . $e->getMessage());
+        }
+    }
+
+    private function uploadChangeRequestFiles($changeRequest)
+    {
+        \Log::info('Uploading change request files', [
+            'request_id' => $changeRequest->justificationID,
+            'file_count' => count($this->changeRequestFiles)
+        ]);
+
+        foreach ($this->changeRequestFiles as $file) {
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('change_requests', $filename, 'public');
+
+            $fileRecord = File::create([
+                'fileable_id' => $changeRequest->justificationID,
+                'fileable_type' => 'App\\Models\\RequestJustification',
+                'file_path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+            ]);
+
+            \Log::info('File created', [
+                'file_id' => $fileRecord->id,
+                'fileable_id' => $changeRequest->justificationID,
+                'fileable_type' => 'App\\Models\\RequestJustification',
+                'file_path' => $path,
+                'original_name' => $file->getClientOriginalName()
+            ]);
+        }
+    }
+
+    public function viewChangeRequests($applicationID)
+    {
+        $application = PlacementApplication::with(['changeRequests.committee', 'changeRequests.coordinator', 'changeRequests.files'])
+            ->findOrFail($applicationID);
+
+        // Check if this application belongs to the current student
+        if ($application->studentID !== Auth::user()->student->studentID) {
+            session()->flash('error', 'You can only view your own change requests.');
+            return;
+        }
+
+        // Debug logging
+        \Log::info('Viewing change requests', [
+            'application_id' => $applicationID,
+            'change_requests_count' => $application->changeRequests->count(),
+            'change_requests_with_files' => $application->changeRequests->map(function($cr) {
+                return [
+                    'id' => $cr->justificationID,
+                    'files_count' => $cr->files->count(),
+                    'files' => $cr->files->map(function($file) {
+                        return [
+                            'id' => $file->id,
+                            'original_name' => $file->original_name,
+                            'fileable_id' => $file->fileable_id,
+                            'fileable_type' => $file->fileable_type
+                        ];
+                    })->toArray()
+                ];
+            })->toArray()
+        ]);
+
+        $this->selectedApplicationForChange = $application;
+        $this->viewingChangeRequests = true;
+    }
+
+    public function closeChangeRequestsView()
+    {
+        $this->viewingChangeRequests = false;
+        $this->selectedApplicationForChange = null;
+    }
+
     public function render()
     {
         $applications = $this->getFilteredApplications()->paginate($this->perPage);
@@ -421,10 +732,31 @@ class StudentPlacementApplicationTable extends Component
                 ->exists();
         }
 
+        // Check for approved change requests
+        $hasApprovedChangeRequest = false;
+        if (Auth::user()->student) {
+            $hasApprovedChangeRequest = RequestJustification::whereHas('placementApplication', function($query) {
+                $query->where('studentID', Auth::user()->student->studentID);
+            })
+            ->where('committeeStatus', 'Approved')
+            ->where('coordinatorStatus', 'Approved')
+            ->exists();
+        }
+
+        // Check course verification status separately
+        $hasCourseVerification = false;
+        if (Auth::user()->student) {
+            $hasCourseVerification = CourseVerification::where('studentID', Auth::user()->student->studentID)
+                ->where('status', 'approved')
+                ->exists();
+        }
+
         return view('livewire.student-placement-application-table', [
             'applications' => $applications,
             'canApply' => $canApply,
             'hasAcceptedApplication' => $hasAcceptedApplication,
+            'hasApprovedChangeRequest' => $hasApprovedChangeRequest,
+            'hasCourseVerification' => $hasCourseVerification,
         ]);
     }
 }

@@ -72,6 +72,14 @@ class PlacementApplication extends Model
     }
 
     /**
+     * Get all change request justifications for this application.
+     */
+    public function changeRequests()
+    {
+        return $this->hasMany(RequestJustification::class, 'applicationID', 'applicationID');
+    }
+
+    /**
      * Get overall status based on committee and coordinator approval.
      */
     public function getOverallStatusAttribute(): string

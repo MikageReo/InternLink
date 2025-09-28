@@ -255,15 +255,31 @@
                                             @if ($application->committeeStatus === 'Pending' && Auth::user()->lecturer->isCommittee)
                                                 <button
                                                     wire:click="approveAsCommittee({{ $application->applicationID }})"
-                                                    class="text-green-600 hover:text-green-900"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="approveAsCommittee({{ $application->applicationID }})"
+                                                    class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     title="Approve as Committee">
-                                                    ✅
+                                                    <span wire:loading.remove wire:target="approveAsCommittee({{ $application->applicationID }})">✅</span>
+                                                    <span wire:loading wire:target="approveAsCommittee({{ $application->applicationID }})">
+                                                        <svg class="animate-spin h-4 w-4 text-green-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                    </span>
                                                 </button>
                                                 <button
                                                     wire:click="rejectAsCommittee({{ $application->applicationID }})"
-                                                    class="text-red-600 hover:text-red-900"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="rejectAsCommittee({{ $application->applicationID }})"
+                                                    class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     title="Reject as Committee">
-                                                    ❌
+                                                    <span wire:loading.remove wire:target="rejectAsCommittee({{ $application->applicationID }})">❌</span>
+                                                    <span wire:loading wire:target="rejectAsCommittee({{ $application->applicationID }})">
+                                                        <svg class="animate-spin h-4 w-4 text-red-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                    </span>
                                                 </button>
                                             @endif
 
@@ -274,15 +290,31 @@
                                                     Auth::user()->lecturer->isCoordinator)
                                                 <button
                                                     wire:click="approveAsCoordinator({{ $application->applicationID }})"
-                                                    class="text-green-600 hover:text-green-900"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="approveAsCoordinator({{ $application->applicationID }})"
+                                                    class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     title="Approve as Coordinator">
-                                                    ✅ Coord
+                                                    <span wire:loading.remove wire:target="approveAsCoordinator({{ $application->applicationID }})">✅</span>
+                                                    <span wire:loading wire:target="approveAsCoordinator({{ $application->applicationID }})">
+                                                        <svg class="animate-spin h-4 w-4 text-green-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                    </span>
                                                 </button>
                                                 <button
                                                     wire:click="rejectAsCoordinator({{ $application->applicationID }})"
-                                                    class="text-red-600 hover:text-red-900"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="rejectAsCoordinator({{ $application->applicationID }})"
+                                                    class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     title="Reject as Coordinator">
-                                                    ❌ Coord
+                                                    <span wire:loading.remove wire:target="rejectAsCoordinator({{ $application->applicationID }})">❌</span>
+                                                    <span wire:loading wire:target="rejectAsCoordinator({{ $application->applicationID }})">
+                                                        <svg class="animate-spin h-4 w-4 text-red-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                    </span>
                                                 </button>
                                             @endif
                                         </div>
@@ -466,12 +498,30 @@
                     <div class="flex space-x-2">
                         @if ($selectedApplication->committeeStatus === 'Pending' && Auth::user()->lecturer->isCommittee)
                             <button wire:click="rejectAsCommittee({{ $selectedApplication->applicationID }})"
-                                class="px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100">
-                                Reject as Committee
+                                wire:loading.attr="disabled"
+                                wire:target="rejectAsCommittee({{ $selectedApplication->applicationID }})"
+                                class="px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove wire:target="rejectAsCommittee({{ $selectedApplication->applicationID }})">Reject as Committee</span>
+                                <span wire:loading wire:target="rejectAsCommittee({{ $selectedApplication->applicationID }})" class="flex items-center">
+                                    <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Rejecting...
+                                </span>
                             </button>
                             <button wire:click="approveAsCommittee({{ $selectedApplication->applicationID }})"
-                                class="px-4 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100">
-                                Approve as Committee
+                                wire:loading.attr="disabled"
+                                wire:target="approveAsCommittee({{ $selectedApplication->applicationID }})"
+                                class="px-4 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove wire:target="approveAsCommittee({{ $selectedApplication->applicationID }})">Approve as Committee</span>
+                                <span wire:loading wire:target="approveAsCommittee({{ $selectedApplication->applicationID }})" class="flex items-center">
+                                    <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Approving...
+                                </span>
                             </button>
                         @endif
 
@@ -480,12 +530,30 @@
                                 $selectedApplication->committeeStatus === 'Approved' &&
                                 Auth::user()->lecturer->isCoordinator)
                             <button wire:click="rejectAsCoordinator({{ $selectedApplication->applicationID }})"
-                                class="px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100">
-                                Reject as Coordinator
+                                wire:loading.attr="disabled"
+                                wire:target="rejectAsCoordinator({{ $selectedApplication->applicationID }})"
+                                class="px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove wire:target="rejectAsCoordinator({{ $selectedApplication->applicationID }})">Reject as Coordinator</span>
+                                <span wire:loading wire:target="rejectAsCoordinator({{ $selectedApplication->applicationID }})" class="flex items-center">
+                                    <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Rejecting...
+                                </span>
                             </button>
                             <button wire:click="approveAsCoordinator({{ $selectedApplication->applicationID }})"
-                                class="px-4 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100">
-                                Approve as Coordinator
+                                wire:loading.attr="disabled"
+                                wire:target="approveAsCoordinator({{ $selectedApplication->applicationID }})"
+                                class="px-4 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove wire:target="approveAsCoordinator({{ $selectedApplication->applicationID }})">Approve as Coordinator</span>
+                                <span wire:loading wire:target="approveAsCoordinator({{ $selectedApplication->applicationID }})" class="flex items-center">
+                                    <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Approving...
+                                </span>
                             </button>
                         @endif
                     </div>

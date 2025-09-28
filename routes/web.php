@@ -27,13 +27,14 @@ Route::get('/dashboard', function () {
     return redirect()->route('login');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Student routes
-Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
-    Route::view('/dashboard', 'student.dashboard.studentPortal')->name('dashboard');
-    Route::view('/course-verification', 'student.dashboard.courseVerification')->name('courseVerification');
-    Route::view('/placement-applications', 'student.dashboard.placementApplications')->name('placementApplications');
-    Route::view('/request-defer', 'student.dashboard.requestDefer')->name('requestDefer');
-});
+    // Student routes
+    Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
+        Route::view('/dashboard', 'student.dashboard.studentPortal')->name('dashboard');
+        Route::view('/course-verification', 'student.dashboard.courseVerification')->name('courseVerification');
+        Route::view('/placement-applications', 'student.dashboard.placementApplications')->name('placementApplications');
+        Route::view('/request-defer', 'student.dashboard.requestDefer')->name('requestDefer');
+        Route::view('/change-request-history', 'student.dashboard.changeRequestHistory')->name('changeRequestHistory');
+    });
 
 // Lecturer routes
 Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->name('lecturer.')->group(function () {
@@ -41,11 +42,12 @@ Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->na
     Route::view('/register-user', 'lecturer.dashboard.registerUser')->name('registerUser');
     Route::view('/course-verification-management', 'lecturer.dashboard.courseVerificationManagement')->name('courseVerificationManagement');
 
-    // Placement applications - restricted to committee and coordinator only
-    Route::middleware(['committee.coordinator'])->group(function () {
-        Route::view('/placement-applications', 'lecturer.dashboard.placementApplications')->name('placementApplications');
-        Route::view('/request-defer', 'lecturer.dashboard.requestDefer')->name('requestDefer');
-    });
+        // Placement applications - restricted to committee and coordinator only
+        Route::middleware(['committee.coordinator'])->group(function () {
+            Route::view('/placement-applications', 'lecturer.dashboard.placementApplications')->name('placementApplications');
+            Route::view('/request-defer', 'lecturer.dashboard.requestDefer')->name('requestDefer');
+            Route::view('/change-requests', 'lecturer.dashboard.changeRequests')->name('changeRequests');
+        });
 
     Route::controller(ManageUserController::class)->group(function () {
         Route::post('/register-user', 'registerUsers')->name('registerUsers');
