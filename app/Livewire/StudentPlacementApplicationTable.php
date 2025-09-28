@@ -28,6 +28,8 @@ class StudentPlacementApplicationTable extends Component
     // Form properties
     public $showForm = false;
     public $editingId = null;
+    public $showViewModal = false;
+    public $viewingApplication = null;
 
     // Application form data
     public $companyName = '';
@@ -156,6 +158,26 @@ class StudentPlacementApplicationTable extends Component
         $this->resetErrorBag();
     }
 
+    public function view($id)
+    {
+        $application = PlacementApplication::with(['files', 'committee', 'coordinator'])->findOrFail($id);
+
+        // Check if this application belongs to the current student
+        if ($application->studentID !== Auth::user()->student->studentID) {
+            session()->flash('error', 'You can only view your own applications.');
+            return;
+        }
+
+        $this->viewingApplication = $application;
+        $this->showViewModal = true;
+    }
+
+    public function closeViewModal()
+    {
+        $this->showViewModal = false;
+        $this->viewingApplication = null;
+    }
+
     public function edit($id)
     {
         $application = PlacementApplication::with('files')->findOrFail($id);
@@ -166,9 +188,9 @@ class StudentPlacementApplicationTable extends Component
             return;
         }
 
-        // Only allow editing if status is pending
-        if ($application->overall_status !== 'Pending') {
-            session()->flash('error', 'You can only edit pending applications.');
+        // Only allow editing if both committee and coordinator status are pending
+        if ($application->committeeStatus !== 'Pending' || $application->coordinatorStatus !== 'Pending') {
+            session()->flash('error', 'You can only edit applications that are still pending review by both committee and coordinator.');
             return;
         }
 

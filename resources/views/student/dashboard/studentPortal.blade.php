@@ -78,6 +78,18 @@
                             </div>
                         </div>
 
+                        <!-- Request Defer -->
+                        <div class="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-lg">
+                            <h4 class="font-semibold text-amber-800 dark:text-amber-200 mb-2">Request Defer</h4>
+                            <p class="text-amber-600 dark:text-amber-300 text-sm">Submit and manage your internship defer requests</p>
+                            <div class="mt-3">
+                                <a href="{{ route('student.requestDefer') }}"
+                                    class="mt-3 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded text-sm inline-block">
+                                    📝 Request Defer
+                                </a>
+                            </div>
+                        </div>
+
                         <!-- Support -->
                         <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg">
                             <h4 class="font-semibold text-red-800 dark:text-red-200 mb-2">Student Support</h4>

@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name
     Route::view('/dashboard', 'student.dashboard.studentPortal')->name('dashboard');
     Route::view('/course-verification', 'student.dashboard.courseVerification')->name('courseVerification');
     Route::view('/placement-applications', 'student.dashboard.placementApplications')->name('placementApplications');
+    Route::view('/request-defer', 'student.dashboard.requestDefer')->name('requestDefer');
 });
 
 // Lecturer routes
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->na
     // Placement applications - restricted to committee and coordinator only
     Route::middleware(['committee.coordinator'])->group(function () {
         Route::view('/placement-applications', 'lecturer.dashboard.placementApplications')->name('placementApplications');
+        Route::view('/request-defer', 'lecturer.dashboard.requestDefer')->name('requestDefer');
     });
 
     Route::controller(ManageUserController::class)->group(function () {
