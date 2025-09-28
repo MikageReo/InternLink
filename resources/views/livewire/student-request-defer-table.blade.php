@@ -5,6 +5,21 @@
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">Request Defer</h1>
                 <p class="text-gray-600">Submit and manage your internship defer requests</p>
+
+                <!-- Important Notice -->
+                <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <span class="text-yellow-600 text-lg">⚠️</span>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-800">
+                                <strong>Important:</strong> Defer requests incur a penalty fee regardless of approval status.
+                                Please consider all options before submitting.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Flash Messages -->
@@ -194,6 +209,106 @@
             </div>
         </div>
     </div>
+
+    <!-- Warning Modal -->
+    @if ($showWarningModal)
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
+             wire:click="cancelRequest"></div>
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+                <!-- Modal Header -->
+                <div class="px-6 py-4 border-b border-gray-200 bg-red-50">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <span class="text-red-600 text-3xl">⚠️</span>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-red-900">
+                                Important Notice: Defer Request Penalty
+                            </h3>
+                            <p class="text-sm text-red-700 mt-1">
+                                Please read this carefully before proceeding
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="px-6 py-4">
+                    <div class="space-y-4">
+                        <!-- Main Warning -->
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <span class="text-yellow-600 text-xl">💰</span>
+                                </div>
+                                <div class="ml-3">
+                                    <h4 class="text-sm font-medium text-yellow-800">Financial Penalty</h4>
+                                    <p class="text-sm text-yellow-700 mt-1">
+                                        Submitting a defer request will incur a <strong>penalty fee</strong> that must be paid regardless of whether your request is approved or rejected.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="space-y-3">
+                            <h4 class="font-medium text-gray-900">Before you proceed, please consider:</h4>
+                            <ul class="list-disc list-inside space-y-2 text-sm text-gray-700">
+                                <li><strong>Penalty Fee:</strong> A non-refundable administrative fee will be charged upon submission</li>
+                                <li><strong>Academic Impact:</strong> Deferring may affect your graduation timeline and course sequence</li>
+                                <li><strong>Financial Aid:</strong> Your financial aid status may be affected by the deferment</li>
+                                <li><strong>Approval Not Guaranteed:</strong> The penalty applies even if your request is rejected</li>
+                                <li><strong>Alternative Options:</strong> Consider discussing alternatives with your academic advisor first</li>
+                            </ul>
+                        </div>
+
+                        <!-- Recommendation -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <span class="text-blue-600 text-xl">💡</span>
+                                </div>
+                                <div class="ml-3">
+                                    <h4 class="text-sm font-medium text-blue-800">Recommendation</h4>
+                                    <p class="text-sm text-blue-700 mt-1">
+                                        We strongly recommend consulting with your academic advisor or the internship coordinator before submitting a defer request to explore all available options.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h4 class="text-sm font-medium text-gray-800 mb-2">Need Help?</h4>
+                            <p class="text-sm text-gray-600">
+                                Contact the Academic Office or your assigned advisor for guidance before proceeding with your defer request.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-600">
+                            <span class="font-medium">⚠️ Remember:</span> Penalty fees apply regardless of approval status
+                        </div>
+                        <div class="flex space-x-3">
+                            <button wire:click="cancelRequest" type="button"
+                                class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button wire:click="proceedWithRequest" type="button"
+                                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                                I Understand, Proceed
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Defer Request Form Modal -->
     @if ($showForm)

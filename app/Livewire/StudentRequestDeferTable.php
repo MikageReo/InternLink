@@ -30,6 +30,7 @@ class StudentRequestDeferTable extends Component
     public $editingId = null;
     public $showViewModal = false;
     public $viewingRequest = null;
+    public $showWarningModal = false;
 
     // Defer request form data
     public $reason = '';
@@ -107,8 +108,22 @@ class StudentRequestDeferTable extends Component
             return;
         }
 
+        // Show warning modal first
+        $this->showWarningModal = true;
+    }
+
+    public function proceedWithRequest()
+    {
+        // Close warning modal and open form
+        $this->showWarningModal = false;
         $this->showForm = true;
         $this->resetForm();
+    }
+
+    public function cancelRequest()
+    {
+        // Close warning modal
+        $this->showWarningModal = false;
     }
 
     public function closeForm()
