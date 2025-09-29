@@ -12,7 +12,13 @@ class PlacementApplication extends Model
 
     protected $fillable = [
         'companyName',
-        'companyAddress',
+        'companyAddressLine',
+        'companyCity',
+        'companyPostcode',
+        'companyState',
+        'companyCountry',
+        'companyLatitude',
+        'companyLongitude',
         'companyEmail',
         'companyNumber',
         'allowance',
@@ -37,6 +43,8 @@ class PlacementApplication extends Model
         'endDate' => 'date',
         'applicationDate' => 'date',
         'allowance' => 'decimal:2',
+        'companyLatitude' => 'decimal:8',
+        'companyLongitude' => 'decimal:8',
     ];
 
     /**
@@ -145,5 +153,44 @@ class PlacementApplication extends Model
     {
         return $query->where('committeeStatus', 'Approved')
             ->where('coordinatorStatus', 'Approved');
+    }
+
+    /**
+     * Get the full company address as a formatted string
+     */
+    public function getCompanyFullAddressAttribute(): string
+    {
+        $addressParts = array_filter([
+            $this->companyAddressLine,
+            $this->companyCity,
+            $this->companyPostcode,
+            $this->companyState,
+            $this->companyCountry
+        ]);
+
+        return implode(', ', $addressParts);
+    }
+
+    /**
+     * Check if the company has geocoding coordinates
+     */
+    public function getHasGeocodingAttribute(): bool
+    {
+        return !is_null($this->companyLatitude) && !is_null($this->companyLongitude);
+    }
+
+    /**
+     * Get the company coordinates as an array
+     */
+    public function getCompanyCoordinatesAttribute(): ?array
+    {
+        if ($this->has_geocoding) {
+            return [
+                'latitude' => $this->companyLatitude,
+                'longitude' => $this->companyLongitude
+            ];
+        }
+
+        return null;
     }
 }

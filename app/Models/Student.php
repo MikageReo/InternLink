@@ -18,12 +18,17 @@ class Student extends Model
         'user_id',
         'phone',
         'address',
+        'city',
+        'postcode',
+        'state',
+        'country',
+        'latitude',
+        'longitude',
         'nationality',
         'program',
         'semester',
         'year',
         'profilePhoto',
-        'resume',
         'status',
         'academicAdvisorID',
         'industrySupervisorName',
@@ -31,7 +36,48 @@ class Student extends Model
 
     protected $casts = [
         'isAcademicAdvisor' => 'boolean',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
+
+    /**
+     * Get the full address as a formatted string
+     */
+    public function getFullAddressAttribute(): string
+    {
+        $addressParts = array_filter([
+            $this->address,
+            $this->city,
+            $this->postcode,
+            $this->state,
+            $this->country
+        ]);
+
+        return implode(', ', $addressParts);
+    }
+
+    /**
+     * Check if the student has geocoding coordinates
+     */
+    public function getHasGeocodingAttribute(): bool
+    {
+        return !is_null($this->latitude) && !is_null($this->longitude);
+    }
+
+    /**
+     * Get the coordinates as an array
+     */
+    public function getCoordinatesAttribute(): ?array
+    {
+        if ($this->has_geocoding) {
+            return [
+                'latitude' => $this->latitude,
+                'longitude' => $this->longitude
+            ];
+        }
+
+        return null;
+    }
 
     /**
      * Get the academic advisor (lecturer) for this student
