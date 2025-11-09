@@ -1,2 +1,2 @@
-lecturerID,name,email,staffGrade,role,position,address,city,postcode,state,country,researchGroup,department,studentQuota,isAcademicAdvisor,isSupervisorFaculty,isCommittee,isCoordinator,isAdmin,is_supervisor,supervisor_quota,latitude,longitude
-LEC001,Dr. Abdullah Rahman,mharizhaikal7@gmail.com,DG54,Lecturer,Senior Lecturer,Faculty of Computing,Kuantan,26300,Pahang,Malaysia,Software Engineering,Faculty of Computing,10,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,9,,
+lecturerID,name,email,staffGrade,role,position,address,city,postcode,state,country,researchGroup,department,studentQuota,isAcademicAdvisor,isSupervisorFaculty,isCommittee,isCoordinator,isAdmin,supervisor_quota,latitude,longitude
+LEC001,Dr. Abdullah Rahman,mharizhaikal7@gmail.com,DG54,Lecturer,Senior Lecturer,Faculty of Computing,Kuantan,26300,Pahang,Malaysia,Software Engineering,Faculty of Computing,10,TRUE,TRUE,TRUE,TRUE,TRUE,9,,

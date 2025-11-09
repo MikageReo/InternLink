@@ -61,7 +61,7 @@ class SupervisorAssignmentService
         // Validate supervisor
         $supervisor = Lecturer::findOrFail($supervisorID);
 
-        if (!$supervisor->is_supervisor) {
+        if (!$supervisor->isSupervisorFaculty) {
             throw new \Exception('Selected lecturer is not a supervisor.');
         }
 

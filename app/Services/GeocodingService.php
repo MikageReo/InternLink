@@ -228,7 +228,7 @@ class GeocodingService
         int $limit = 10,
         bool $includeFullQuota = false
     ): \Illuminate\Support\Collection {
-        $query = \App\Models\Lecturer::where('is_supervisor', true)
+        $query = \App\Models\Lecturer::where('isSupervisorFaculty', true)
             ->where('status', \App\Models\Lecturer::STATUS_ACTIVE)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude');

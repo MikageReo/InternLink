@@ -18,6 +18,7 @@ class Lecturer extends Model
         'staffGrade',
         'role',
         'position',
+        'address',
         'state',
         'city',
         'postcode',
@@ -36,7 +37,6 @@ class Lecturer extends Model
         'isCommittee',
         'isCoordinator',
         'isAdmin',
-        'is_supervisor',
         'supervisor_quota',
         'current_assignments',
     ];
@@ -47,7 +47,6 @@ class Lecturer extends Model
         'isCommittee'         => 'boolean',
         'isCoordinator'       => 'boolean',
         'isAdmin'             => 'boolean',
-        'is_supervisor'       => 'boolean',
         'latitude'            => 'decimal:8',
         'longitude'           => 'decimal:8',
     ];
@@ -193,7 +192,7 @@ class Lecturer extends Model
      */
     public function hasAvailableQuota(): bool
     {
-        if (!$this->is_supervisor) {
+        if (!$this->isSupervisorFaculty) {
             return false;
         }
 
@@ -205,7 +204,7 @@ class Lecturer extends Model
      */
     public function getAvailableQuotaAttribute(): int
     {
-        if (!$this->is_supervisor) {
+        if (!$this->isSupervisorFaculty) {
             return 0;
         }
 
@@ -217,7 +216,7 @@ class Lecturer extends Model
      */
     public function canSupervise(): bool
     {
-        return $this->is_supervisor
+        return $this->isSupervisorFaculty
             && $this->status === self::STATUS_ACTIVE;
     }
 }

@@ -964,7 +964,6 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'isCommittee' => isset($data['isCommittee']) && strtolower($data['isCommittee']) === 'true',
                 'isCoordinator' => isset($data['isCoordinator']) && strtolower($data['isCoordinator']) === 'true',
                 'isAdmin' => isset($data['isAdmin']) && strtolower($data['isAdmin']) === 'true',
-                'is_supervisor' => isset($data['is_supervisor']) && strtolower($data['is_supervisor']) === 'true',
                 'supervisor_quota' => isset($data['supervisor_quota']) ? (int)$data['supervisor_quota'] : 0,
                 'status' => 'active',
             ]);
