@@ -14,11 +14,14 @@ use App\Models\RequestJustification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Services\GeocodingService;
 use Illuminate\Support\Collection;
 
 class StudentPlacementApplicationTable extends Component
 {
     use WithPagination, WithFileUploads;
+
+    private GeocodingService $geocodingService;
 
     // Search and sort properties
     public $search = '';
@@ -35,7 +38,13 @@ class StudentPlacementApplicationTable extends Component
 
     // Application form data
     public $companyName = '';
-    public $companyAddress = '';
+    public $companyAddressLine = '';
+    public $companyCity = '';
+    public $companyPostcode = '';
+    public $companyState = '';
+    public $companyCountry = '';
+    public $companyLatitude = '';
+    public $companyLongitude = '';
     public $companyEmail = '';
     public $companyNumber = '';
     public $allowance = '';
@@ -69,7 +78,11 @@ class StudentPlacementApplicationTable extends Component
     {
         return [
             'companyName' => 'required|string|max:255',
-            'companyAddress' => 'required|string',
+            'companyAddressLine' => 'required|string',
+            'companyCity' => 'nullable|string',
+            'companyPostcode' => 'nullable|string',
+            'companyState' => 'nullable|string',
+            'companyCountry' => 'nullable|string',
             'companyEmail' => 'required|email|max:255',
             'companyNumber' => 'required|string|max:20',
             'allowance' => 'nullable|numeric|min:0',
@@ -92,7 +105,7 @@ class StudentPlacementApplicationTable extends Component
 
     protected $messages = [
         'companyName.required' => 'Company name is required.',
-        'companyAddress.required' => 'Company address is required.',
+        'companyAddressLine.required' => 'Company address line is required.',
         'companyEmail.required' => 'Company email is required.',
         'companyEmail.email' => 'Please provide a valid email address.',
         'companyNumber.required' => 'Company contact number is required.',
@@ -112,6 +125,12 @@ class StudentPlacementApplicationTable extends Component
         'changeRequestFiles.*.mimes' => 'Supporting files must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',
         'changeRequestFiles.*.max' => 'Each file must be less than 10MB.',
     ];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->geocodingService = new GeocodingService();
+    }
 
     public function mount()
     {
@@ -188,7 +207,11 @@ class StudentPlacementApplicationTable extends Component
     {
         $this->reset([
             'companyName',
-            'companyAddress',
+            'companyAddressLine',
+            'companyCity',
+            'companyPostcode',
+            'companyState',
+            'companyCountry',
             'companyEmail',
             'companyNumber',
             'allowance',
@@ -200,6 +223,11 @@ class StudentPlacementApplicationTable extends Component
             'applicationFiles',
             'existingFiles'
         ]);
+
+        // Reset coordinates manually
+        $this->companyLatitude = null;
+        $this->companyLongitude = null;
+
         $this->editingId = null;
         $this->resetErrorBag();
         $this->resetValidation();
@@ -243,7 +271,13 @@ class StudentPlacementApplicationTable extends Component
 
         $this->editingId = $id;
         $this->companyName = $application->companyName;
-        $this->companyAddress = $application->companyAddress;
+        $this->companyAddressLine = $application->companyAddressLine ?? '';
+        $this->companyCity = $application->companyCity ?? '';
+        $this->companyPostcode = $application->companyPostcode ?? '';
+        $this->companyState = $application->companyState ?? '';
+        $this->companyCountry = $application->companyCountry ?? '';
+        $this->companyLatitude = $application->companyLatitude ?? '';
+        $this->companyLongitude = $application->companyLongitude ?? '';
         $this->companyEmail = $application->companyEmail;
         $this->companyNumber = $application->companyNumber;
         $this->allowance = $application->allowance;
@@ -267,7 +301,13 @@ class StudentPlacementApplicationTable extends Component
             'all_form_data' => [
                 'companyName' => $this->companyName,
                 'companyEmail' => $this->companyEmail,
-                'companyAddress' => $this->companyAddress,
+                'companyAddressLine' => $this->companyAddressLine,
+                'companyCity' => $this->companyCity,
+                'companyPostcode' => $this->companyPostcode,
+                'companyState' => $this->companyState,
+                'companyCountry' => $this->companyCountry,
+                'companyLatitude' => $this->companyLatitude,
+                'companyLongitude' => $this->companyLongitude,
                 'position' => $this->position,
                 'startDate' => $this->startDate,
                 'endDate' => $this->endDate
@@ -304,9 +344,34 @@ class StudentPlacementApplicationTable extends Component
                 return;
             }
 
+            // Try to geocode the company address if coordinates are not provided
+            $companyLatitude = $this->companyLatitude;
+            $companyLongitude = $this->companyLongitude;
+
+            if (empty($companyLatitude) || empty($companyLongitude)) {
+                $geocodeResult = $this->geocodingService->geocodeStructuredAddress([
+                    'street' => $this->companyAddressLine,
+                    'city' => $this->companyCity,
+                    'postcode' => $this->companyPostcode,
+                    'state' => $this->companyState,
+                    'country' => $this->companyCountry
+                ]);
+
+                if ($geocodeResult) {
+                    $companyLatitude = $geocodeResult['latitude'];
+                    $companyLongitude = $geocodeResult['longitude'];
+                }
+            }
+
             $applicationData = [
                 'companyName' => $this->companyName,
-                'companyAddress' => $this->companyAddress,
+                'companyAddressLine' => $this->companyAddressLine,
+                'companyCity' => $this->companyCity,
+                'companyPostcode' => $this->companyPostcode,
+                'companyState' => $this->companyState,
+                'companyCountry' => $this->companyCountry,
+                'companyLatitude' => $companyLatitude,
+                'companyLongitude' => $companyLongitude,
                 'companyEmail' => $this->companyEmail,
                 'companyNumber' => $this->companyNumber,
                 'allowance' => $this->allowance ?: null,

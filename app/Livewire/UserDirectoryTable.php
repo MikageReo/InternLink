@@ -4,17 +4,25 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\Lecturer;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use App\Notifications\UserRegistrationNotification;
+use App\Services\GeocodingService;
 // Removed Excel import temporarily due to missing GD extension
 // use Maatwebsite\Excel\Facades\Excel;
 // use App\Exports\UsersExport;
 
 class UserDirectoryTable extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
+
+    private GeocodingService $geocodingService;
 
     // Filter properties
     public $role = '';
@@ -30,6 +38,56 @@ class UserDirectoryTable extends Component
 
     // UI properties
     public $showFilters = true;
+    public $showBulkRegistration = false;
+    public $showStudentRegistration = false;
+    public $showLecturerRegistration = false;
+
+    // CSV Upload properties
+    public $csvFile;
+    public $bulkSemester = '';
+    public $bulkYear = '';
+
+    // Individual Student Registration properties
+    public $studentName = '';
+    public $studentEmail = '';
+    public $studentID = '';
+    public $studentPhone = '';
+    public $studentAddress = '';
+    public $studentCity = '';
+    public $studentPostcode = '';
+    public $studentState = '';
+    public $studentCountry = '';
+    public $studentLatitude = '';
+    public $studentLongitude = '';
+    public $studentNationality = '';
+    public $studentProgram = '';
+    public $studentSemester = '';
+    public $studentYear = '';
+
+    // Individual Lecturer Registration properties
+    public $lecturerName = '';
+    public $lecturerEmail = '';
+    public $lecturerID = '';
+    public $lecturerStaffGrade = '';
+    public $lecturerRole = '';
+    public $lecturerPosition = '';
+    public $lecturerAddress = '';
+    public $lecturerCity = '';
+    public $lecturerPostcode = '';
+    public $lecturerState = '';
+    public $lecturerCountry = '';
+    public $lecturerLatitude = '';
+    public $lecturerLongitude = '';
+    public $lecturerResearchGroup = '';
+    public $lecturerDepartment = '';
+    public $lecturerSemester = '';
+    public $lecturerYear = '';
+    public $lecturerStudentQuota = 0;
+    public $lecturerIsAcademicAdvisor = false;
+    public $lecturerIsSupervisorFaculty = false;
+    public $lecturerIsCommittee = false;
+    public $lecturerIsCoordinator = false;
+    public $lecturerIsAdmin = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -41,9 +99,18 @@ class UserDirectoryTable extends Component
         'page' => ['except' => 1],
     ];
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->geocodingService = new GeocodingService();
+    }
+
     public function mount()
     {
         $this->year = date('Y');
+        $this->bulkYear = date('Y');
+        $this->studentYear = date('Y');
+        $this->lecturerYear = date('Y');
     }
 
     public function updatingSearch()
@@ -617,5 +684,489 @@ xmlns="http://www.w3.org/TR/REC-html40">
 </html>';
 
         return $html;
+    }
+
+    // Modal toggle methods
+    public function toggleBulkRegistration()
+    {
+        $this->showBulkRegistration = !$this->showBulkRegistration;
+    }
+
+    public function toggleStudentRegistration()
+    {
+        $this->showStudentRegistration = !$this->showStudentRegistration;
+        $this->resetStudentForm();
+    }
+
+    public function toggleLecturerRegistration()
+    {
+        $this->showLecturerRegistration = !$this->showLecturerRegistration;
+        $this->resetLecturerForm();
+    }
+
+    // Form reset methods
+    public function resetStudentForm()
+    {
+        $this->studentName = '';
+        $this->studentEmail = '';
+        $this->studentID = '';
+        $this->studentPhone = '';
+        $this->studentAddress = '';
+        $this->studentCity = '';
+        $this->studentPostcode = '';
+        $this->studentState = '';
+        $this->studentCountry = '';
+        $this->studentLatitude = null;
+        $this->studentLongitude = null;
+        $this->studentNationality = '';
+        $this->studentProgram = '';
+        $this->studentSemester = '';
+        $this->studentYear = date('Y');
+    }
+
+    public function resetLecturerForm()
+    {
+        $this->lecturerName = '';
+        $this->lecturerEmail = '';
+        $this->lecturerID = '';
+        $this->lecturerStaffGrade = '';
+        $this->lecturerRole = '';
+        $this->lecturerPosition = '';
+        $this->lecturerAddress = '';
+        $this->lecturerCity = '';
+        $this->lecturerPostcode = '';
+        $this->lecturerState = '';
+        $this->lecturerCountry = '';
+        $this->lecturerLatitude = null;
+        $this->lecturerLongitude = null;
+        $this->lecturerResearchGroup = '';
+        $this->lecturerDepartment = '';
+        $this->lecturerSemester = '';
+        $this->lecturerYear = date('Y');
+        $this->lecturerStudentQuota = 0;
+        $this->lecturerIsAcademicAdvisor = false;
+        $this->lecturerIsSupervisorFaculty = false;
+        $this->lecturerIsCommittee = false;
+        $this->lecturerIsCoordinator = false;
+        $this->lecturerIsAdmin = false;
+    }
+
+    // Bulk registration from CSV
+    public function registerUsersFromCSV()
+    {
+        $this->validate([
+            'csvFile' => 'required|file|mimes:csv,txt|max:2048',
+            'bulkSemester' => 'required|in:1,2',
+            'bulkYear' => 'required|integer|min:2020|max:2040',
+        ]);
+
+        try {
+            $csvData = array_map('str_getcsv', file($this->csvFile->getRealPath()));
+
+            if (empty($csvData)) {
+                session()->flash('error', 'CSV file is empty or could not be read.');
+                return;
+            }
+
+            $header = array_shift($csvData);
+            $header = array_map('trim', $header);
+
+            // Auto-detect file type by header
+            if (in_array('studentID', $header)) {
+                $roleType = 'student';
+            } elseif (in_array('lecturerID', $header)) {
+                $roleType = 'lecturer';
+            } else {
+                session()->flash('error', "CSV must contain either 'studentID' or 'lecturerID' column.");
+                return;
+            }
+
+            $successCount = 0;
+            $errorCount = 0;
+            $errors = [];
+            $createdUsers = [];
+
+            foreach ($csvData as $index => $row) {
+                try {
+                    if (empty(array_filter($row))) {
+                        continue;
+                    }
+
+                    $data = array_combine($header, $row);
+                    $data = array_map('trim', $data);
+
+                    if ($roleType === 'student') {
+                        $result = $this->createStudentFromCSV($data, $index + 2);
+                    } else {
+                        $result = $this->createLecturerFromCSV($data, $index + 2);
+                    }
+
+                    if ($result['success']) {
+                        $successCount++;
+                        $createdUsers[] = $result['user'];
+                    } else {
+                        $errorCount++;
+                        $errors[] = $result['error'];
+                    }
+                } catch (\Exception $e) {
+                    $errorCount++;
+                    $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+                }
+            }
+
+            // Send email notifications
+            foreach ($createdUsers as $userData) {
+                try {
+                    $userData['user']->notify(new UserRegistrationNotification($userData['password'], $userData['role']));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send email to ' . $userData['user']->email . ': ' . $e->getMessage());
+                }
+            }
+
+            $message = "Registration completed! {$successCount} users created successfully.";
+            if ($errorCount > 0) {
+                $message .= " {$errorCount} errors occurred.";
+            }
+
+            session()->flash('message', $message);
+            if (!empty($errors)) {
+                session()->flash('errors', $errors);
+            }
+
+            $this->showBulkRegistration = false;
+            $this->csvFile = null;
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error processing CSV file: ' . $e->getMessage());
+        }
+    }
+
+    private function createStudentFromCSV($data, $rowNumber)
+    {
+        try {
+            DB::beginTransaction();
+
+            $defaultPassword = uniqid();
+            $user = User::create([
+                'name' => $data['name'] ?? '',
+                'email' => $data['email'] ?? '',
+                'password' => Hash::make($defaultPassword),
+                'role' => 'student',
+            ]);
+
+            // Try to geocode the address if coordinates are not provided
+            $latitude = !empty($data['latitude']) ? (float)$data['latitude'] : null;
+            $longitude = !empty($data['longitude']) ? (float)$data['longitude'] : null;
+
+            if (is_null($latitude) || is_null($longitude)) {
+                $geocodeResult = $this->geocodingService->geocodeStructuredAddress([
+                    'street' => $data['address'] ?? '',
+                    'city' => $data['city'] ?? '',
+                    'postcode' => $data['postcode'] ?? '',
+                    'state' => $data['state'] ?? '',
+                    'country' => $data['country'] ?? ''
+                ]);
+
+                if ($geocodeResult) {
+                    $latitude = $geocodeResult['latitude'];
+                    $longitude = $geocodeResult['longitude'];
+                }
+            }
+
+            Student::create([
+                'studentID' => $data['studentID'] ?? '',
+                'user_id' => $user->id,
+                'phone' => $data['phone'] ?? null,
+                'address' => $data['address'] ?? null,
+                'city' => $data['city'] ?? null,
+                'postcode' => $data['postcode'] ?? null,
+                'state' => $data['state'] ?? null,
+                'country' => $data['country'] ?? null,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'nationality' => $data['nationality'] ?? null,
+                'program' => $data['program'] ?? null,
+                'semester' => $this->bulkSemester,
+                'year' => $this->bulkYear,
+                'status' => 'active',
+            ]);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'user' => $user,
+                'password' => $defaultPassword,
+                'role' => 'student'
+            ];
+        } catch (\Exception $e) {
+            DB::rollback();
+            return [
+                'success' => false,
+                'error' => "Row {$rowNumber}: " . $e->getMessage()
+            ];
+        }
+    }
+
+    private function createLecturerFromCSV($data, $rowNumber)
+    {
+        try {
+            DB::beginTransaction();
+
+            $defaultPassword = uniqid();
+            $user = User::create([
+                'name' => $data['name'] ?? '',
+                'email' => $data['email'] ?? '',
+                'password' => Hash::make($defaultPassword),
+                'role' => 'lecturer',
+            ]);
+
+            // Try to geocode the address if coordinates are not provided
+            $latitude = !empty($data['latitude']) ? (float)$data['latitude'] : null;
+            $longitude = !empty($data['longitude']) ? (float)$data['longitude'] : null;
+
+            if (is_null($latitude) || is_null($longitude)) {
+                $geocodeResult = $this->geocodingService->geocodeStructuredAddress([
+                    'street' => $data['address'] ?? '',
+                    'city' => $data['city'] ?? '',
+                    'postcode' => $data['postcode'] ?? '',
+                    'state' => $data['state'] ?? '',
+                    'country' => $data['country'] ?? ''
+                ]);
+
+                if ($geocodeResult) {
+                    $latitude = $geocodeResult['latitude'];
+                    $longitude = $geocodeResult['longitude'];
+                }
+            }
+
+            Lecturer::create([
+                'lecturerID' => $data['lecturerID'] ?? '',
+                'user_id' => $user->id,
+                'staffGrade' => $data['staffGrade'] ?? null,
+                'role' => $data['role'] ?? null,
+                'position' => $data['position'] ?? null,
+                'address' => $data['address'] ?? null,
+                'city' => $data['city'] ?? null,
+                'postcode' => $data['postcode'] ?? null,
+                'state' => $data['state'] ?? null,
+                'country' => $data['country'] ?? null,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'researchGroup' => $data['researchGroup'] ?? null,
+                'department' => $data['department'] ?? null,
+                'semester' => $this->bulkSemester,
+                'year' => $this->bulkYear,
+                'studentQuota' => isset($data['studentQuota']) ? (int)$data['studentQuota'] : 0,
+                'isAcademicAdvisor' => isset($data['isAcademicAdvisor']) && strtolower($data['isAcademicAdvisor']) === 'true',
+                'isSupervisorFaculty' => isset($data['isSupervisorFaculty']) && strtolower($data['isSupervisorFaculty']) === 'true',
+                'isCommittee' => isset($data['isCommittee']) && strtolower($data['isCommittee']) === 'true',
+                'isCoordinator' => isset($data['isCoordinator']) && strtolower($data['isCoordinator']) === 'true',
+                'isAdmin' => isset($data['isAdmin']) && strtolower($data['isAdmin']) === 'true',
+                'status' => 'active',
+            ]);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'user' => $user,
+                'password' => $defaultPassword,
+                'role' => 'lecturer'
+            ];
+        } catch (\Exception $e) {
+            DB::rollback();
+            return [
+                'success' => false,
+                'error' => "Row {$rowNumber}: " . $e->getMessage()
+            ];
+        }
+    }
+
+    // Individual student registration
+    public function registerStudent()
+    {
+        $this->validate([
+            'studentName' => 'required|string|max:255',
+            'studentEmail' => 'required|email|unique:users,email',
+            'studentID' => 'required|string|unique:students,studentID',
+            'studentPhone' => 'nullable|string',
+            'studentAddress' => 'nullable|string',
+            'studentCity' => 'nullable|string',
+            'studentPostcode' => 'nullable|string',
+            'studentState' => 'nullable|string',
+            'studentCountry' => 'nullable|string',
+            'studentNationality' => 'nullable|string',
+            'studentProgram' => 'nullable|string',
+            'studentSemester' => 'required|in:1,2',
+            'studentYear' => 'required|integer|min:2020|max:2040',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $defaultPassword = uniqid();
+            $user = User::create([
+                'name' => $this->studentName,
+                'email' => $this->studentEmail,
+                'password' => Hash::make($defaultPassword),
+                'role' => 'student',
+            ]);
+
+            // Try to geocode the address if coordinates are not provided
+            $latitude = $this->studentLatitude;
+            $longitude = $this->studentLongitude;
+
+            if (empty($latitude) || empty($longitude)) {
+                $geocodeResult = $this->geocodingService->geocodeStructuredAddress([
+                    'street' => $this->studentAddress,
+                    'city' => $this->studentCity,
+                    'postcode' => $this->studentPostcode,
+                    'state' => $this->studentState,
+                    'country' => $this->studentCountry
+                ]);
+
+                if ($geocodeResult) {
+                    $latitude = $geocodeResult['latitude'];
+                    $longitude = $geocodeResult['longitude'];
+                }
+            }
+
+            Student::create([
+                'studentID' => $this->studentID,
+                'user_id' => $user->id,
+                'phone' => $this->studentPhone,
+                'address' => $this->studentAddress,
+                'city' => $this->studentCity,
+                'postcode' => $this->studentPostcode,
+                'state' => $this->studentState,
+                'country' => $this->studentCountry,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'nationality' => $this->studentNationality,
+                'program' => $this->studentProgram,
+                'semester' => $this->studentSemester,
+                'year' => $this->studentYear,
+                'status' => 'active',
+            ]);
+
+            DB::commit();
+
+            // Send email notification
+            try {
+                $user->notify(new UserRegistrationNotification($defaultPassword, 'student'));
+                $emailMessage = ' Email notification sent to ' . $user->email . '.';
+            } catch (\Exception $e) {
+                Log::error('Failed to send email to ' . $user->email . ': ' . $e->getMessage());
+                $emailMessage = ' Note: Email notification failed to send.';
+            }
+
+            session()->flash('message', 'Student registered successfully!' . $emailMessage);
+            $this->showStudentRegistration = false;
+            $this->resetStudentForm();
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            session()->flash('error', 'Failed to register student: ' . $e->getMessage());
+        }
+    }
+
+    // Individual lecturer registration
+    public function registerLecturer()
+    {
+        $this->validate([
+            'lecturerName' => 'required|string|max:255',
+            'lecturerEmail' => 'required|email|unique:users,email',
+            'lecturerID' => 'required|string|unique:lecturers,lecturerID',
+            'lecturerStaffGrade' => 'nullable|string',
+            'lecturerRole' => 'nullable|string',
+            'lecturerPosition' => 'nullable|string',
+            'lecturerAddress' => 'nullable|string',
+            'lecturerCity' => 'nullable|string',
+            'lecturerPostcode' => 'nullable|string',
+            'lecturerState' => 'nullable|string',
+            'lecturerCountry' => 'nullable|string',
+            'lecturerResearchGroup' => 'nullable|string',
+            'lecturerDepartment' => 'nullable|string',
+            'lecturerSemester' => 'required|in:1,2',
+            'lecturerYear' => 'required|integer|min:2020|max:2040',
+            'lecturerStudentQuota' => 'nullable|integer|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $defaultPassword = uniqid();
+            $user = User::create([
+                'name' => $this->lecturerName,
+                'email' => $this->lecturerEmail,
+                'password' => Hash::make($defaultPassword),
+                'role' => 'lecturer',
+            ]);
+
+            // Try to geocode the address if coordinates are not provided
+            $latitude = $this->lecturerLatitude;
+            $longitude = $this->lecturerLongitude;
+
+            if (empty($latitude) || empty($longitude)) {
+                $geocodeResult = $this->geocodingService->geocodeStructuredAddress([
+                    'street' => $this->lecturerAddress,
+                    'city' => $this->lecturerCity,
+                    'postcode' => $this->lecturerPostcode,
+                    'state' => $this->lecturerState,
+                    'country' => $this->lecturerCountry
+                ]);
+
+                if ($geocodeResult) {
+                    $latitude = $geocodeResult['latitude'];
+                    $longitude = $geocodeResult['longitude'];
+                }
+            }
+
+            Lecturer::create([
+                'lecturerID' => $this->lecturerID,
+                'user_id' => $user->id,
+                'staffGrade' => $this->lecturerStaffGrade,
+                'role' => $this->lecturerRole,
+                'position' => $this->lecturerPosition,
+                'address' => $this->lecturerAddress,
+                'city' => $this->lecturerCity,
+                'postcode' => $this->lecturerPostcode,
+                'state' => $this->lecturerState,
+                'country' => $this->lecturerCountry,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'researchGroup' => $this->lecturerResearchGroup,
+                'department' => $this->lecturerDepartment,
+                'semester' => $this->lecturerSemester,
+                'year' => $this->lecturerYear,
+                'studentQuota' => $this->lecturerStudentQuota ?? 0,
+                'isAcademicAdvisor' => $this->lecturerIsAcademicAdvisor,
+                'isSupervisorFaculty' => $this->lecturerIsSupervisorFaculty,
+                'isCommittee' => $this->lecturerIsCommittee,
+                'isCoordinator' => $this->lecturerIsCoordinator,
+                'isAdmin' => $this->lecturerIsAdmin,
+                'status' => 'active',
+            ]);
+
+            DB::commit();
+
+            // Send email notification
+            try {
+                $user->notify(new UserRegistrationNotification($defaultPassword, 'lecturer'));
+                $emailMessage = ' Email notification sent to ' . $user->email . '.';
+            } catch (\Exception $e) {
+                Log::error('Failed to send email to ' . $user->email . ': ' . $e->getMessage());
+                $emailMessage = ' Note: Email notification failed to send.';
+            }
+
+            session()->flash('message', 'Lecturer registered successfully!' . $emailMessage);
+            $this->showLecturerRegistration = false;
+            $this->resetLecturerForm();
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            session()->flash('error', 'Failed to register lecturer: ' . $e->getMessage());
+        }
     }
 }

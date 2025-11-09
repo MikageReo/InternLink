@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'committee.coordinator' => \App\Http\Middleware\CheckCommitteeOrCoordinator::class,
+            'coordinator' => \App\Http\Middleware\CheckCoordinator::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -73,6 +73,42 @@
         </div>
     @endif
 
+    @if (session()->has('error'))
+        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if (session()->has('errors'))
+        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
+            <p class="font-semibold">Errors occurred during registration:</p>
+            <ul class="mt-2 list-disc list-inside">
+                @foreach (session('errors') as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <!-- Registration Buttons -->
+    <div class="mb-4 flex flex-wrap gap-2">
+        <button wire:click="toggleBulkRegistration"
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <i class="fas fa-upload mr-2"></i>
+            Bulk Registration (CSV)
+        </button>
+        <button wire:click="toggleStudentRegistration"
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            <i class="fas fa-user-plus mr-2"></i>
+            Register Student
+        </button>
+        <button wire:click="toggleLecturerRegistration"
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+            <i class="fas fa-user-plus mr-2"></i>
+            Register Lecturer
+        </button>
+    </div>
+
     <!-- Action Bar -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -596,4 +632,455 @@
             </div>
         @endif
     </div>
+
+    <!-- Bulk Registration Modal -->
+    @if ($showBulkRegistration)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                        Bulk User Registration from CSV
+                    </h3>
+
+                    <form wire:submit.prevent="registerUsersFromCSV">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                CSV File
+                            </label>
+                            <input type="file" wire:model="csvFile" accept=".csv,.txt"
+                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            @error('csvFile') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Semester
+                                </label>
+                                <select wire:model="bulkSemester" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">Select Semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                </select>
+                                @error('bulkSemester') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Year
+                                </label>
+                                <input type="number" wire:model="bulkYear" min="2020" max="2040"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('bulkYear') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" wire:click="toggleBulkRegistration"
+                                    class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                                Upload & Register
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Student Registration Modal -->
+    @if ($showStudentRegistration)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white dark:bg-gray-800 max-h-screen overflow-y-auto">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                        Register New Student
+                    </h3>
+
+                    <form wire:submit.prevent="registerStudent">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <!-- Basic Information -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Full Name *
+                                </label>
+                                <input type="text" wire:model="studentName"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('studentName') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Email *
+                                </label>
+                                <input type="email" wire:model="studentEmail"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('studentEmail') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Student ID *
+                                </label>
+                                <input type="text" wire:model="studentID"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('studentID') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Phone Number
+                                </label>
+                                <input type="text" wire:model="studentPhone"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('studentPhone') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div class="mb-4">
+                            <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">Address Information</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Street Address
+                                    </label>
+                                    <input type="text" wire:model="studentAddress"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('studentAddress') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        City
+                                    </label>
+                                    <input type="text" wire:model="studentCity"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('studentCity') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Postcode
+                                    </label>
+                                    <input type="text" wire:model="studentPostcode"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('studentPostcode') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        State
+                                    </label>
+                                    <input type="text" wire:model="studentState"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('studentState') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Country
+                                    </label>
+                                    <input type="text" wire:model="studentCountry"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('studentCountry') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Automatic Geocoding Notice -->
+                        <div class="mb-4">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                                            <strong>🗺️ Smart Geocoding:</strong> Latitude and longitude coordinates will be automatically determined from the address using Google Maps API.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Academic Information -->
+                        <div class="mb-4">
+                            <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">Academic Information</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Nationality
+                                    </label>
+                                    <input type="text" wire:model="studentNationality"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('studentNationality') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Program
+                                    </label>
+                                    <input type="text" wire:model="studentProgram"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('studentProgram') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Semester *
+                                    </label>
+                                    <select wire:model="studentSemester" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Select Semester</option>
+                                        <option value="1">Semester 1</option>
+                                        <option value="2">Semester 2</option>
+                                    </select>
+                                    @error('studentSemester') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Year *
+                                    </label>
+                                    <input type="number" wire:model="studentYear" min="2020" max="2040"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('studentYear') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" wire:click="toggleStudentRegistration"
+                                    class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+                                Register Student
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Lecturer Registration Modal -->
+    @if ($showLecturerRegistration)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white dark:bg-gray-800 max-h-screen overflow-y-auto">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                        Register New Lecturer
+                    </h3>
+
+                    <form wire:submit.prevent="registerLecturer">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <!-- Basic Information -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Full Name *
+                                </label>
+                                <input type="text" wire:model="lecturerName"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('lecturerName') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Email *
+                                </label>
+                                <input type="email" wire:model="lecturerEmail"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('lecturerEmail') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Lecturer ID *
+                                </label>
+                                <input type="text" wire:model="lecturerID"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('lecturerID') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Staff Grade
+                                </label>
+                                <input type="text" wire:model="lecturerStaffGrade"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('lecturerStaffGrade') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Role
+                                </label>
+                                <input type="text" wire:model="lecturerRole"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('lecturerRole') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Position
+                                </label>
+                                <input type="text" wire:model="lecturerPosition"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                @error('lecturerPosition') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div class="mb-4">
+                            <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">Address Information</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Street Address
+                                    </label>
+                                    <input type="text" wire:model="lecturerAddress"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('lecturerAddress') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        City
+                                    </label>
+                                    <input type="text" wire:model="lecturerCity"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('lecturerCity') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Postcode
+                                    </label>
+                                    <input type="text" wire:model="lecturerPostcode"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('lecturerPostcode') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        State
+                                    </label>
+                                    <input type="text" wire:model="lecturerState"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('lecturerState') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Country
+                                    </label>
+                                    <input type="text" wire:model="lecturerCountry"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('lecturerCountry') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Automatic Geocoding Notice -->
+                        <div class="mb-4">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                                            <strong>🗺️ Smart Geocoding:</strong> Latitude and longitude coordinates will be automatically determined from the address using Google Maps API.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Professional Information -->
+                        <div class="mb-4">
+                            <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">Professional Information</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Research Group
+                                    </label>
+                                    <input type="text" wire:model="lecturerResearchGroup"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('lecturerResearchGroup') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Department
+                                    </label>
+                                    <input type="text" wire:model="lecturerDepartment"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('lecturerDepartment') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Semester *
+                                    </label>
+                                    <select wire:model="lecturerSemester" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Select Semester</option>
+                                        <option value="1">Semester 1</option>
+                                        <option value="2">Semester 2</option>
+                                    </select>
+                                    @error('lecturerSemester') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Year *
+                                    </label>
+                                    <input type="number" wire:model="lecturerYear" min="2020" max="2040"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('lecturerYear') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Student Quota
+                                    </label>
+                                    <input type="number" wire:model="lecturerStudentQuota" min="0"
+                                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    @error('lecturerStudentQuota') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Permissions -->
+                        <div class="mb-4">
+                            <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">Permissions</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" wire:model="lecturerIsAcademicAdvisor"
+                                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Academic Advisor</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" wire:model="lecturerIsSupervisorFaculty"
+                                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Supervisor Faculty</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" wire:model="lecturerIsCommittee"
+                                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Committee</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" wire:model="lecturerIsCoordinator"
+                                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Coordinator</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" wire:model="lecturerIsAdmin"
+                                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Admin</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" wire:click="toggleLecturerRegistration"
+                                    class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
+                                Register Lecturer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

@@ -18,12 +18,12 @@
 
                         <!-- User Management -->
                         <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
-                            <h4 class="font-semibold text-green-800 dark:text-green-200 mb-2">User Directory</h4>
-                            <p class="text-green-600 dark:text-green-300 text-sm">Comprehensive user management system
+                            <h4 class="font-semibold text-green-800 dark:text-green-200 mb-2">User Directory & Registration</h4>
+                            <p class="text-green-600 dark:text-green-300 text-sm">Comprehensive user management
                             </p>
                             <div class="mt-3">
                                 <a href="{{ route('lecturer.userDirectory') }}"
-                                    class="mt-3 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
+                                    class="mt-3 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm inline-block">
                                     <i class="fas fa-users mr-2"></i>User Directory
                                 </a>
                             </div>
@@ -78,15 +78,18 @@
                                     </a>
                                 </div>
                             </div>
-                        @else
-                            <!-- Restricted Access Notice for Regular Lecturers -->
-                            <div class="bg-gray-50 dark:bg-gray-800/20 p-6 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
-                                <h4 class="font-semibold text-gray-500 dark:text-gray-400 mb-2">🔒 Internship Management</h4>
-                                <p class="text-gray-400 dark:text-gray-500 text-sm">Access restricted to committee members and coordinators only</p>
+                        @endif
+
+                        <!-- Supervisor Assignment Management (Coordinator Only) -->
+                        @if(Auth::user()->lecturer && Auth::user()->lecturer->isCoordinator)
+                            <div class="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-lg">
+                                <h4 class="font-semibold text-purple-800 dark:text-purple-200 mb-2">Supervisor Assignments</h4>
+                                <p class="text-purple-600 dark:text-purple-300 text-sm">Assign supervisors to students with accepted placement applications</p>
                                 <div class="mt-3">
-                                    <span class="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                                        Contact admin for role assignment
-                                    </span>
+                                    <a href="{{ route('lecturer.supervisorAssignments') }}"
+                                        class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded text-sm inline-block">
+                                        👨‍🏫 Manage Assignments
+                                    </a>
                                 </div>
                             </div>
                         @endif

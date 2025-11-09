@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ManageUserController;
 
 // Redirect root to login page
 Route::get('/', function () {
@@ -27,34 +26,32 @@ Route::get('/dashboard', function () {
     return redirect()->route('login');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-    // Student routes
-    Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
-        Route::view('/dashboard', 'student.dashboard.studentPortal')->name('dashboard');
-        Route::view('/course-verification', 'student.dashboard.courseVerification')->name('courseVerification');
-        Route::view('/placement-applications', 'student.dashboard.placementApplications')->name('placementApplications');
-        Route::view('/request-defer', 'student.dashboard.requestDefer')->name('requestDefer');
-        Route::view('/change-request-history', 'student.dashboard.changeRequestHistory')->name('changeRequestHistory');
-    });
+// Student routes
+Route::middleware(['auth', 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
+    Route::view('/dashboard', 'student.dashboard.studentPortal')->name('dashboard');
+    Route::view('/course-verification', 'student.dashboard.courseVerification')->name('courseVerification');
+    Route::view('/placement-applications', 'student.dashboard.placementApplications')->name('placementApplications');
+    Route::view('/request-defer', 'student.dashboard.requestDefer')->name('requestDefer');
+    Route::view('/change-request-history', 'student.dashboard.changeRequestHistory')->name('changeRequestHistory');
+});
 
 // Lecturer routes
 Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->name('lecturer.')->group(function () {
     Route::view('/dashboard', 'lecturer.dashboard.lecturerPortal')->name('dashboard');
     Route::view('/register-user', 'lecturer.dashboard.registerUser')->name('registerUser');
     Route::view('/course-verification-management', 'lecturer.dashboard.courseVerificationManagement')->name('courseVerificationManagement');
+    Route::view('/user-directory', 'lecturer.dashboard.userDirectory')->name('userDirectory');
 
-        // Placement applications - restricted to committee and coordinator only
-        Route::middleware(['committee.coordinator'])->group(function () {
-            Route::view('/placement-applications', 'lecturer.dashboard.placementApplications')->name('placementApplications');
-            Route::view('/request-defer', 'lecturer.dashboard.requestDefer')->name('requestDefer');
-            Route::view('/change-requests', 'lecturer.dashboard.changeRequests')->name('changeRequests');
-        });
+    // Placement applications - restricted to committee and coordinator only
+    Route::middleware(['committee.coordinator'])->group(function () {
+        Route::view('/placement-applications', 'lecturer.dashboard.placementApplications')->name('placementApplications');
+        Route::view('/request-defer', 'lecturer.dashboard.requestDefer')->name('requestDefer');
+        Route::view('/change-requests', 'lecturer.dashboard.changeRequests')->name('changeRequests');
+    });
 
-    Route::controller(ManageUserController::class)->group(function () {
-        Route::post('/register-user', 'registerUsers')->name('registerUsers');
-        Route::post('/register-student', 'registerStudent')->name('registerStudent');
-        Route::post('/register-lecturer', 'registerLecturer')->name('registerLecturer');
-        Route::get('/user-directory', 'showUserDirectory')->name('userDirectory');
-        Route::post('/user-directory', 'filterUserDirectory')->name('userDirectory.filter');
+    // Supervisor assignment - restricted to coordinators only
+    Route::middleware(['coordinator'])->group(function () {
+        Route::view('/supervisor-assignments', 'lecturer.dashboard.supervisorAssignments')->name('supervisorAssignments');
     });
 });
 

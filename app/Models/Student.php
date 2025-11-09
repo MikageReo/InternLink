@@ -102,4 +102,59 @@ class Student extends Model
     {
         return $this->hasMany(CourseVerification::class, 'studentID', 'studentID');
     }
+
+    /**
+     * Get the placement applications for this student
+     */
+    public function placementApplications(): HasMany
+    {
+        return $this->hasMany(PlacementApplication::class, 'studentID', 'studentID');
+    }
+
+    /**
+     * Get the supervisor assignment for this student
+     */
+    public function supervisorAssignment(): HasOne
+    {
+        return $this->hasOne(SupervisorAssignment::class, 'studentID', 'studentID')
+            ->where('status', SupervisorAssignment::STATUS_ASSIGNED);
+    }
+
+    /**
+     * Get all supervisor assignments (including historical)
+     */
+    public function supervisorAssignments(): HasMany
+    {
+        return $this->hasMany(SupervisorAssignment::class, 'studentID', 'studentID');
+    }
+
+    /**
+     * Get supervisor through assignment (helper method)
+     * Note: Direct supervisor relationship is not possible due to intermediate table
+     * Use $student->supervisorAssignment->supervisor instead
+     */
+    public function getSupervisorAttribute()
+    {
+        $assignment = $this->supervisorAssignment;
+        return $assignment ? $assignment->supervisor : null;
+    }
+
+    /**
+     * Check if student has an accepted placement application
+     */
+    public function hasAcceptedPlacement(): bool
+    {
+        return $this->placementApplications()
+            ->where('studentAcceptance', 'Accepted')
+            ->exists();
+    }
+
+    /**
+     * Get the accepted placement application
+     */
+    public function acceptedPlacementApplication(): HasOne
+    {
+        return $this->hasOne(PlacementApplication::class, 'studentID', 'studentID')
+            ->where('studentAcceptance', 'Accepted');
+    }
 }

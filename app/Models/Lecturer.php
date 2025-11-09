@@ -36,6 +36,9 @@ class Lecturer extends Model
         'isCommittee',
         'isCoordinator',
         'isAdmin',
+        'is_supervisor',
+        'supervisor_quota',
+        'current_assignments',
     ];
 
     protected $casts = [
@@ -44,6 +47,7 @@ class Lecturer extends Model
         'isCommittee'         => 'boolean',
         'isCoordinator'       => 'boolean',
         'isAdmin'             => 'boolean',
+        'is_supervisor'       => 'boolean',
         'latitude'            => 'decimal:8',
         'longitude'           => 'decimal:8',
     ];
@@ -153,5 +157,67 @@ class Lecturer extends Model
     public function courseVerifications(): HasMany
     {
         return $this->hasMany(CourseVerification::class, 'lecturerID', 'lecturerID');
+    }
+
+    /**
+     * Get all supervisor assignments for this lecturer
+     */
+    public function supervisorAssignments(): HasMany
+    {
+        return $this->hasMany(SupervisorAssignment::class, 'supervisorID', 'lecturerID');
+    }
+
+    /**
+     * Get active supervisor assignments for this lecturer
+     */
+    public function activeSupervisorAssignments(): HasMany
+    {
+        return $this->hasMany(SupervisorAssignment::class, 'supervisorID', 'lecturerID')
+            ->where('status', SupervisorAssignment::STATUS_ASSIGNED);
+    }
+
+    /**
+     * Get students supervised by this lecturer through assignments
+     * Returns a query builder for supervised students
+     */
+    public function supervisedStudents()
+    {
+        return Student::whereHas('supervisorAssignments', function ($query) {
+            $query->where('supervisorID', $this->lecturerID)
+                ->where('status', SupervisorAssignment::STATUS_ASSIGNED);
+        });
+    }
+
+    /**
+     * Check if lecturer has available quota
+     */
+    public function hasAvailableQuota(): bool
+    {
+        if (!$this->is_supervisor) {
+            return false;
+        }
+
+        return ($this->supervisor_quota - $this->current_assignments) > 0;
+    }
+
+    /**
+     * Get available quota slots
+     */
+    public function getAvailableQuotaAttribute(): int
+    {
+        if (!$this->is_supervisor) {
+            return 0;
+        }
+
+        return max(0, $this->supervisor_quota - $this->current_assignments);
+    }
+
+    /**
+     * Check if lecturer can supervise (is supervisor and active)
+     */
+    public function canSupervise(): bool
+    {
+        return $this->is_supervisor
+            && $this->status === self::STATUS_ACTIVE;
     }
 }

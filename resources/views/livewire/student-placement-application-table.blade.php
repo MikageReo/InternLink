@@ -321,10 +321,57 @@
                         </div>
 
                         <!-- Company Address -->
+                        <!-- Company Address Information -->
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Company Address *</label>
-                            <textarea wire:model="companyAddress" rows="3" class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
-                            @error('companyAddress')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                            <h4 class="text-md font-medium text-gray-700 mb-2">Company Address</h4>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
+                            <input type="text" wire:model="companyAddressLine" class="w-full border border-gray-300 rounded px-3 py-2">
+                            @error('companyAddressLine')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                            <input type="text" wire:model="companyCity" class="w-full border border-gray-300 rounded px-3 py-2">
+                            @error('companyCity')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
+                            <input type="text" wire:model="companyPostcode" class="w-full border border-gray-300 rounded px-3 py-2">
+                            @error('companyPostcode')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                            <input type="text" wire:model="companyState" class="w-full border border-gray-300 rounded px-3 py-2">
+                            @error('companyState')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                            <input type="text" wire:model="companyCountry" class="w-full border border-gray-300 rounded px-3 py-2">
+                            @error('companyCountry')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <!-- Automatic Geocoding Notice -->
+                        <div class="md:col-span-2">
+                            <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-blue-700">
+                                            <strong>🗺️ Smart Geocoding:</strong> Company location coordinates will be automatically determined from the address using Google Maps API.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Company Phone -->
@@ -487,7 +534,10 @@
                                 <p><strong>Company Name:</strong> {{ $viewingApplication->companyName }}</p>
                                 <p><strong>Email:</strong> {{ $viewingApplication->companyEmail }}</p>
                                 <p><strong>Phone:</strong> {{ $viewingApplication->companyNumber }}</p>
-                                <p><strong>Address:</strong> {{ $viewingApplication->companyAddress }}</p>
+                                <p><strong>Address:</strong> {{ $viewingApplication->company_full_address }}</p>
+                                @if($viewingApplication->has_geocoding)
+                                    <p><strong>Coordinates:</strong> {{ $viewingApplication->companyLatitude }}, {{ $viewingApplication->companyLongitude }}</p>
+                                @endif
                             </div>
                         </div>
 

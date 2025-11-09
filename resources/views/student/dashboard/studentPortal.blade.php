@@ -64,6 +64,11 @@
                         </div>
                     </div>
                     </div>
+
+                    <!-- Supervisor Information -->
+                    <div class="mt-6 col-span-full">
+                        @livewire('student-supervisor-card')
+                    </div>
                 </div>
             </div>
         </div>
