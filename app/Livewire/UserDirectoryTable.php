@@ -99,10 +99,9 @@ class UserDirectoryTable extends Component
         'page' => ['except' => 1],
     ];
 
-    public function __construct()
+    public function boot(GeocodingService $geocodingService)
     {
-        parent::__construct();
-        $this->geocodingService = new GeocodingService();
+        $this->geocodingService = $geocodingService;
     }
 
     public function mount()
@@ -803,7 +802,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
 
                     if ($result['success']) {
                         $successCount++;
-                        $createdUsers[] = $result['user'];
+                        $createdUsers[] = $result;
                     } else {
                         $errorCount++;
                         $errors[] = $result['error'];
@@ -817,9 +816,12 @@ xmlns="http://www.w3.org/TR/REC-html40">
             // Send email notifications
             foreach ($createdUsers as $userData) {
                 try {
-                    $userData['user']->notify(new UserRegistrationNotification($userData['password'], $userData['role']));
+                    if (isset($userData['user']) && $userData['user']) {
+                        $userData['user']->notify(new UserRegistrationNotification($userData['password'], $userData['role']));
+                    }
                 } catch (\Exception $e) {
-                    Log::error('Failed to send email to ' . $userData['user']->email . ': ' . $e->getMessage());
+                    $email = isset($userData['user']) ? $userData['user']->email : 'unknown';
+                    Log::error('Failed to send email to ' . $email . ': ' . $e->getMessage());
                 }
             }
 
@@ -835,7 +837,6 @@ xmlns="http://www.w3.org/TR/REC-html40">
 
             $this->showBulkRegistration = false;
             $this->csvFile = null;
-
         } catch (\Exception $e) {
             session()->flash('error', 'Error processing CSV file: ' . $e->getMessage());
         }
@@ -963,6 +964,8 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'isCommittee' => isset($data['isCommittee']) && strtolower($data['isCommittee']) === 'true',
                 'isCoordinator' => isset($data['isCoordinator']) && strtolower($data['isCoordinator']) === 'true',
                 'isAdmin' => isset($data['isAdmin']) && strtolower($data['isAdmin']) === 'true',
+                'is_supervisor' => isset($data['is_supervisor']) && strtolower($data['is_supervisor']) === 'true',
+                'supervisor_quota' => isset($data['supervisor_quota']) ? (int)$data['supervisor_quota'] : 0,
                 'status' => 'active',
             ]);
 
@@ -1064,7 +1067,6 @@ xmlns="http://www.w3.org/TR/REC-html40">
             session()->flash('message', 'Student registered successfully!' . $emailMessage);
             $this->showStudentRegistration = false;
             $this->resetStudentForm();
-
         } catch (\Exception $e) {
             DB::rollback();
             session()->flash('error', 'Failed to register student: ' . $e->getMessage());
@@ -1163,7 +1165,6 @@ xmlns="http://www.w3.org/TR/REC-html40">
             session()->flash('message', 'Lecturer registered successfully!' . $emailMessage);
             $this->showLecturerRegistration = false;
             $this->resetLecturerForm();
-
         } catch (\Exception $e) {
             DB::rollback();
             session()->flash('error', 'Failed to register lecturer: ' . $e->getMessage());
