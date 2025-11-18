@@ -768,16 +768,76 @@
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         State
                                     </label>
-                                    <input type="text" wire:model="studentState"
+                                    <select wire:model="studentState"
                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Select State</option>
+                                        <option value="Johor">Johor</option>
+                                        <option value="Kedah">Kedah</option>
+                                        <option value="Kelantan">Kelantan</option>
+                                        <option value="Kuala Lumpur">Kuala Lumpur</option>
+                                        <option value="Labuan">Labuan</option>
+                                        <option value="Melaka">Melaka</option>
+                                        <option value="Negeri Sembilan">Negeri Sembilan</option>
+                                        <option value="Pahang">Pahang</option>
+                                        <option value="Penang">Penang</option>
+                                        <option value="Perak">Perak</option>
+                                        <option value="Perlis">Perlis</option>
+                                        <option value="Putrajaya">Putrajaya</option>
+                                        <option value="Sabah">Sabah</option>
+                                        <option value="Sarawak">Sarawak</option>
+                                        <option value="Selangor">Selangor</option>
+                                        <option value="Terengganu">Terengganu</option>
+                                    </select>
                                     @error('studentState') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Country
                                     </label>
-                                    <input type="text" wire:model="studentCountry"
+                                    <input type="text" wire:model="studentCountry" list="countries-list"
+                                           placeholder="Search or select country..."
                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <datalist id="countries-list">
+                                        <option value="Malaysia">
+                                        <option value="Afghanistan"><option value="Albania"><option value="Algeria"><option value="Andorra"><option value="Angola">
+                                        <option value="Argentina"><option value="Armenia"><option value="Australia"><option value="Austria"><option value="Azerbaijan">
+                                        <option value="Bahamas"><option value="Bahrain"><option value="Bangladesh"><option value="Barbados"><option value="Belarus">
+                                        <option value="Belgium"><option value="Belize"><option value="Benin"><option value="Bhutan"><option value="Bolivia">
+                                        <option value="Bosnia and Herzegovina"><option value="Botswana"><option value="Brazil"><option value="Brunei"><option value="Bulgaria">
+                                        <option value="Burkina Faso"><option value="Burundi"><option value="Cambodia"><option value="Cameroon"><option value="Canada">
+                                        <option value="Cape Verde"><option value="Chad"><option value="Chile"><option value="China"><option value="Colombia">
+                                        <option value="Comoros"><option value="Congo"><option value="Costa Rica"><option value="Croatia"><option value="Cuba">
+                                        <option value="Cyprus"><option value="Czech Republic"><option value="Denmark"><option value="Djibouti"><option value="Dominica">
+                                        <option value="Dominican Republic"><option value="Ecuador"><option value="Egypt"><option value="El Salvador"><option value="Equatorial Guinea">
+                                        <option value="Eritrea"><option value="Estonia"><option value="Ethiopia"><option value="Fiji"><option value="Finland">
+                                        <option value="France"><option value="Gabon"><option value="Gambia"><option value="Georgia"><option value="Germany">
+                                        <option value="Ghana"><option value="Greece"><option value="Grenada"><option value="Guatemala"><option value="Guinea">
+                                        <option value="Guinea-Bissau"><option value="Guyana"><option value="Haiti"><option value="Honduras"><option value="Hungary">
+                                        <option value="Iceland"><option value="India"><option value="Indonesia"><option value="Iran"><option value="Iraq">
+                                        <option value="Ireland"><option value="Israel"><option value="Italy"><option value="Jamaica"><option value="Japan">
+                                        <option value="Jordan"><option value="Kazakhstan"><option value="Kenya"><option value="Kiribati"><option value="Korea, North">
+                                        <option value="Korea, South"><option value="Kuwait"><option value="Kyrgyzstan"><option value="Laos"><option value="Latvia">
+                                        <option value="Lebanon"><option value="Lesotho"><option value="Liberia"><option value="Libya"><option value="Liechtenstein">
+                                        <option value="Lithuania"><option value="Luxembourg"><option value="Macedonia"><option value="Madagascar"><option value="Malawi">
+                                        <option value="Maldives"><option value="Mali"><option value="Malta"><option value="Marshall Islands"><option value="Mauritania">
+                                        <option value="Mauritius"><option value="Mexico"><option value="Micronesia"><option value="Moldova"><option value="Monaco">
+                                        <option value="Mongolia"><option value="Montenegro"><option value="Morocco"><option value="Mozambique"><option value="Myanmar">
+                                        <option value="Namibia"><option value="Nauru"><option value="Nepal"><option value="Netherlands"><option value="New Zealand">
+                                        <option value="Nicaragua"><option value="Niger"><option value="Nigeria"><option value="Norway"><option value="Oman">
+                                        <option value="Pakistan"><option value="Palau"><option value="Panama"><option value="Papua New Guinea"><option value="Paraguay">
+                                        <option value="Peru"><option value="Philippines"><option value="Poland"><option value="Portugal"><option value="Qatar">
+                                        <option value="Romania"><option value="Russia"><option value="Rwanda"><option value="Saint Lucia"><option value="Samoa">
+                                        <option value="San Marino"><option value="Saudi Arabia"><option value="Senegal"><option value="Serbia"><option value="Seychelles">
+                                        <option value="Sierra Leone"><option value="Singapore"><option value="Slovakia"><option value="Slovenia"><option value="Solomon Islands">
+                                        <option value="Somalia"><option value="South Africa"><option value="South Sudan"><option value="Spain"><option value="Sri Lanka">
+                                        <option value="Sudan"><option value="Suriname"><option value="Swaziland"><option value="Sweden"><option value="Switzerland">
+                                        <option value="Syria"><option value="Taiwan"><option value="Tajikistan"><option value="Tanzania"><option value="Thailand">
+                                        <option value="Togo"><option value="Tonga"><option value="Trinidad and Tobago"><option value="Tunisia"><option value="Turkey">
+                                        <option value="Turkmenistan"><option value="Tuvalu"><option value="Uganda"><option value="Ukraine"><option value="United Arab Emirates">
+                                        <option value="United Kingdom"><option value="United States"><option value="Uruguay"><option value="Uzbekistan"><option value="Vanuatu">
+                                        <option value="Vatican City"><option value="Venezuela"><option value="Vietnam"><option value="Yemen"><option value="Zambia">
+                                        <option value="Zimbabwe">
+                                    </datalist>
                                     @error('studentCountry') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -817,8 +877,15 @@
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Program
                                     </label>
-                                    <input type="text" wire:model="studentProgram"
+                                    <select wire:model="studentProgram"
                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Select Program</option>
+                                        <option value="BCS">BCS - Bachelor of Computer Science (Software Engineering)</option>
+                                        <option value="BCN">BCN - Bachelor of Computer Science (Computer Systems & Networking)</option>
+                                        <option value="BCG">BCG - Bachelor of Computer Science (Graphics & Multimedia)</option>
+                                        <option value="BCY">BCY - Bachelor of Computer Science (Cybersecurity)</option>
+                                        <option value="CS">CS - Bachelor of Computer Science</option>
+                                    </select>
                                     @error('studentProgram') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
@@ -899,24 +966,46 @@
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Staff Grade
                                 </label>
-                                <input type="text" wire:model="lecturerStaffGrade"
+                                <select wire:model="lecturerStaffGrade"
                                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">Select Staff Grade</option>
+                                    <option value="VK6-A">VK6-A</option>
+                                    <option value="VK7-A">VK7-A</option>
+                                    <option value="DS51-A">DS51-A</option>
+                                    <option value="DS52-A">DS52-A</option>
+                                    <option value="DS53-A">DS53-A</option>
+                                    <option value="DS54-A">DS54-A</option>
+                                    <option value="DS45-A">DS45-A</option>
+                                    <option value="FP">FP</option>
+                                </select>
                                 @error('lecturerStaffGrade') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Role
                                 </label>
-                                <input type="text" wire:model="lecturerRole"
+                                <select wire:model="lecturerRole"
                                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">Select Role</option>
+                                    <option value="Management">Management</option>
+                                    <option value="Non-Management">Non-Management</option>
+                                </select>
                                 @error('lecturerRole') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Position
                                 </label>
-                                <input type="text" wire:model="lecturerPosition"
+                                <select wire:model="lecturerPosition"
                                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">Select Position</option>
+                                    <option value="Dean">Dean</option>
+                                    <option value="Deputy Dean(R)">Deputy Dean(R)</option>
+                                    <option value="Deputy Dean(A)">Deputy Dean(A)</option>
+                                    <option value="Coordinator (s)">Coordinator (s)</option>
+                                    <option value="Head of Programs">Head of Programs</option>
+                                    <option value="Committee">Committee</option>
+                                </select>
                                 @error('lecturerPosition') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -953,16 +1042,76 @@
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         State
                                     </label>
-                                    <input type="text" wire:model="lecturerState"
+                                    <select wire:model="lecturerState"
                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Select State</option>
+                                        <option value="Johor">Johor</option>
+                                        <option value="Kedah">Kedah</option>
+                                        <option value="Kelantan">Kelantan</option>
+                                        <option value="Kuala Lumpur">Kuala Lumpur</option>
+                                        <option value="Labuan">Labuan</option>
+                                        <option value="Melaka">Melaka</option>
+                                        <option value="Negeri Sembilan">Negeri Sembilan</option>
+                                        <option value="Pahang">Pahang</option>
+                                        <option value="Penang">Penang</option>
+                                        <option value="Perak">Perak</option>
+                                        <option value="Perlis">Perlis</option>
+                                        <option value="Putrajaya">Putrajaya</option>
+                                        <option value="Sabah">Sabah</option>
+                                        <option value="Sarawak">Sarawak</option>
+                                        <option value="Selangor">Selangor</option>
+                                        <option value="Terengganu">Terengganu</option>
+                                    </select>
                                     @error('lecturerState') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Country
                                     </label>
-                                    <input type="text" wire:model="lecturerCountry"
+                                    <input type="text" wire:model="lecturerCountry" list="countries-list-lecturer"
+                                           placeholder="Search or select country..."
                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <datalist id="countries-list-lecturer">
+                                        <option value="Malaysia">
+                                        <option value="Afghanistan"><option value="Albania"><option value="Algeria"><option value="Andorra"><option value="Angola">
+                                        <option value="Argentina"><option value="Armenia"><option value="Australia"><option value="Austria"><option value="Azerbaijan">
+                                        <option value="Bahamas"><option value="Bahrain"><option value="Bangladesh"><option value="Barbados"><option value="Belarus">
+                                        <option value="Belgium"><option value="Belize"><option value="Benin"><option value="Bhutan"><option value="Bolivia">
+                                        <option value="Bosnia and Herzegovina"><option value="Botswana"><option value="Brazil"><option value="Brunei"><option value="Bulgaria">
+                                        <option value="Burkina Faso"><option value="Burundi"><option value="Cambodia"><option value="Cameroon"><option value="Canada">
+                                        <option value="Cape Verde"><option value="Chad"><option value="Chile"><option value="China"><option value="Colombia">
+                                        <option value="Comoros"><option value="Congo"><option value="Costa Rica"><option value="Croatia"><option value="Cuba">
+                                        <option value="Cyprus"><option value="Czech Republic"><option value="Denmark"><option value="Djibouti"><option value="Dominica">
+                                        <option value="Dominican Republic"><option value="Ecuador"><option value="Egypt"><option value="El Salvador"><option value="Equatorial Guinea">
+                                        <option value="Eritrea"><option value="Estonia"><option value="Ethiopia"><option value="Fiji"><option value="Finland">
+                                        <option value="France"><option value="Gabon"><option value="Gambia"><option value="Georgia"><option value="Germany">
+                                        <option value="Ghana"><option value="Greece"><option value="Grenada"><option value="Guatemala"><option value="Guinea">
+                                        <option value="Guinea-Bissau"><option value="Guyana"><option value="Haiti"><option value="Honduras"><option value="Hungary">
+                                        <option value="Iceland"><option value="India"><option value="Indonesia"><option value="Iran"><option value="Iraq">
+                                        <option value="Ireland"><option value="Israel"><option value="Italy"><option value="Jamaica"><option value="Japan">
+                                        <option value="Jordan"><option value="Kazakhstan"><option value="Kenya"><option value="Kiribati"><option value="Korea, North">
+                                        <option value="Korea, South"><option value="Kuwait"><option value="Kyrgyzstan"><option value="Laos"><option value="Latvia">
+                                        <option value="Lebanon"><option value="Lesotho"><option value="Liberia"><option value="Libya"><option value="Liechtenstein">
+                                        <option value="Lithuania"><option value="Luxembourg"><option value="Macedonia"><option value="Madagascar"><option value="Malawi">
+                                        <option value="Maldives"><option value="Mali"><option value="Malta"><option value="Marshall Islands"><option value="Mauritania">
+                                        <option value="Mauritius"><option value="Mexico"><option value="Micronesia"><option value="Moldova"><option value="Monaco">
+                                        <option value="Mongolia"><option value="Montenegro"><option value="Morocco"><option value="Mozambique"><option value="Myanmar">
+                                        <option value="Namibia"><option value="Nauru"><option value="Nepal"><option value="Netherlands"><option value="New Zealand">
+                                        <option value="Nicaragua"><option value="Niger"><option value="Nigeria"><option value="Norway"><option value="Oman">
+                                        <option value="Pakistan"><option value="Palau"><option value="Panama"><option value="Papua New Guinea"><option value="Paraguay">
+                                        <option value="Peru"><option value="Philippines"><option value="Poland"><option value="Portugal"><option value="Qatar">
+                                        <option value="Romania"><option value="Russia"><option value="Rwanda"><option value="Saint Lucia"><option value="Samoa">
+                                        <option value="San Marino"><option value="Saudi Arabia"><option value="Senegal"><option value="Serbia"><option value="Seychelles">
+                                        <option value="Sierra Leone"><option value="Singapore"><option value="Slovakia"><option value="Slovenia"><option value="Solomon Islands">
+                                        <option value="Somalia"><option value="South Africa"><option value="South Sudan"><option value="Spain"><option value="Sri Lanka">
+                                        <option value="Sudan"><option value="Suriname"><option value="Swaziland"><option value="Sweden"><option value="Switzerland">
+                                        <option value="Syria"><option value="Taiwan"><option value="Tajikistan"><option value="Tanzania"><option value="Thailand">
+                                        <option value="Togo"><option value="Tonga"><option value="Trinidad and Tobago"><option value="Tunisia"><option value="Turkey">
+                                        <option value="Turkmenistan"><option value="Tuvalu"><option value="Uganda"><option value="Ukraine"><option value="United Arab Emirates">
+                                        <option value="United Kingdom"><option value="United States"><option value="Uruguay"><option value="Uzbekistan"><option value="Vanuatu">
+                                        <option value="Vatican City"><option value="Venezuela"><option value="Vietnam"><option value="Yemen"><option value="Zambia">
+                                        <option value="Zimbabwe">
+                                    </datalist>
                                     @error('lecturerCountry') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -994,16 +1143,36 @@
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Research Group
                                     </label>
-                                    <input type="text" wire:model="lecturerResearchGroup"
+                                    <select wire:model="lecturerResearchGroup"
                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Select Research Group</option>
+                                        <option value="CSRG">CSRG</option>
+                                        <option value="VISIC">VISIC</option>
+                                        <option value="MIRG">MIRG</option>
+                                        <option value="Cy-SIG">Cy-SIG</option>
+                                        <option value="SERG">SERG</option>
+                                        <option value="KECL">KECL</option>
+                                        <option value="DSSIM">DSSIM</option>
+                                        <option value="DBIS">DBIS</option>
+                                        <option value="EDU-TECH">EDU-TECH</option>
+                                        <option value="ISP">ISP</option>
+                                        <option value="CNRG">CNRG</option>
+                                        <option value="SCORE">SCORE</option>
+                                    </select>
                                     @error('lecturerResearchGroup') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Department
                                     </label>
-                                    <input type="text" wire:model="lecturerDepartment"
+                                    <select wire:model="lecturerDepartment"
                                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Select Department</option>
+                                        <option value="CS">CS - Computer Science</option>
+                                        <option value="SN">SN - Systems & Networking</option>
+                                        <option value="GMM">GMM - Graphics & Multimedia</option>
+                                        <option value="CY">CY - Cybersecurity</option>
+                                    </select>
                                     @error('lecturerDepartment') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
