@@ -29,6 +29,8 @@ class Lecturer extends Model
         'status',
         'researchGroup',
         'department',
+        'preferred_coursework',
+        'travel_preference',
         'semester',
         'year',
         'studentQuota',

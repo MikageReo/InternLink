@@ -1,3 +1,11 @@
 studentID,name,email,phone,address,city,postcode,state,country,nationality,program,latitude,longitude
-CD220001,Muhammad Hariz,mharizh03@gmail.com,60123456789,"No 29, Jalan CP3, Taman Cheng Perdana 1",Melaka,72520,Melaka,Malaysia,Malaysian,Bachelor of Computer Science (Software Engineering),,
-CD220002,Iman Nopie,mhareezh@gmail.com,60198765432,"No 2160, Jalan Tiara Sendayan 6/1, Labu",Seremban,71900,Negeri Sembilan,Malaysia,Malaysian,Bachelor of Computer Science (Computer Systems & Networking),,
+CD220001,Muhammad Hariz,mharizh03@gmail.com,60123456789,"No 29, Jalan CP3, Taman Cheng Perdana 1",Melaka,72520,Melaka,Malaysia,Malaysian,Bachelor of Computer Science (Software Engineering),2.1896,102.2501
+CD220002,Iman Nopie,imannopie@gmail.com,60198765432,"No 2160, Jalan Tiara Sendayan 6/1, Labu",Seremban,71900,Negeri Sembilan,Malaysia,Malaysian,Bachelor of Computer Science (Computer Systems & Networking),2.7258,101.9424
+CD220003,Ahmad Razif,arazif@gmail.com,60167894561,"No 45, Jalan Sutera 2/3, Taman Sutera",Johor Bahru,81100,Johor,Malaysia,Malaysian,Bachelor of Computer Science (Data Science),1.4927,103.7414
+CD220004,Nurul Aisyah,nurulaisyah@gmail.com,60134567891,"Block A-5-7, Jalan Putra Heights 1",Subang Jaya,47650,Selangor,Malaysia,Malaysian,Bachelor of Information Technology,3.0738,101.5183
+CD220005,Wei Ming Tan,weiming@gmail.com,60189876543,"No 88, Jalan Tun Razak",Kuala Lumpur,50400,Kuala Lumpur,Malaysia,Malaysian,Bachelor of Computer Science (Artificial Intelligence),3.1549,101.7123
+CD220006,Siti Fatimah,sitifatimah@gmail.com,60112345678,"No 123, Jalan Sultan Ismail 3",Kuantan,25100,Pahang,Malaysia,Malaysian,Bachelor of Computer Science (Software Engineering),3.8077,103.3260
+CD220007,Raj Kumar,rajkumar@gmail.com,60175432198,"No 76, Jalan Ipoh 5/2",Ipoh,30100,Perak,Malaysia,Malaysian,Bachelor of Computer Science (Cybersecurity),4.5975,101.0901
+CD220008,Lim Hui Ling,huiling@gmail.com,60145678912,"No 32, Lorong Delima 4",Georgetown,10400,Penang,Malaysia,Malaysian,Bachelor of Computer Science (Computer Systems & Networking),5.4141,100.3288
+CD220009,Azman Ibrahim,azmanibrahim@gmail.com,60158765432,"No 99, Jalan Pahlawan 2",Kota Kinabalu,88100,Sabah,Malaysia,Malaysian,Bachelor of Information Technology,5.9804,116.0735
+CD220010,Chong Yi Xuan,yixuan@gmail.com,60129876541,"No 15, Jalan Tunku Abdul Rahman",Kuching,93100,Sarawak,Malaysia,Malaysian,Bachelor of Computer Science (Data Science),1.5535,110.3593

@@ -956,6 +956,10 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'longitude' => $longitude,
                 'researchGroup' => $data['researchGroup'] ?? null,
                 'department' => $data['department'] ?? null,
+                'preferred_coursework' => $data['preferred_coursework'] ?? null,
+                'travel_preference' => isset($data['travel_preference']) && in_array(strtolower($data['travel_preference']), ['local', 'nationwide'])
+                    ? strtolower($data['travel_preference'])
+                    : 'local',
                 'semester' => $this->bulkSemester,
                 'year' => $this->bulkYear,
                 'studentQuota' => isset($data['studentQuota']) ? (int)$data['studentQuota'] : 0,

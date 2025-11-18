@@ -126,9 +126,8 @@ class StudentPlacementApplicationTable extends Component
         'changeRequestFiles.*.max' => 'Each file must be less than 10MB.',
     ];
 
-    public function __construct()
+    public function boot()
     {
-        parent::__construct();
         $this->geocodingService = new GeocodingService();
     }
 

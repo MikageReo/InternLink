@@ -52,6 +52,7 @@ Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->na
     // Supervisor assignment - restricted to coordinators only
     Route::middleware(['coordinator'])->group(function () {
         Route::view('/supervisor-assignments', 'lecturer.dashboard.supervisorAssignments')->name('supervisorAssignments');
+        Route::view('/auto-supervisor-assignments', 'lecturer.dashboard.autoSupervisorAssignments')->name('autoSupervisorAssignments');
     });
 });
 
