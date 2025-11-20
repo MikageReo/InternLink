@@ -2,9 +2,20 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Page Header -->
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Internship Placement Applications</h1>
-                <p class="text-gray-600">Submit and manage your internship placement applications</p>
+            <div class="mb-8 flex items-start justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Internship Placement Applications</h1>
+                    <p class="text-gray-600">Submit and manage your internship placement applications</p>
+                </div>
+                <a href="{{ asset('documents/placement-application-guide.pdf') }}" 
+                   target="_blank"
+                   download
+                   class="inline-flex items-center px-4 py-2 border border-blue-400 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Application Guide
+                </a>
             </div>
 
             <!-- Course Verification Alert -->
@@ -299,6 +310,27 @@
                         </div>
                     </div>
 
+                    <!-- Information Box -->
+                    @if (!$editingId)
+                        <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                                <div class="text-sm text-blue-800">
+                                    <p class="font-semibold mb-2">📝 Before you start, make sure you have:</p>
+                                    <ul class="list-disc list-inside space-y-1 ml-2">
+                                        <li>Company's complete contact information and address</li>
+                                        <li>Official offer letter or acceptance form</li>
+                                        <li>Clear job scope and responsibilities</li>
+                                        <li>Confirmed internship start and end dates</li>
+                                        <li>Supporting documents in PDF or image format</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <form wire:submit.prevent="submit">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Company Information Section -->
@@ -309,14 +341,18 @@
                         <!-- Company Name -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
-                            <input type="text" wire:model="companyName" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="text" wire:model="companyName" 
+                                   placeholder="e.g., Tech Solutions Sdn Bhd"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyName')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <!-- Company Email -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Company Email *</label>
-                            <input type="email" wire:model="companyEmail" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="email" wire:model="companyEmail" 
+                                   placeholder="e.g., hr@company.com"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyEmail')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
 
@@ -328,31 +364,129 @@
 
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
-                            <input type="text" wire:model="companyAddressLine" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="text" wire:model="companyAddressLine" 
+                                   placeholder="e.g., No. 123, Jalan Technology Park 2, Bukit Jalil"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyAddressLine')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                            <input type="text" wire:model="companyCity" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="text" wire:model="companyCity" 
+                                   placeholder="e.g., Kuala Lumpur, Johor Bahru"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyCity')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
-                            <input type="text" wire:model="companyPostcode" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="text" wire:model="companyPostcode" 
+                                   placeholder="e.g., 50400"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyPostcode')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
-                            <input type="text" wire:model="companyState" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <select wire:model="companyState" 
+                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select State</option>
+                                <option value="Johor">Johor</option>
+                                <option value="Kedah">Kedah</option>
+                                <option value="Kelantan">Kelantan</option>
+                                <option value="Kuala Lumpur">Kuala Lumpur</option>
+                                <option value="Labuan">Labuan</option>
+                                <option value="Melaka">Melaka</option>
+                                <option value="Negeri Sembilan">Negeri Sembilan</option>
+                                <option value="Pahang">Pahang</option>
+                                <option value="Penang">Penang</option>
+                                <option value="Perak">Perak</option>
+                                <option value="Perlis">Perlis</option>
+                                <option value="Putrajaya">Putrajaya</option>
+                                <option value="Sabah">Sabah</option>
+                                <option value="Sarawak">Sarawak</option>
+                                <option value="Selangor">Selangor</option>
+                                <option value="Terengganu">Terengganu</option>
+                            </select>
                             @error('companyState')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                            <input type="text" wire:model="companyCountry" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <select wire:model="companyCountry" 
+                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Country</option>
+                                <option value="Malaysia">Malaysia</option>
+                                <option value="Afghanistan">Afghanistan</option>
+                                <option value="Albania">Albania</option>
+                                <option value="Algeria">Algeria</option>
+                                <option value="Argentina">Argentina</option>
+                                <option value="Australia">Australia</option>
+                                <option value="Austria">Austria</option>
+                                <option value="Bangladesh">Bangladesh</option>
+                                <option value="Belgium">Belgium</option>
+                                <option value="Brazil">Brazil</option>
+                                <option value="Brunei">Brunei</option>
+                                <option value="Cambodia">Cambodia</option>
+                                <option value="Canada">Canada</option>
+                                <option value="Chile">Chile</option>
+                                <option value="China">China</option>
+                                <option value="Colombia">Colombia</option>
+                                <option value="Denmark">Denmark</option>
+                                <option value="Egypt">Egypt</option>
+                                <option value="Finland">Finland</option>
+                                <option value="France">France</option>
+                                <option value="Germany">Germany</option>
+                                <option value="Greece">Greece</option>
+                                <option value="Hong Kong">Hong Kong</option>
+                                <option value="India">India</option>
+                                <option value="Indonesia">Indonesia</option>
+                                <option value="Iran">Iran</option>
+                                <option value="Iraq">Iraq</option>
+                                <option value="Ireland">Ireland</option>
+                                <option value="Israel">Israel</option>
+                                <option value="Italy">Italy</option>
+                                <option value="Japan">Japan</option>
+                                <option value="Jordan">Jordan</option>
+                                <option value="Kenya">Kenya</option>
+                                <option value="Kuwait">Kuwait</option>
+                                <option value="Lebanon">Lebanon</option>
+                                <option value="Libya">Libya</option>
+                                <option value="Mexico">Mexico</option>
+                                <option value="Morocco">Morocco</option>
+                                <option value="Myanmar">Myanmar</option>
+                                <option value="Nepal">Nepal</option>
+                                <option value="Netherlands">Netherlands</option>
+                                <option value="New Zealand">New Zealand</option>
+                                <option value="Nigeria">Nigeria</option>
+                                <option value="Norway">Norway</option>
+                                <option value="Oman">Oman</option>
+                                <option value="Pakistan">Pakistan</option>
+                                <option value="Palestine">Palestine</option>
+                                <option value="Philippines">Philippines</option>
+                                <option value="Poland">Poland</option>
+                                <option value="Portugal">Portugal</option>
+                                <option value="Qatar">Qatar</option>
+                                <option value="Russia">Russia</option>
+                                <option value="Saudi Arabia">Saudi Arabia</option>
+                                <option value="Singapore">Singapore</option>
+                                <option value="South Africa">South Africa</option>
+                                <option value="South Korea">South Korea</option>
+                                <option value="Spain">Spain</option>
+                                <option value="Sri Lanka">Sri Lanka</option>
+                                <option value="Sudan">Sudan</option>
+                                <option value="Sweden">Sweden</option>
+                                <option value="Switzerland">Switzerland</option>
+                                <option value="Syria">Syria</option>
+                                <option value="Taiwan">Taiwan</option>
+                                <option value="Thailand">Thailand</option>
+                                <option value="Turkey">Turkey</option>
+                                <option value="United Arab Emirates">United Arab Emirates</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="United States">United States</option>
+                                <option value="Vietnam">Vietnam</option>
+                                <option value="Yemen">Yemen</option>
+                            </select>
                             @error('companyCountry')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
 
@@ -377,15 +511,20 @@
                         <!-- Company Phone -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Company Phone *</label>
-                            <input type="text" wire:model="companyNumber" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="text" wire:model="companyNumber" 
+                                   placeholder="e.g., +603-1234 5678 or 011-1234 5678"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyNumber')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <!-- Monthly Allowance -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Allowance (RM)</label>
-                            <input type="number" wire:model="allowance" step="0.01" min="0" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="number" wire:model="allowance" step="0.01" min="0" 
+                                   placeholder="e.g., 800.00"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('allowance')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                            <p class="text-xs text-gray-500 mt-1">Leave blank if no allowance provided</p>
                         </div>
 
                         <!-- Position Information Section -->
@@ -396,20 +535,23 @@
                         <!-- Position -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Position *</label>
-                            <input type="text" wire:model="position" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="text" wire:model="position" 
+                                   placeholder="e.g., Software Developer Intern, Marketing Intern"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('position')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <!-- Method of Work -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Method of Work *</label>
-                            <select wire:model="methodOfWork" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <select wire:model="methodOfWork" 
+                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select method of work</option>
-                                <option value="WFO">Work From Office</option>
-                                <option value="WOS">Work On Site</option>
-                                <option value="WOC">Work On Campus</option>
-                                <option value="WFH">Work From Home</option>
-                                <option value="WFO & WFH">Hybrid (Office & Home)</option>
+                                <option value="WFO">🏢 Work From Office (WFO)</option>
+                                <option value="WOS">🏗️ Work On Site (WOS)</option>
+                                <option value="WOC">🎓 Work On Campus (WOC)</option>
+                                <option value="WFH">🏠 Work From Home (WFH)</option>
+                                <option value="WFO & WFH">🔄 Hybrid (Office & Home)</option>
                             </select>
                             @error('methodOfWork')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
@@ -417,9 +559,11 @@
                         <!-- Job Scope -->
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Job Scope *</label>
-                            <textarea wire:model="jobscope" rows="4" class="w-full border border-gray-300 rounded px-3 py-2"
-                                      placeholder="Describe the main responsibilities and tasks..."></textarea>
+                            <textarea wire:model="jobscope" rows="5" 
+                                      class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="Describe your main responsibilities and tasks during the internship. For example:&#10;• Assist in developing web applications using Laravel and Vue.js&#10;• Collaborate with team members on software projects&#10;• Participate in code reviews and testing&#10;• Document development processes"></textarea>
                             @error('jobscope')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                            <p class="text-xs text-gray-500 mt-1">Be specific and detailed about your responsibilities</p>
                         </div>
 
                         <!-- Duration Section -->
@@ -430,29 +574,52 @@
                         <!-- Start Date -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
-                            <input type="date" wire:model="startDate" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="date" wire:model="startDate" 
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('startDate')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                            <p class="text-xs text-gray-500 mt-1">Internship start date</p>
                         </div>
 
                         <!-- End Date -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
-                            <input type="date" wire:model="endDate" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <input type="date" wire:model="endDate" 
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('endDate')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                            <p class="text-xs text-gray-500 mt-1">Internship end date (must be after start date)</p>
                         </div>
 
                         <!-- File Upload Section -->
                         <div class="md:col-span-2 mt-4">
                             <h4 class="text-md font-semibold text-gray-900 mb-3">Supporting Documents</h4>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Upload Files</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <span class="flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                        Upload Files (Offer Letter, Acceptance Form, etc.)
+                                    </span>
+                                </label>
                                 <input type="file" wire:model="applicationFiles" multiple
                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                       class="w-full border border-gray-300 rounded px-3 py-2">
-                                <p class="text-sm text-gray-500 mt-1">
-                                    You can upload multiple files. Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 10MB each)
-                                </p>
-                                @error('applicationFiles.*')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                                       class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                <div class="mt-2 flex items-start space-x-2">
+                                    <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                    </svg>
+                                    <div class="text-xs text-gray-600">
+                                        <p class="font-medium">Recommended documents:</p>
+                                        <ul class="list-disc list-inside mt-1 space-y-0.5">
+                                            <li>Offer letter from the company</li>
+                                            <li>Acceptance form (if provided)</li>
+                                            <li>Company profile or brochure</li>
+                                            <li>Job description document</li>
+                                        </ul>
+                                        <p class="mt-2 text-gray-500">Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG • Max: 10MB per file</p>
+                                    </div>
+                                </div>
+                                @error('applicationFiles.*')<p class="text-red-600 text-sm mt-2">{{ $message }}</p>@enderror
                             </div>
 
                             <!-- Show existing files if editing -->

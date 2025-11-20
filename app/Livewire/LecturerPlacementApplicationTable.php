@@ -38,6 +38,11 @@ class LecturerPlacementApplicationTable extends Component
     // Analytics properties
     public $showAnalytics = false;
 
+    // Bulk selection properties
+    public $selectedApplications = [];
+    public $selectAll = false;
+    public $bulkRemarks = '';
+
     protected $queryString = [
         'search' => ['except' => ''],
         'sortField' => ['except' => 'applicationDate'],
@@ -252,6 +257,226 @@ class LecturerPlacementApplicationTable extends Component
     public function toggleAnalytics()
     {
         $this->showAnalytics = !$this->showAnalytics;
+    }
+
+    // Bulk selection methods
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            // Select all applications on current filtered results (only pending ones for the user's role)
+            $lecturer = Auth::user()->lecturer;
+            $query = $this->getFilteredApplications();
+            
+            if ($lecturer->isCommittee && !$lecturer->isCoordinator) {
+                // Committee members can only select applications pending committee review
+                $query->where('committeeStatus', 'Pending');
+            } elseif ($lecturer->isCoordinator && !$lecturer->isCommittee) {
+                // Coordinators can only select applications pending coordinator review
+                $query->where('coordinatorStatus', 'Pending')
+                      ->where('committeeStatus', 'Approved');
+            } elseif ($lecturer->isCommittee && $lecturer->isCoordinator) {
+                // If user is both, select all pending
+                $query->where(function($q) {
+                    $q->where('committeeStatus', 'Pending')
+                      ->orWhere(function($q2) {
+                          $q2->where('coordinatorStatus', 'Pending')
+                             ->where('committeeStatus', 'Approved');
+                      });
+                });
+            }
+            
+            $this->selectedApplications = $query->pluck('applicationID')->toArray();
+        } else {
+            $this->selectedApplications = [];
+        }
+    }
+
+    public function bulkApproveCommittee()
+    {
+        $lecturer = Auth::user()->lecturer;
+
+        if (!$lecturer || !$lecturer->isCommittee) {
+            session()->flash('error', 'Access denied. Only committee members can approve applications as committee.');
+            return;
+        }
+
+        if (empty($this->selectedApplications)) {
+            session()->flash('error', 'Please select at least one application to approve.');
+            return;
+        }
+
+        $this->processBulkApproval('committee', 'Approved');
+    }
+
+    public function bulkRejectCommittee()
+    {
+        $lecturer = Auth::user()->lecturer;
+
+        if (!$lecturer || !$lecturer->isCommittee) {
+            session()->flash('error', 'Access denied. Only committee members can reject applications as committee.');
+            return;
+        }
+
+        if (empty($this->selectedApplications)) {
+            session()->flash('error', 'Please select at least one application to reject.');
+            return;
+        }
+
+        $this->processBulkApproval('committee', 'Rejected');
+    }
+
+    public function bulkApproveCoordinator()
+    {
+        $lecturer = Auth::user()->lecturer;
+
+        if (!$lecturer || !$lecturer->isCoordinator) {
+            session()->flash('error', 'Access denied. Only coordinators can approve applications as coordinator.');
+            return;
+        }
+
+        if (empty($this->selectedApplications)) {
+            session()->flash('error', 'Please select at least one application to approve.');
+            return;
+        }
+
+        $this->processBulkApproval('coordinator', 'Approved');
+    }
+
+    public function bulkRejectCoordinator()
+    {
+        $lecturer = Auth::user()->lecturer;
+
+        if (!$lecturer || !$lecturer->isCoordinator) {
+            session()->flash('error', 'Access denied. Only coordinators can reject applications as coordinator.');
+            return;
+        }
+
+        if (empty($this->selectedApplications)) {
+            session()->flash('error', 'Please select at least one application to reject.');
+            return;
+        }
+
+        $this->processBulkApproval('coordinator', 'Rejected');
+    }
+
+    private function processBulkApproval($role, $status)
+    {
+        try {
+            $lecturer = Auth::user()->lecturer;
+            $count = 0;
+
+            foreach ($this->selectedApplications as $id) {
+                $application = PlacementApplication::find($id);
+                
+                if (!$application) {
+                    continue;
+                }
+
+                // Verify the application can be processed by this role
+                if ($role === 'committee' && $application->committeeStatus !== 'Pending') {
+                    continue;
+                }
+                if ($role === 'coordinator' && $application->coordinatorStatus !== 'Pending') {
+                    continue;
+                }
+
+                // Update application based on role
+                $updateData = [
+                    'remarks' => $this->bulkRemarks ?: ($status === 'Approved' ? 'Approved' : 'Rejected'),
+                ];
+
+                if ($role === 'committee') {
+                    $updateData['committeeID'] = $lecturer->lecturerID;
+                    $updateData['committeeStatus'] = $status;
+                    
+                    // If committee rejects, also set coordinator to rejected
+                    if ($status === 'Rejected') {
+                        $updateData['coordinatorStatus'] = 'Rejected';
+                    }
+                } else {
+                    $updateData['coordinatorID'] = $lecturer->lecturerID;
+                    $updateData['coordinatorStatus'] = $status;
+                }
+
+                $application->update($updateData);
+                
+                // Send email notification
+                $this->sendStatusNotification($application);
+                
+                $count++;
+            }
+
+            if ($count > 0) {
+                $roleText = $role === 'committee' ? 'committee' : 'coordinator';
+                $actionText = $status === 'Approved' ? 'approved' : 'rejected';
+                session()->flash('message', "Successfully {$actionText} {$count} application(s) as {$roleText}!");
+            } else {
+                session()->flash('error', 'No valid applications were processed. They may have already been reviewed.');
+            }
+
+            // Clear selections
+            $this->selectedApplications = [];
+            $this->selectAll = false;
+            $this->bulkRemarks = '';
+            $this->resetPage();
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred during bulk processing: ' . $e->getMessage());
+            Log::error('Bulk approval error: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkDownload()
+    {
+        if (empty($this->selectedApplications)) {
+            session()->flash('error', 'Please select at least one application to download documents.');
+            return;
+        }
+
+        try {
+            $applications = PlacementApplication::with('files', 'student')
+                ->whereIn('applicationID', $this->selectedApplications)
+                ->get();
+
+            if ($applications->isEmpty()) {
+                session()->flash('error', 'No applications found.');
+                return;
+            }
+
+            // Create a temporary zip file
+            $zipFileName = 'placement_documents_' . date('Y-m-d_His') . '.zip';
+            $zipPath = storage_path('app/temp/' . $zipFileName);
+
+            // Ensure temp directory exists
+            if (!file_exists(storage_path('app/temp'))) {
+                mkdir(storage_path('app/temp'), 0755, true);
+            }
+
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                foreach ($applications as $application) {
+                    // Create a folder for each application
+                    $folderName = 'App_' . $application->applicationID . '_' . $application->student->studentID;
+                    
+                    foreach ($application->files as $file) {
+                        $filePath = storage_path('app/public/' . $file->file_path);
+                        if (file_exists($filePath)) {
+                            // Add file to zip with organized structure
+                            $zip->addFile($filePath, $folderName . '/' . $file->original_name);
+                        }
+                    }
+                }
+                $zip->close();
+
+                // Return download and cleanup
+                return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+            } else {
+                session()->flash('error', 'Failed to create zip file.');
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred during bulk download: ' . $e->getMessage());
+            Log::error('Bulk download error: ' . $e->getMessage());
+        }
     }
 
     private function getFilteredApplications()

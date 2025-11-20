@@ -28,5 +28,10 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'lecturer',
         ]);
+
+        // Call other seeders
+        $this->call([
+            PlacementApplicationSeeder::class,
+        ]);
     }
 }

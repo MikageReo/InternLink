@@ -95,6 +95,73 @@
                     </div>
                 </div>
 
+                <!-- Bulk Actions Bar -->
+                @if(count($selectedApplications) > 0)
+                    <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm font-medium text-gray-700">
+                                    {{ count($selectedApplications) }} application(s) selected
+                                </span>
+                                <button wire:click="$set('selectedApplications', [])" 
+                                        class="text-sm text-gray-600 hover:text-gray-900 underline">
+                                    Clear Selection
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <!-- Committee Actions -->
+                                @if(Auth::user()->lecturer->isCommittee)
+                                    <button wire:click="bulkApproveCommittee"
+                                            wire:confirm="Are you sure you want to approve these applications as committee?"
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Committee Approve
+                                    </button>
+                                    <button wire:click="bulkRejectCommittee"
+                                            wire:confirm="Are you sure you want to reject these applications as committee?"
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Committee Reject
+                                    </button>
+                                @endif
+                                
+                                <!-- Coordinator Actions -->
+                                @if(Auth::user()->lecturer->isCoordinator)
+                                    <button wire:click="bulkApproveCoordinator"
+                                            wire:confirm="Are you sure you want to approve these applications as coordinator?"
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Coordinator Approve
+                                    </button>
+                                    <button wire:click="bulkRejectCoordinator"
+                                            wire:confirm="Are you sure you want to reject these applications as coordinator?"
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Coordinator Reject
+                                    </button>
+                                @endif
+                                
+                                <!-- Download Button -->
+                                <button wire:click="bulkDownload"
+                                        class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                    Download All Files
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Advanced Filters -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -143,6 +210,11 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-3 py-3 text-left">
+                                    <input type="checkbox" 
+                                           wire:model.live="selectAll"
+                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     ID</th>
@@ -171,7 +243,29 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($applications as $application)
+                                @php
+                                    $canSelect = false;
+                                    $lecturer = Auth::user()->lecturer;
+                                    
+                                    // Determine if this application can be selected based on user's role
+                                    if ($lecturer->isCommittee && $application->committeeStatus === 'Pending') {
+                                        $canSelect = true;
+                                    }
+                                    if ($lecturer->isCoordinator && $application->coordinatorStatus === 'Pending' && $application->committeeStatus === 'Approved') {
+                                        $canSelect = true;
+                                    }
+                                @endphp
                                 <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        @if($canSelect)
+                                            <input type="checkbox" 
+                                                   wire:model.live="selectedApplications"
+                                                   value="{{ $application->applicationID }}"
+                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                        @else
+                                            <span class="text-gray-300">—</span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         #{{ $application->applicationID }}
                                     </td>
@@ -322,7 +416,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                                    <td colspan="9" class="px-6 py-8 text-center text-gray-500">
                                         <p class="text-lg font-medium mb-2">No applications found</p>
                                         <p class="text-sm">No placement applications match your current filters.</p>
                                     </td>
