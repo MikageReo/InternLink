@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
 
         // Call other seeders
         $this->call([
+            SupervisorLecturerSeeder::class,
             PlacementApplicationSeeder::class,
         ]);
     }

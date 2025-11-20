@@ -33,6 +33,7 @@ class SupervisorAssignmentTable extends Component
     public $showDetailModal = false;
     public $selectedStudent = null;
     public $selectedAssignment = null;
+    public $selectedAssignmentID = null;
     public $recommendedSupervisors = [];
     public $selectedSupervisorID = null;
     public $assignmentNotes = '';
@@ -107,7 +108,7 @@ class SupervisorAssignmentTable extends Component
             $studentID,
             10,
             $this->quotaOverride
-        )->toArray();
+        );
 
         $this->selectedSupervisorID = null;
         $this->assignmentNotes = '';
@@ -138,7 +139,7 @@ class SupervisorAssignmentTable extends Component
                 $this->selectedStudent->studentID,
                 10,
                 $this->quotaOverride
-            )->toArray();
+            );
         }
     }
 
@@ -204,20 +205,51 @@ class SupervisorAssignmentTable extends Component
 
     public function viewAssignment($assignmentID)
     {
-        $this->selectedAssignment = SupervisorAssignment::with([
+        $this->selectedAssignmentID = $assignmentID;
+        
+        // Load the assignment with all relationships
+        $assignment = SupervisorAssignment::with([
             'student.user',
             'supervisor.user',
             'assignedBy.user',
             'student.acceptedPlacementApplication'
-        ])->findOrFail($assignmentID);
-
-        $this->showDetailModal = true;
+        ])->find($assignmentID);
+        
+        if ($assignment) {
+            // Store as array to avoid Livewire serialization issues
+            $this->selectedAssignment = [
+                'id' => $assignment->id,
+                'student_name' => $assignment->student->user->name,
+                'student_id' => $assignment->student->studentID,
+                'student_program' => $assignment->student->program,
+                'company_name' => $assignment->student->acceptedPlacementApplication->companyName ?? null,
+                'company_city' => $assignment->student->acceptedPlacementApplication->companyCity ?? null,
+                'company_state' => $assignment->student->acceptedPlacementApplication->companyState ?? null,
+                'supervisor_name' => $assignment->supervisor->user->name,
+                'supervisor_id' => $assignment->supervisor->lecturerID,
+                'supervisor_department' => $assignment->supervisor->department,
+                'supervisor_research_group' => $assignment->supervisor->researchGroup,
+                'supervisor_position' => $assignment->supervisor->position,
+                'assigned_by_name' => $assignment->assignedBy->user->name ?? 'N/A',
+                'assigned_by_id' => $assignment->assignedBy->lecturerID ?? null,
+                'status' => $assignment->status,
+                'status_display' => $assignment->status_display,
+                'assigned_at' => $assignment->assigned_at->format('Y-m-d H:i:s'),
+                'distance_km' => $assignment->distance_km,
+                'quota_override' => $assignment->quota_override,
+                'override_reason' => $assignment->override_reason,
+                'assignment_notes' => $assignment->assignment_notes,
+            ];
+            
+            $this->showDetailModal = true;
+        }
     }
 
     public function closeDetailModal()
     {
         $this->showDetailModal = false;
         $this->selectedAssignment = null;
+        $this->selectedAssignmentID = null;
     }
 
     public function render()

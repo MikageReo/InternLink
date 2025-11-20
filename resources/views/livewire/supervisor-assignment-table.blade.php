@@ -189,8 +189,11 @@
                                                 </button>
                                             @else
                                                 <button wire:click="viewAssignment({{ $student->supervisorAssignment->id }})"
-                                                    class="text-indigo-600 hover:text-indigo-900">
-                                                    View Details
+                                                    class="text-indigo-600 hover:text-indigo-900"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="viewAssignment">
+                                                    <span wire:loading.remove wire:target="viewAssignment">View Details</span>
+                                                    <span wire:loading wire:target="viewAssignment">Loading...</span>
                                                 </button>
                                             @endif
                                         </div>
@@ -255,23 +258,27 @@
                             <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
                                 @foreach($recommendedSupervisors as $supervisor)
                                     <label class="flex items-start p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
-                                        <input type="radio" name="supervisor" value="{{ $supervisor['lecturerID'] }}"
+                                        <input type="radio" name="supervisor" value="{{ $supervisor->lecturerID }}"
                                             wire:model="selectedSupervisorID"
                                             class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                         <div class="ml-3 flex-1">
                                             <div class="flex justify-between">
                                                 <div>
-                                                    <p class="text-sm font-medium text-gray-900">{{ $supervisor['user']['name'] }}</p>
-                                                    <p class="text-xs text-gray-500">{{ $supervisor['lecturerID'] }} | {{ $supervisor['department'] ?? 'N/A' }}</p>
+                                                    <p class="text-sm font-medium text-gray-900">{{ $supervisor->user->name }}</p>
+                                                    <p class="text-xs text-gray-500">
+                                                        {{ $supervisor->lecturerID }} | 
+                                                        {{ $supervisor->department ?? 'N/A' }} |
+                                                        {{ $supervisor->researchGroup ?? 'N/A' }}
+                                                    </p>
                                                 </div>
                                                 <div class="text-right">
-                                                    @if(isset($supervisor['distance']))
-                                                        <p class="text-sm font-medium text-gray-900">{{ number_format($supervisor['distance'], 2) }} km</p>
+                                                    @if(isset($supervisor->distance))
+                                                        <p class="text-sm font-medium text-gray-900">{{ number_format($supervisor->distance, 2) }} km</p>
                                                     @endif
                                                     <p class="text-xs text-gray-500">
-                                                        Quota: {{ $supervisor['current_assignments'] }}/{{ $supervisor['supervisor_quota'] }}
-                                                        @if(isset($supervisor['available_quota']) && $supervisor['available_quota'] > 0)
-                                                            <span class="text-green-600">({{ $supervisor['available_quota'] }} available)</span>
+                                                        Quota: {{ $supervisor->current_assignments }}/{{ $supervisor->supervisor_quota }}
+                                                        @if(isset($supervisor->available_quota) && $supervisor->available_quota > 0)
+                                                            <span class="text-green-600">({{ $supervisor->available_quota }} available)</span>
                                                         @else
                                                             <span class="text-red-600">(Full)</span>
                                                         @endif
@@ -354,26 +361,33 @@
                     <!-- Student Info -->
                     <div class="mb-4 p-4 bg-gray-50 rounded-lg">
                         <h4 class="font-medium text-gray-900 mb-2">Student</h4>
-                        <p><strong>Name:</strong> {{ $selectedAssignment->student->user->name }}</p>
-                        <p><strong>ID:</strong> {{ $selectedAssignment->student->studentID }}</p>
-                        @if($selectedAssignment->student->acceptedPlacementApplication)
-                            <p><strong>Company:</strong> {{ $selectedAssignment->student->acceptedPlacementApplication->companyName }}</p>
+                        <p><strong>Name:</strong> {{ $selectedAssignment['student_name'] }}</p>
+                        <p><strong>ID:</strong> {{ $selectedAssignment['student_id'] }}</p>
+                        <p><strong>Program:</strong> {{ $selectedAssignment['student_program'] ?? 'N/A' }}</p>
+                        @if($selectedAssignment['company_name'])
+                            <p><strong>Company:</strong> {{ $selectedAssignment['company_name'] }}</p>
+                            <p><strong>Location:</strong> 
+                                {{ $selectedAssignment['company_city'] }}, 
+                                {{ $selectedAssignment['company_state'] }}
+                            </p>
                         @endif
                     </div>
 
                     <!-- Supervisor Info -->
                     <div class="mb-4 p-4 bg-gray-50 rounded-lg">
                         <h4 class="font-medium text-gray-900 mb-2">Supervisor</h4>
-                        <p><strong>Name:</strong> {{ $selectedAssignment->supervisor->user->name }}</p>
-                        <p><strong>ID:</strong> {{ $selectedAssignment->supervisor->lecturerID }}</p>
-                        <p><strong>Department:</strong> {{ $selectedAssignment->supervisor->department ?? 'N/A' }}</p>
-                        @if($selectedAssignment->distance_km)
-                            <p><strong>Distance:</strong> {{ number_format($selectedAssignment->distance_km, 2) }} km</p>
+                        <p><strong>Name:</strong> {{ $selectedAssignment['supervisor_name'] }}</p>
+                        <p><strong>ID:</strong> {{ $selectedAssignment['supervisor_id'] }}</p>
+                        <p><strong>Department:</strong> {{ $selectedAssignment['supervisor_department'] ?? 'N/A' }}</p>
+                        <p><strong>Research Group:</strong> {{ $selectedAssignment['supervisor_research_group'] ?? 'N/A' }}</p>
+                        <p><strong>Position:</strong> {{ $selectedAssignment['supervisor_position'] ?? 'N/A' }}</p>
+                        @if($selectedAssignment['distance_km'])
+                            <p><strong>Distance:</strong> {{ number_format($selectedAssignment['distance_km'], 2) }} km</p>
                         @endif
-                        @if($selectedAssignment->quota_override)
+                        @if($selectedAssignment['quota_override'])
                             <p class="text-yellow-600"><strong>⚠️ Quota Override Applied</strong></p>
-                            @if($selectedAssignment->override_reason)
-                                <p class="text-sm text-gray-600"><strong>Reason:</strong> {{ $selectedAssignment->override_reason }}</p>
+                            @if($selectedAssignment['override_reason'])
+                                <p class="text-sm text-gray-600"><strong>Reason:</strong> {{ $selectedAssignment['override_reason'] }}</p>
                             @endif
                         @endif
                     </div>
@@ -382,14 +396,19 @@
                     <div class="mb-4 p-4 bg-gray-50 rounded-lg">
                         <h4 class="font-medium text-gray-900 mb-2">Assignment Details</h4>
                         <p><strong>Status:</strong>
-                            <span class="px-2 py-1 text-xs rounded-full {{ $selectedAssignment->status === 'assigned' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                {{ $selectedAssignment->status_display }}
+                            <span class="px-2 py-1 text-xs rounded-full {{ $selectedAssignment['status'] === 'assigned' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                {{ $selectedAssignment['status_display'] }}
                             </span>
                         </p>
-                        <p><strong>Assigned By:</strong> {{ $selectedAssignment->assignedBy->user->name }}</p>
-                        <p><strong>Assigned At:</strong> {{ $selectedAssignment->assigned_at->format('Y-m-d H:i:s') }}</p>
-                        @if($selectedAssignment->assignment_notes)
-                            <p><strong>Notes:</strong> {{ $selectedAssignment->assignment_notes }}</p>
+                        <p><strong>Assigned By:</strong> 
+                            {{ $selectedAssignment['assigned_by_name'] }}
+                            @if($selectedAssignment['assigned_by_id'])
+                                ({{ $selectedAssignment['assigned_by_id'] }})
+                            @endif
+                        </p>
+                        <p><strong>Assigned At:</strong> {{ $selectedAssignment['assigned_at'] }}</p>
+                        @if($selectedAssignment['assignment_notes'])
+                            <p><strong>Notes:</strong> {{ $selectedAssignment['assignment_notes'] }}</p>
                         @endif
                     </div>
 

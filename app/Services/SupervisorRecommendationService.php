@@ -32,11 +32,10 @@ class SupervisorRecommendationService
             return collect();
         }
 
-        // Get all available supervisors
+        // Get all available supervisors (any department can supervise any student)
         $supervisors = Lecturer::where('isSupervisorFaculty', true)
             ->where('status', Lecturer::STATUS_ACTIVE)
             ->whereRaw('(supervisor_quota - current_assignments) > 0')
-            ->where('department', $student->program)
             ->get();
 
         if ($supervisors->isEmpty()) {

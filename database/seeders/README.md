@@ -7,19 +7,24 @@ Creates comprehensive test data for internship placement applications.
 
 **What it creates:**
 - 20-40 placement applications from existing students
+- **UPDATED: More accepted applications for supervisor assignment testing**
 - Variety of application statuses:
-  - Committee pending (5 applications)
-  - Coordinator pending (3 applications)
-  - Fully approved, awaiting student acceptance (2 applications)
-  - Student accepted (2 applications)
-  - Student declined (1 application)
-  - Committee rejected (2 applications)
-  - Coordinator rejected (1 application)
+  - **Student accepted (47% - majority for testing supervisor assignment)**
+  - Committee pending (12%)
+  - Coordinator pending (12%)
+  - Fully approved, awaiting student acceptance (12%)
+  - Student declined (6%)
+  - Committee/Coordinator rejected (11%)
 - Realistic Malaysian companies (Maybank, Grab, Shopee, Intel, etc.)
 - Various positions (Software Developer, Data Analyst, Network Engineer, etc.)
 - Complete job scopes and company details
 - 1-3 PDF files per application (offer letters, acceptance forms, etc.)
 - Proper committee and coordinator assignments
+
+**For Supervisor Assignment Testing:**
+- Each run creates ~8 students with accepted placements
+- Run multiple times to get more students ready for supervisor assignment
+- Current test data: **17 students** ready for supervisor assignment
 
 **Prerequisites:**
 - Students must exist in the database

@@ -74,10 +74,7 @@ class SupervisorAssignmentService
             throw new \Exception('Supervisor has reached their quota limit. Use quota override if necessary.');
         }
 
-        // Check department match (no cross-department)
-        if ($student->program && $supervisor->department && $student->program !== $supervisor->department) {
-            throw new \Exception('Cannot assign supervisor from different department.');
-        }
+        // Note: Department restriction removed - supervisors can supervise any student regardless of department
 
         // Get assigned by (coordinator)
         if (!$assignedBy) {

@@ -231,12 +231,10 @@ class GeocodingService
         $query = \App\Models\Lecturer::where('isSupervisorFaculty', true)
             ->where('status', \App\Models\Lecturer::STATUS_ACTIVE)
             ->whereNotNull('latitude')
-            ->whereNotNull('longitude');
+            ->whereNotNull('longitude')
+            ->with('user'); // Load user relationship
 
-        // Filter by department (no cross-department assignments)
-        if ($studentDepartment) {
-            $query->where('department', $studentDepartment);
-        }
+        // Note: Department filtering removed - supervisors can handle any student regardless of department
 
         // Filter by available quota (unless override is allowed)
         if (!$includeFullQuota) {
@@ -281,7 +279,7 @@ class GeocodingService
             return $this->findNearestSupervisors(
                 (float) $placement->companyLatitude,
                 (float) $placement->companyLongitude,
-                $student->program, // Using program as department equivalent
+                null, // No department filtering - supervisors can handle any student
                 $limit,
                 $includeFullQuota
             );
@@ -292,7 +290,7 @@ class GeocodingService
             return $this->findNearestSupervisors(
                 (float) $student->latitude,
                 (float) $student->longitude,
-                $student->program,
+                null, // No department filtering - supervisors can handle any student
                 $limit,
                 $includeFullQuota
             );

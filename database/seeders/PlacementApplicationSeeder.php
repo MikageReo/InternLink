@@ -129,16 +129,23 @@ class PlacementApplicationSeeder extends Seeder
         $allowances = [800, 1000, 1200, 1500, 0, 600, 900];
 
         // Status combinations for variety
+        // NOTE: More "Accepted" status for supervisor assignment testing
         $statusCombinations = [
+            // Approved and accepted by student (MORE FOR TESTING SUPERVISOR ASSIGNMENT)
+            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
+            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
+            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
+            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
+            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
+            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
+            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
+            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
+            
             // Pending applications
-            ['committee' => 'Pending', 'coordinator' => 'Pending', 'student' => null],
-            ['committee' => 'Pending', 'coordinator' => 'Pending', 'student' => null],
-            ['committee' => 'Pending', 'coordinator' => 'Pending', 'student' => null],
             ['committee' => 'Pending', 'coordinator' => 'Pending', 'student' => null],
             ['committee' => 'Pending', 'coordinator' => 'Pending', 'student' => null],
             
             // Committee approved, coordinator pending
-            ['committee' => 'Approved', 'coordinator' => 'Pending', 'student' => null],
             ['committee' => 'Approved', 'coordinator' => 'Pending', 'student' => null],
             ['committee' => 'Approved', 'coordinator' => 'Pending', 'student' => null],
             
@@ -146,15 +153,10 @@ class PlacementApplicationSeeder extends Seeder
             ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => null],
             ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => null],
             
-            // Approved and accepted by student
-            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
-            ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Accepted'],
-            
             // Approved but declined by student
             ['committee' => 'Approved', 'coordinator' => 'Approved', 'student' => 'Declined'],
             
             // Committee rejected
-            ['committee' => 'Rejected', 'coordinator' => 'Rejected', 'student' => null],
             ['committee' => 'Rejected', 'coordinator' => 'Rejected', 'student' => null],
             
             // Coordinator rejected
