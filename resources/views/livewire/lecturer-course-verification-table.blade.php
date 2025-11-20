@@ -175,12 +175,59 @@
                 </div>
             </div>
 
+            <!-- Bulk Actions Section -->
+            @if (count($selectedApplications) > 0)
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="flex items-center">
+                            <i class="fa fa-check text-blue-600 text-lg mr-3"></i>
+                            <span class="text-sm font-medium text-blue-900">
+                                {{ count($selectedApplications) }} application(s) selected
+                            </span>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row gap-2">
+                            <!-- Bulk Remarks Input -->
+                            <input type="text" wire:model="remarks"
+                                class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                placeholder="Remarks (required for reject)">
+                            
+                            <!-- Bulk Actions Buttons -->
+                            <button wire:click="bulkDownload"
+                                class="px-4 py-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fa fa-download mr-2"></i>
+                                Download All
+                            </button>
+                            
+                            <button wire:click="bulkReject"
+                                wire:confirm="Are you sure you want to reject {{ count($selectedApplications) }} application(s)?"
+                                class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                <i class="fa fa-times mr-2"></i>
+                                Reject Selected
+                            </button>
+                            
+                            <button wire:click="bulkApprove"
+                                wire:confirm="Are you sure you want to approve {{ count($selectedApplications) }} application(s)?"
+                                class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                <i class="fa fa-check mr-2"></i>
+                                Approve Selected
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Table Section -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                                    <input type="checkbox" wire:model.live="selectAll"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                        title="Select all">
+                                </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <button wire:click="sortBy('courseVerificationID')"
@@ -298,6 +345,18 @@
                             @forelse($applications as $application)
                                 <tr
                                     class="hover:bg-gray-50 {{ $application->status === 'pending' ? 'bg-yellow-50' : '' }}">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if ($application->status === 'pending')
+                                            <input type="checkbox" 
+                                                wire:model.live="selectedApplications" 
+                                                value="{{ $application->courseVerificationID }}"
+                                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                        @else
+                                            <span class="text-gray-400" title="Already {{ $application->status }}">
+                                                <i class="fa {{ $application->status === 'approved' ? 'fa-check' : 'fa-times' }}"></i>
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $application->courseVerificationID }}
                                     </td>
@@ -341,7 +400,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                                         <div class="flex flex-col items-center">
                                             <i class="fa fa-file text-4xl text-gray-300 mb-4"></i>
                                             <p class="text-lg font-medium mb-2">No applications found</p>

@@ -30,6 +30,10 @@ class LecturerCourseVerificationTable extends Component
     public $selectedApplication = null;
     public $remarks = '';
 
+    // Bulk selection properties
+    public $selectedApplications = [];
+    public $selectAll = false;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'sortField' => ['except' => 'applicationDate'],
@@ -251,6 +255,174 @@ class LecturerCourseVerificationTable extends Component
         }
 
         return response()->download(Storage::disk('public')->path($file->file_path), $file->original_name);
+    }
+
+    // Bulk selection methods
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            // Select all PENDING applications on current page only
+            $this->selectedApplications = $this->getFilteredApplications()
+                ->where('status', 'pending')
+                ->pluck('courseVerificationID')
+                ->toArray();
+        } else {
+            $this->selectedApplications = [];
+        }
+    }
+
+    public function bulkApprove()
+    {
+        if (empty($this->selectedApplications)) {
+            session()->flash('error', 'Please select at least one application to approve.');
+            return;
+        }
+
+        try {
+            $lecturer = Auth::user()->lecturer;
+
+            if (!$lecturer) {
+                session()->flash('error', 'Lecturer profile not found.');
+                return;
+            }
+
+            $count = 0;
+            foreach ($this->selectedApplications as $id) {
+                $application = CourseVerification::find($id);
+                if ($application && $application->status === 'pending') {
+                    $application->update([
+                        'status' => 'approved',
+                        'lecturerID' => $lecturer->lecturerID,
+                        'remarks' => $this->remarks ?: 'Bulk approved',
+                    ]);
+
+                    // Send notification
+                    try {
+                        $application->load('student.user');
+                        $application->student->user->notify(
+                            new CourseVerificationStatusNotification($application)
+                        );
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send approval notification: ' . $e->getMessage());
+                    }
+
+                    $count++;
+                }
+            }
+
+            session()->flash('message', "Successfully approved {$count} application(s)! Email notifications sent to students.");
+            $this->selectedApplications = [];
+            $this->selectAll = false;
+            $this->remarks = '';
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred during bulk approval: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkReject()
+    {
+        if (empty($this->selectedApplications)) {
+            session()->flash('error', 'Please select at least one application to reject.');
+            return;
+        }
+
+        if (empty($this->remarks)) {
+            session()->flash('error', 'Please provide remarks for rejection.');
+            return;
+        }
+
+        try {
+            $lecturer = Auth::user()->lecturer;
+
+            if (!$lecturer) {
+                session()->flash('error', 'Lecturer profile not found.');
+                return;
+            }
+
+            $count = 0;
+            foreach ($this->selectedApplications as $id) {
+                $application = CourseVerification::find($id);
+                if ($application && $application->status === 'pending') {
+                    $application->update([
+                        'status' => 'rejected',
+                        'lecturerID' => $lecturer->lecturerID,
+                        'remarks' => $this->remarks,
+                    ]);
+
+                    // Send notification
+                    try {
+                        $application->load('student.user');
+                        $application->student->user->notify(
+                            new CourseVerificationStatusNotification($application)
+                        );
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send rejection notification: ' . $e->getMessage());
+                    }
+
+                    $count++;
+                }
+            }
+
+            session()->flash('message', "Successfully rejected {$count} application(s)! Email notifications sent to students.");
+            $this->selectedApplications = [];
+            $this->selectAll = false;
+            $this->remarks = '';
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred during bulk rejection: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkDownload()
+    {
+        if (empty($this->selectedApplications)) {
+            session()->flash('error', 'Please select at least one application to download documents.');
+            return;
+        }
+
+        try {
+            $applications = CourseVerification::with('files')
+                ->whereIn('courseVerificationID', $this->selectedApplications)
+                ->get();
+
+            if ($applications->isEmpty()) {
+                session()->flash('error', 'No applications found.');
+                return;
+            }
+
+            // Create a temporary zip file
+            $zipFileName = 'course_verification_documents_' . date('Y-m-d_His') . '.zip';
+            $zipPath = storage_path('app/temp/' . $zipFileName);
+
+            // Ensure temp directory exists
+            if (!file_exists(storage_path('app/temp'))) {
+                mkdir(storage_path('app/temp'), 0755, true);
+            }
+
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                foreach ($applications as $application) {
+                    foreach ($application->files as $file) {
+                        $filePath = storage_path('app/public/' . $file->file_path);
+                        if (file_exists($filePath)) {
+                            // Create a meaningful filename with student ID
+                            $fileName = $application->studentID . '_' . $file->original_name;
+                            $zip->addFile($filePath, $fileName);
+                        }
+                    }
+                }
+                $zip->close();
+
+                // Return download and cleanup
+                return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+            } else {
+                session()->flash('error', 'Failed to create zip file.');
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred during bulk download: ' . $e->getMessage());
+            Log::error('Bulk download error: ' . $e->getMessage());
+        }
     }
 
     public function render()

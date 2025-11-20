@@ -439,7 +439,7 @@
                         <!-- Current Credit -->
                         <div>
                             <label for="currentCredit" class="block text-sm font-medium text-gray-700 mb-1">
-                                Current Credit <span class="text-red-500">*</span>
+                                Total Taken Current Credit <span class="text-red-500">*</span>
                             </label>
                             <input type="number" wire:model="currentCredit" id="currentCredit" min="0"
                                 max="118"
