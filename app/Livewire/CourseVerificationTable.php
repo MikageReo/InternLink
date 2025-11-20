@@ -272,10 +272,16 @@ class CourseVerificationTable extends Component
             $currentApplication = CourseVerification::where('studentID', $student->studentID)
                 ->with(['lecturer', 'files'])
                 ->latest('applicationDate')
+                ->latest('courseVerificationID')
                 ->first();
 
-            // Student can apply if they have no application, or their latest application is rejected
-            $canApply = !$currentApplication || $currentApplication->status === 'rejected';
+            // Check if student has any approved application
+            $hasApprovedApplication = CourseVerification::where('studentID', $student->studentID)
+                ->where('status', 'approved')
+                ->exists();
+
+            // Student can apply if they have no approved application AND (no application at all OR latest is rejected)
+            $canApply = !$hasApprovedApplication && (!$currentApplication || $currentApplication->status === 'rejected');
         }
 
         return view('livewire.course-verification-table', [
@@ -283,6 +289,7 @@ class CourseVerificationTable extends Component
             'totalCreditRequired' => $this->totalCreditRequired,
             'currentApplication' => $currentApplication,
             'canApply' => $canApply,
+            'hasApprovedApplication' => $hasApprovedApplication ?? false,
         ]);
     }
 }

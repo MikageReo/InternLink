@@ -1,0 +1,10 @@
+# Ignore temporary files
+*.tmp
+*.temp
+*~
+
+# Keep the actual guide files
+!course-verification-guide.pdf
+!course-verification-guide.html
+!README.txt
+

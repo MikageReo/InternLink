@@ -293,7 +293,7 @@ class LecturerCourseVerificationTable extends Component
                     $application->update([
                         'status' => 'approved',
                         'lecturerID' => $lecturer->lecturerID,
-                        'remarks' => $this->remarks ?: 'Bulk approved',
+                        'remarks' => $this->remarks ?: 'Approved',
                     ]);
 
                     // Send notification

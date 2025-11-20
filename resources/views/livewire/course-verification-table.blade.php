@@ -77,18 +77,29 @@
 
             <!-- Total Credit Information -->
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fa fa-info-circle text-blue-500 text-xl"></i>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fa fa-info-circle text-blue-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-blue-900">Credit Requirements</h3>
+                            <p class="text-blue-700">
+                                <strong>Total Credits Required:</strong> {{ $totalCreditRequired }} credits
+                            </p>
+                            <p class="text-sm text-blue-600 mt-1">
+                                Submit your current credit count and course documentation for verification.
+                            </p>
+                        </div>
                     </div>
-                    <div class="ml-3">
-                        <h3 class="text-lg font-medium text-blue-900">Credit Requirements</h3>
-                        <p class="text-blue-700">
-                            <strong>Total Credits Required:</strong> {{ $totalCreditRequired }} credits
-                        </p>
-                        <p class="text-sm text-blue-600 mt-1">
-                            Submit your current credit count and course documentation for verification.
-                        </p>
+                    <div class="flex-shrink-0 ml-4">
+                        <a href="{{ asset('documents/course-verification-guide.pdf') }}"
+                           target="_blank"
+                           download
+                           class="inline-flex items-center px-4 py-2 border border-blue-400 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            <i class="fa fa-download mr-2"></i>
+                            Download Guide
+                        </a>
                     </div>
                 </div>
             </div>
@@ -133,10 +144,16 @@
                                         further action is needed.
                                     </p>
                                 @elseif($currentApplication->status === 'rejected')
-                                    <p class="text-sm mt-2">
-                                        <strong>Your application was rejected.</strong> You can submit a new application
-                                        with updated information.
-                                    </p>
+                                    @if ($hasApprovedApplication)
+                                        <p class="text-sm mt-2">
+                                            <strong>This application was rejected.</strong> However, you have a previously approved verification and cannot submit new applications.
+                                        </p>
+                                    @else
+                                        <p class="text-sm mt-2">
+                                            <strong>Your application was rejected.</strong> You can submit a new application
+                                            with updated information.
+                                        </p>
+                                    @endif
                                 @endif
 
                                 @if (in_array($currentApplication->status, ['approved', 'rejected']) && $currentApplication->remarks)
@@ -197,18 +214,18 @@
                                 @endif
                             </button>
                         @else
-                            @if ($currentApplication)
+                            @if ($hasApprovedApplication)
+                                <div
+                                    class="inline-flex items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-green-100">
+                                    <i class="fa fa-check-circle mr-2"></i>
+                                    Verification Approved
+                                </div>
+                            @elseif ($currentApplication)
                                 @if ($currentApplication->status === 'pending')
                                     <div
                                         class="inline-flex items-center px-4 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-yellow-100">
                                         <i class="fa fa-clock mr-2"></i>
                                         Application Under Review
-                                    </div>
-                                @elseif($currentApplication->status === 'approved')
-                                    <div
-                                        class="inline-flex items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-green-100">
-                                        <i class="fa fa-check-circle mr-2"></i>
-                                        Verification Approved
                                     </div>
                                 @endif
                             @else
@@ -361,7 +378,7 @@
                                             @endif
 
                                             <!-- Edit/Delete (only for current application and appropriate status) -->
-                                            @if ($currentApplication && $currentApplication->courseVerificationID === $verification->courseVerificationID)
+                                            @if ($currentApplication && $currentApplication->courseVerificationID === $verification->courseVerificationID && !$hasApprovedApplication)
                                                 @if (in_array($verification->status, ['pending', 'rejected']))
                                                     <button
                                                         wire:click="edit({{ $verification->courseVerificationID }})"
