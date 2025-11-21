@@ -93,6 +93,20 @@
                                 </div>
                             </div>
                         @endif
+
+                        <!-- AHP Weight Calculator (Admin & Coordinator Only) -->
+                        @if(Auth::user()->lecturer && (Auth::user()->lecturer->isAdmin || Auth::user()->lecturer->isCoordinator))
+                            <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-lg">
+                                <h4 class="font-semibold text-indigo-800 dark:text-indigo-200 mb-2">AHP Weight Calculator</h4>
+                                <p class="text-indigo-600 dark:text-indigo-300 text-sm">Configure weights for supervisor assignment criteria using Analytic Hierarchy Process</p>
+                                <div class="mt-3">
+                                    <a href="{{ route('lecturer.ahpCalculator') }}"
+                                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded text-sm inline-block">
+                                        ⚖️ Configure Weights
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

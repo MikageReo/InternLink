@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Student;
 use App\Models\Lecturer;
 use App\Models\SupervisorAssignment;
+use App\Models\AHPWeight;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -12,9 +13,35 @@ class SupervisorRecommendationService
 {
     protected GeocodingService $geocodingService;
 
+    // Default weights (fallback if no AHP weights exist)
+    protected const DEFAULT_WEIGHTS = [
+        'course_match' => 0.40,
+        'preference_match' => 0.30,
+        'distance_score' => 0.20,
+        'workload_score' => 0.10,
+    ];
+
     public function __construct(GeocodingService $geocodingService)
     {
         $this->geocodingService = $geocodingService;
+    }
+
+    /**
+     * Get weights for supervisor scoring
+     * Checks for AHP weights first, falls back to default weights
+     *
+     * @return array
+     */
+    protected function getWeights(): array
+    {
+        $ahpWeights = AHPWeight::getLatest();
+
+        if ($ahpWeights && $ahpWeights->is_consistent) {
+            return $ahpWeights->getWeights();
+        }
+
+        // Fallback to default weights
+        return self::DEFAULT_WEIGHTS;
     }
 
     /**
@@ -76,7 +103,8 @@ class SupervisorRecommendationService
     /**
      * Calculate hybrid score for a supervisor-student match
      *
-     * Formula: score = (courseMatch * 0.4) + (preferenceMatch * 0.3) + (distanceScore * 0.2) + (workloadScore * 0.1)
+     * Formula uses AHP weights if available, otherwise defaults:
+     * score = (courseMatch * weight) + (preferenceMatch * weight) + (distanceScore * weight) + (workloadScore * weight)
      *
      * @param Lecturer $lecturer
      * @param Student $student
@@ -85,42 +113,50 @@ class SupervisorRecommendationService
      */
     protected function calculateSupervisorScore(Lecturer $lecturer, Student $student, $placement): array
     {
+        // Get weights (AHP or default)
+        $weights = $this->getWeights();
         $breakdown = [];
 
-        // 1. Course Match (40% weight)
+        // 1. Course Match
         $courseMatch = $this->calculateCourseMatch($lecturer, $student, $placement);
-        $courseScore = $courseMatch * 0.4;
+        $courseWeight = $weights['course_match'] ?? self::DEFAULT_WEIGHTS['course_match'];
+        $courseScore = $courseMatch * $courseWeight;
         $breakdown['course_match'] = [
             'raw' => $courseMatch,
             'weighted' => $courseScore,
-            'weight' => '40%'
+            'weight' => number_format($courseWeight * 100, 1) . '%'
         ];
 
-        // 2. Travel Preference Match (30% weight)
+        // 2. Travel Preference Match
         $distance = $this->calculateDistance($lecturer, $placement);
         $preferenceMatch = $this->calculatePreferenceMatch($lecturer, $distance);
-        $preferenceScore = $preferenceMatch * 0.3;
+        $preferenceWeight = $weights['preference_match'] ?? self::DEFAULT_WEIGHTS['preference_match'];
+        $preferenceScore = $preferenceMatch * $preferenceWeight;
         $breakdown['preference_match'] = [
             'raw' => $preferenceMatch,
             'weighted' => $preferenceScore,
-            'weight' => '30%'
+            'weight' => number_format($preferenceWeight * 100, 1) . '%'
         ];
 
-        // 3. Distance Score (20% weight)
-        $distanceScore = $this->calculateDistanceScore($distance) * 0.2;
+        // 3. Distance Score
+        $distanceScoreRaw = $this->calculateDistanceScore($distance);
+        $distanceWeight = $weights['distance_score'] ?? self::DEFAULT_WEIGHTS['distance_score'];
+        $distanceScore = $distanceScoreRaw * $distanceWeight;
         $breakdown['distance_score'] = [
-            'raw' => $this->calculateDistanceScore($distance),
+            'raw' => $distanceScoreRaw,
             'weighted' => $distanceScore,
-            'weight' => '20%',
+            'weight' => number_format($distanceWeight * 100, 1) . '%',
             'distance_km' => $distance
         ];
 
-        // 4. Workload Score (10% weight)
-        $workloadScore = $this->calculateWorkloadScore($lecturer) * 0.1;
+        // 4. Workload Score
+        $workloadScoreRaw = $this->calculateWorkloadScore($lecturer);
+        $workloadWeight = $weights['workload_score'] ?? self::DEFAULT_WEIGHTS['workload_score'];
+        $workloadScore = $workloadScoreRaw * $workloadWeight;
         $breakdown['workload_score'] = [
-            'raw' => $this->calculateWorkloadScore($lecturer),
+            'raw' => $workloadScoreRaw,
             'weighted' => $workloadScore,
-            'weight' => '10%',
+            'weight' => number_format($workloadWeight * 100, 1) . '%',
             'current_load' => $lecturer->current_assignments,
             'max_load' => $lecturer->supervisor_quota
         ];
@@ -130,7 +166,8 @@ class SupervisorRecommendationService
         return [
             'total' => round($totalScore, 4),
             'breakdown' => $breakdown,
-            'distance' => $distance
+            'distance' => $distance,
+            'weights_source' => AHPWeight::getLatest() ? 'ahp' : 'default'
         ];
     }
 

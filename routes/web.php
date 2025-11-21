@@ -54,6 +54,11 @@ Route::middleware(['auth', 'verified', 'role:lecturer'])->prefix('lecturer')->na
         Route::view('/supervisor-assignments', 'lecturer.dashboard.supervisorAssignments')->name('supervisorAssignments');
         Route::view('/auto-supervisor-assignments', 'lecturer.dashboard.autoSupervisorAssignments')->name('autoSupervisorAssignments');
     });
+
+    // AHP Weight Calculator - restricted to admins and coordinators
+    Route::middleware(['admin.coordinator'])->group(function () {
+        Route::view('/ahp-calculator', 'lecturer.dashboard.ahpCalculator')->name('ahpCalculator');
+    });
 });
 
 Route::view('profile', 'profile')

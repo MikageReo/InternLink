@@ -62,7 +62,7 @@ class AHPWeightCalculator extends Component
     {
         // Check if user is admin or coordinator
         $user = Auth::user();
-        if (!$user || (!$user->isAdmin && (!$user->lecturer || !$user->lecturer->isCoordinator))) {
+        if (!$user || !$user->lecturer || (!$user->lecturer->isAdmin && !$user->lecturer->isCoordinator)) {
             abort(403, 'Access denied. Only administrators and coordinators can access this page.');
         }
 
@@ -90,8 +90,17 @@ class AHPWeightCalculator extends Component
     /**
      * Update matrix value and automatically update reciprocal
      */
-    public function updateMatrix($row, $col, $value)
+    public function updatedMatrix($value, $key)
     {
+        // Parse the key (e.g., "0.1" means row 0, col 1)
+        $parts = explode('.', $key);
+        if (count($parts) !== 2) {
+            return;
+        }
+
+        $row = (int) $parts[0];
+        $col = (int) $parts[1];
+
         // Skip diagonal (always 1)
         if ($row == $col) {
             return;
@@ -101,6 +110,8 @@ class AHPWeightCalculator extends Component
         $value = (float) $value;
         if ($value < 0.111 || $value > 9.0) {
             $this->addError("matrix.{$row}.{$col}", 'Value must be between 1/9 and 9');
+            // Reset to previous valid value
+            $this->matrix[$row][$col] = 1.0;
             return;
         }
 
