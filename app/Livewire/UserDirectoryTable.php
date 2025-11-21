@@ -82,7 +82,7 @@ class UserDirectoryTable extends Component
     public $lecturerDepartment = '';
     public $lecturerSemester = '';
     public $lecturerYear = '';
-    public $lecturerStudentQuota = 0;
+    public $lecturerSupervisorQuota = 0;
     public $lecturerIsAcademicAdvisor = false;
     public $lecturerIsSupervisorFaculty = false;
     public $lecturerIsCommittee = false;
@@ -337,7 +337,7 @@ class UserDirectoryTable extends Component
                     $user->lecturer->state ?? 'N/A',
                     $user->lecturer->researchGroup ?? 'N/A',
                     $user->lecturer->department ?? 'N/A',
-                    $user->lecturer->studentQuota ?? 'N/A',
+                    $user->lecturer->supervisor_quota ?? 'N/A',
                     implode(', ', $specialRoles) ?: 'None',
                     $user->lecturer->semester ?? 'N/A',
                     $user->lecturer->year ?? 'N/A'
@@ -545,7 +545,7 @@ class UserDirectoryTable extends Component
                     <td>' . ($user->lecturer->state ?? 'N/A') . '</td>
                     <td>' . ($user->lecturer->researchGroup ?? 'N/A') . '</td>
                     <td>' . ($user->lecturer->department ?? 'N/A') . '</td>
-                    <td>' . ($user->lecturer->studentQuota ?? 'N/A') . '</td>
+                    <td>' . ($user->lecturer->supervisor_quota ?? 'N/A') . '</td>
                     <td>' . (implode(', ', $specialRoles) ?: 'None') . '</td>
                     <td>' . ($user->lecturer->semester ?? 'N/A') . '</td>
                     <td>' . ($user->lecturer->year ?? 'N/A') . '</td>
@@ -669,7 +669,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     <td>' . ($user->lecturer->state ?? 'N/A') . '</td>
                     <td>' . ($user->lecturer->researchGroup ?? 'N/A') . '</td>
                     <td>' . ($user->lecturer->department ?? 'N/A') . '</td>
-                    <td>' . ($user->lecturer->studentQuota ?? 'N/A') . '</td>
+                    <td>' . ($user->lecturer->supervisor_quota ?? 'N/A') . '</td>
                     <td>' . (implode(', ', $specialRoles) ?: 'None') . '</td>
                     <td>' . ($user->lecturer->semester ?? 'N/A') . '</td>
                     <td>' . ($user->lecturer->year ?? 'N/A') . '</td>
@@ -742,7 +742,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->lecturerDepartment = '';
         $this->lecturerSemester = '';
         $this->lecturerYear = date('Y');
-        $this->lecturerStudentQuota = 0;
+        $this->lecturerSupervisorQuota = 0;
         $this->lecturerIsAcademicAdvisor = false;
         $this->lecturerIsSupervisorFaculty = false;
         $this->lecturerIsCommittee = false;
@@ -962,13 +962,12 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     : 'local',
                 'semester' => $this->bulkSemester,
                 'year' => $this->bulkYear,
-                'studentQuota' => isset($data['studentQuota']) ? (int)$data['studentQuota'] : 0,
                 'isAcademicAdvisor' => isset($data['isAcademicAdvisor']) && strtolower($data['isAcademicAdvisor']) === 'true',
                 'isSupervisorFaculty' => isset($data['isSupervisorFaculty']) && strtolower($data['isSupervisorFaculty']) === 'true',
                 'isCommittee' => isset($data['isCommittee']) && strtolower($data['isCommittee']) === 'true',
                 'isCoordinator' => isset($data['isCoordinator']) && strtolower($data['isCoordinator']) === 'true',
                 'isAdmin' => isset($data['isAdmin']) && strtolower($data['isAdmin']) === 'true',
-                'supervisor_quota' => isset($data['supervisor_quota']) ? (int)$data['supervisor_quota'] : 0,
+                'supervisor_quota' => isset($data['supervisor_quota']) ? (int)$data['supervisor_quota'] : (isset($data['studentQuota']) ? (int)$data['studentQuota'] : 0),
                 'status' => 'active',
             ]);
 
@@ -1095,7 +1094,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
             'lecturerDepartment' => 'nullable|string',
             'lecturerSemester' => 'required|in:1,2',
             'lecturerYear' => 'required|integer|min:2020|max:2040',
-            'lecturerStudentQuota' => 'nullable|integer|min:0',
+            'lecturerSupervisorQuota' => 'nullable|integer|min:0',
         ]);
 
         try {
@@ -1145,7 +1144,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'department' => $this->lecturerDepartment,
                 'semester' => $this->lecturerSemester,
                 'year' => $this->lecturerYear,
-                'studentQuota' => $this->lecturerStudentQuota ?? 0,
+                'supervisor_quota' => $this->lecturerSupervisorQuota ?? 0,
                 'isAcademicAdvisor' => $this->lecturerIsAcademicAdvisor,
                 'isSupervisorFaculty' => $this->lecturerIsSupervisorFaculty,
                 'isCommittee' => $this->lecturerIsCommittee,

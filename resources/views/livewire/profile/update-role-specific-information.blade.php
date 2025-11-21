@@ -32,7 +32,7 @@ new class extends Component
     public string $department = '';
     public string $lecturerSemester = '';
     public string $lecturerYear = '';
-    public string $studentQuota = '';
+    public string $supervisorQuota = '';
     public bool $isAcademicAdvisor = false;
     public bool $isSupervisorFaculty = false;
     public bool $isCommittee = false;
@@ -80,7 +80,7 @@ new class extends Component
             $this->department = $lecturer->department ?? '';
             $this->lecturerSemester = $lecturer->semester ?? '';
             $this->lecturerYear = $lecturer->year ?? '';
-            $this->studentQuota = $lecturer->studentQuota ?? '';
+            $this->supervisorQuota = $lecturer->supervisor_quota ?? '';
             $this->isAcademicAdvisor = $lecturer->isAcademicAdvisor ?? false;
             $this->isSupervisorFaculty = $lecturer->isSupervisorFaculty ?? false;
             $this->isCommittee = $lecturer->isCommittee ?? false;
@@ -473,11 +473,11 @@ new class extends Component
                                   value="{{ $lecturerYear ?: 'Not provided' }}" readonly />
                 </div>
 
-                <!-- Student Quota (Read-only) -->
+                <!-- Supervisor Quota (Read-only) -->
                 <div>
-                    <x-input-label for="studentQuota" :value="__('Student Quota')" />
-                    <x-text-input id="studentQuota" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $studentQuota ?: 'Not provided' }}" readonly />
+                    <x-input-label for="supervisorQuota" :value="__('Supervisor Quota')" />
+                    <x-text-input id="supervisorQuota" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
+                                  value="{{ $supervisorQuota ?: 'Not provided' }}" readonly />
                 </div>
             </div>
 

@@ -241,7 +241,7 @@ class ManageUserController extends Controller
                         'department' => $userData['department'] ?? null,
                         'semester'   => $semester,
                         'year'       => $year,
-                        'studentQuota' => $userData['studentQuota'] ?? 0,
+                        'supervisor_quota' => $userData['supervisor_quota'] ?? $userData['studentQuota'] ?? 0,
                         'isAcademicAdvisor'   => $userData['isAcademicAdvisor'] ?? 0,
                         'isSupervisorFaculty' => $userData['isSupervisorFaculty'] ?? 0,
                         'isCommittee'         => $userData['isCommittee'] ?? 0,
@@ -367,7 +367,7 @@ class ManageUserController extends Controller
             'state' => 'nullable|string',
             'researchGroup' => 'nullable|string',
             'department' => 'nullable|string',
-            'studentQuota' => 'nullable|integer|min:0',
+            'supervisor_quota' => 'nullable|integer|min:0',
         ]);
 
         try {
@@ -394,7 +394,7 @@ class ManageUserController extends Controller
                 'department' => $request->department,
                 'semester' => $request->semester,
                 'year' => $request->year,
-                'studentQuota' => $request->studentQuota ?? 0,
+                'supervisor_quota' => $request->supervisor_quota ?? 0,
                 'isAcademicAdvisor' => $request->has('isAcademicAdvisor'),
                 'isSupervisorFaculty' => $request->has('isSupervisorFaculty'),
                 'isCommittee' => $request->has('isCommittee'),

@@ -33,7 +33,6 @@ class Lecturer extends Model
         'travel_preference',
         'semester',
         'year',
-        'studentQuota',
         'isAcademicAdvisor',
         'isSupervisorFaculty',
         'isCommittee',
@@ -214,11 +213,56 @@ class Lecturer extends Model
     }
 
     /**
-     * Check if lecturer can supervise (is supervisor and active)
+     * Check if lecturer can supervise (is supervisor, active, and not in administrative position)
      */
     public function canSupervise(): bool
     {
         return $this->isSupervisorFaculty
-            && $this->status === self::STATUS_ACTIVE;
+            && $this->status === self::STATUS_ACTIVE
+            && !$this->hasAdministrativePosition();
+    }
+
+    /**
+     * Check if lecturer holds an administrative position
+     * Administrative positions: Dean, Deputy Dean, Director, Deputy Director, etc.
+     */
+    public function hasAdministrativePosition(): bool
+    {
+        if (!$this->position) {
+            return false;
+        }
+
+        $position = strtolower(trim($this->position));
+        $administrativePositions = [
+            'dean',
+            'deputy dean (r)',
+            'deputy dean (a)',
+            'coordinator (s)',
+            'head of program',
+            'committee',
+        ];
+
+        foreach ($administrativePositions as $adminPos) {
+            if (stripos($position, $adminPos) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get list of administrative positions that cannot supervise
+     */
+    public static function getAdministrativePositions(): array
+    {
+        return [
+            'Dean',
+            'Deputy Dean (R)',
+            'Deputy Dean (A)',
+            'Coordinator (s)',
+            'Head of Programs',
+            'Committee',
+        ];
     }
 }

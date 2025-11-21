@@ -4,8 +4,8 @@
             <!-- Page Header -->
             <div class="mb-8 flex items-start justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Internship Placement Applications</h1>
-                    <p class="text-gray-600">Submit and manage your internship placement applications</p>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Internship Placement Applications</h1>
+                <p class="text-gray-600">Submit and manage your internship placement applications</p>
                 </div>
                 <a href="{{ asset('documents/placement-application-guide.pdf') }}" 
                    target="_blank"

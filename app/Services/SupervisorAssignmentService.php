@@ -69,6 +69,11 @@ class SupervisorAssignmentService
             throw new \Exception('Supervisor is not available (inactive status).');
         }
 
+        // Check if supervisor holds an administrative position
+        if ($supervisor->hasAdministrativePosition()) {
+            throw new \Exception('Supervisor cannot be assigned as they hold an administrative position (' . $supervisor->position . ').');
+        }
+
         // Check quota unless override
         if (!$quotaOverride && !$supervisor->hasAvailableQuota()) {
             throw new \Exception('Supervisor has reached their quota limit. Use quota override if necessary.');

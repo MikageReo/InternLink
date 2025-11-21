@@ -27,10 +27,13 @@ class SupervisorAssignmentTable extends Component
     public $studentFilter = '';
     public $supervisorFilter = '';
     public $assignmentTypeFilter = ''; // 'assigned', 'unassigned', 'all'
+    public $semesterFilter = '';
+    public $yearFilter = '';
 
     // Modal properties
     public $showAssignModal = false;
     public $showDetailModal = false;
+    public $showEditModal = false;
     public $selectedStudent = null;
     public $selectedAssignment = null;
     public $selectedAssignmentID = null;
@@ -40,6 +43,8 @@ class SupervisorAssignmentTable extends Component
     public $quotaOverride = false;
     public $overrideReason = '';
     public $showOverrideModal = false;
+    public $editAssignmentID = null;
+    public $newSupervisorID = null;
 
     protected $supervisorAssignmentService;
     protected $geocodingService;
@@ -50,6 +55,8 @@ class SupervisorAssignmentTable extends Component
         'sortDirection' => ['except' => 'desc'],
         'statusFilter' => ['except' => ''],
         'assignmentTypeFilter' => ['except' => 'unassigned'],
+        'semesterFilter' => ['except' => ''],
+        'yearFilter' => ['except' => ''],
     ];
 
     public function boot(SupervisorAssignmentService $supervisorAssignmentService, GeocodingService $geocodingService)
@@ -78,6 +85,16 @@ class SupervisorAssignmentTable extends Component
     }
 
     public function updatingAssignmentTypeFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSemesterFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingYearFilter()
     {
         $this->resetPage();
     }
@@ -170,7 +187,6 @@ class SupervisorAssignmentTable extends Component
 
             // Reset pagination to show the newly assigned student
             $this->resetPage();
-
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
             Log::error('Failed to assign supervisor', [
@@ -193,7 +209,6 @@ class SupervisorAssignmentTable extends Component
             }
 
             $this->resetPage();
-
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
             Log::error('Failed to auto-assign supervisor', [
@@ -206,7 +221,7 @@ class SupervisorAssignmentTable extends Component
     public function viewAssignment($assignmentID)
     {
         $this->selectedAssignmentID = $assignmentID;
-        
+
         // Load the assignment with all relationships
         $assignment = SupervisorAssignment::with([
             'student.user',
@@ -214,7 +229,7 @@ class SupervisorAssignmentTable extends Component
             'assignedBy.user',
             'student.acceptedPlacementApplication'
         ])->find($assignmentID);
-        
+
         if ($assignment) {
             // Store as array to avoid Livewire serialization issues
             $this->selectedAssignment = [
@@ -240,7 +255,7 @@ class SupervisorAssignmentTable extends Component
                 'override_reason' => $assignment->override_reason,
                 'assignment_notes' => $assignment->assignment_notes,
             ];
-            
+
             $this->showDetailModal = true;
         }
     }
@@ -250,6 +265,97 @@ class SupervisorAssignmentTable extends Component
         $this->showDetailModal = false;
         $this->selectedAssignment = null;
         $this->selectedAssignmentID = null;
+    }
+
+    public function openEditModal($assignmentID)
+    {
+        $assignment = SupervisorAssignment::with(['student.user', 'supervisor.user'])
+            ->findOrFail($assignmentID);
+
+        $this->editAssignmentID = $assignmentID;
+        $this->newSupervisorID = $assignment->supervisor->lecturerID;
+        $this->assignmentNotes = $assignment->assignment_notes;
+
+        // Get recommended supervisors for reassignment
+        $this->recommendedSupervisors = $this->supervisorAssignmentService->getRecommendedSupervisors(
+            $assignment->studentID,
+            10,
+            true // Include full quota for editing
+        );
+
+        $this->showEditModal = true;
+    }
+
+    public function closeEditModal()
+    {
+        $this->showEditModal = false;
+        $this->editAssignmentID = null;
+        $this->newSupervisorID = null;
+        $this->assignmentNotes = '';
+        $this->recommendedSupervisors = [];
+        $this->resetValidation();
+    }
+
+    public function updateAssignment()
+    {
+        $this->validate([
+            'newSupervisorID' => 'required|exists:lecturers,lecturerID',
+            'assignmentNotes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $assignment = SupervisorAssignment::findOrFail($this->editAssignmentID);
+            $oldSupervisor = $assignment->supervisor;
+
+            // Update assignment
+            $assignment->update([
+                'lecturerID' => $this->newSupervisorID,
+                'assignment_notes' => $this->assignmentNotes,
+            ]);
+
+            // Update quota counts
+            if ($oldSupervisor->lecturerID !== $this->newSupervisorID) {
+                // Decrease old supervisor's count
+                $oldSupervisor->decrement('current_assignments');
+
+                // Increase new supervisor's count
+                $newSupervisor = Lecturer::where('lecturerID', $this->newSupervisorID)->first();
+                $newSupervisor->increment('current_assignments');
+            }
+
+            session()->flash('success', 'Supervisor assignment updated successfully!');
+            $this->closeEditModal();
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to update assignment: ' . $e->getMessage());
+            Log::error('Failed to update supervisor assignment', [
+                'assignment_id' => $this->editAssignmentID,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function removeAssignment($assignmentID)
+    {
+        try {
+            $assignment = SupervisorAssignment::findOrFail($assignmentID);
+            $supervisor = $assignment->supervisor;
+
+            // Delete assignment
+            $assignment->delete();
+
+            // Decrease supervisor's count
+            $supervisor->decrement('current_assignments');
+
+            session()->flash('success', 'Supervisor assignment removed successfully!');
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to remove assignment: ' . $e->getMessage());
+            Log::error('Failed to remove supervisor assignment', [
+                'assignment_id' => $assignmentID,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function render()
@@ -269,6 +375,16 @@ class SupervisorAssignmentTable extends Component
             $query->whereDoesntHave('supervisorAssignments', function ($q) {
                 $q->where('status', SupervisorAssignment::STATUS_ASSIGNED);
             });
+        }
+
+        // Filter by semester
+        if ($this->semesterFilter) {
+            $query->where('semester', $this->semesterFilter);
+        }
+
+        // Filter by year
+        if ($this->yearFilter) {
+            $query->where('year', $this->yearFilter);
         }
 
         // Search filter
@@ -291,8 +407,8 @@ class SupervisorAssignmentTable extends Component
                 $join->on('students.studentID', '=', 'supervisor_assignments.studentID')
                     ->where('supervisor_assignments.status', '=', SupervisorAssignment::STATUS_ASSIGNED);
             })
-            ->orderBy('supervisor_assignments.assigned_at', $this->sortDirection)
-            ->select('students.*');
+                ->orderBy('supervisor_assignments.assigned_at', $this->sortDirection)
+                ->select('students.*');
         } else {
             $query->orderBy($this->sortField, $this->sortDirection);
         }
@@ -316,9 +432,15 @@ class SupervisorAssignmentTable extends Component
             })->count(),
         ];
 
+        // Get available years and semesters for filters
+        $availableYears = Student::distinct()->pluck('year')->filter()->sort()->values();
+        $availableSemesters = [1, 2];
+
         return view('livewire.supervisor-assignment-table', [
             'students' => $students,
             'stats' => $stats,
+            'availableYears' => $availableYears,
+            'availableSemesters' => $availableSemesters,
         ]);
     }
 }

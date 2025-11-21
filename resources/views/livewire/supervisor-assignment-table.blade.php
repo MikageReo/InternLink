@@ -70,7 +70,7 @@
 
                 <!-- Advanced Filters -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                         <!-- Search -->
                         <div class="md:col-span-2">
                             <input type="text" wire:model.live.debounce.300ms="search"
@@ -85,6 +85,28 @@
                                 <option value="unassigned">Unassigned Only</option>
                                 <option value="assigned">Assigned Only</option>
                                 <option value="all">All Students</option>
+                            </select>
+                        </div>
+
+                        <!-- Semester Filter -->
+                        <div>
+                            <select wire:model.live="semesterFilter"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                <option value="">All Semesters</option>
+                                @foreach($availableSemesters as $semester)
+                                    <option value="{{ $semester }}">Semester {{ $semester }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Year Filter -->
+                        <div>
+                            <select wire:model.live="yearFilter"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                <option value="">All Years</option>
+                                @foreach($availableYears as $year)
+                                    <option value="{{ $year }}">{{ $year }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -189,11 +211,20 @@
                                                 </button>
                                             @else
                                                 <button wire:click="viewAssignment({{ $student->supervisorAssignment->id }})"
-                                                    class="text-indigo-600 hover:text-indigo-900"
+                                                    class="text-indigo-600 hover:text-indigo-900 mr-2"
                                                     wire:loading.attr="disabled"
                                                     wire:target="viewAssignment">
                                                     <span wire:loading.remove wire:target="viewAssignment">View Details</span>
                                                     <span wire:loading wire:target="viewAssignment">Loading...</span>
+                                                </button>
+                                                <button wire:click="openEditModal({{ $student->supervisorAssignment->id }})"
+                                                    class="text-yellow-600 hover:text-yellow-900 mr-2">
+                                                    Edit
+                                                </button>
+                                                <button wire:click="removeAssignment({{ $student->supervisorAssignment->id }})"
+                                                    wire:confirm="Are you sure you want to remove this supervisor assignment?"
+                                                    class="text-red-600 hover:text-red-900">
+                                                    Remove
                                                 </button>
                                             @endif
                                         </div>
@@ -266,7 +297,7 @@
                                                 <div>
                                                     <p class="text-sm font-medium text-gray-900">{{ $supervisor->user->name }}</p>
                                                     <p class="text-xs text-gray-500">
-                                                        {{ $supervisor->lecturerID }} | 
+                                                        {{ $supervisor->lecturerID }} |
                                                         {{ $supervisor->department ?? 'N/A' }} |
                                                         {{ $supervisor->researchGroup ?? 'N/A' }}
                                                     </p>
@@ -345,6 +376,108 @@
         </div>
     @endif
 
+    <!-- Edit Assignment Modal -->
+    @if($showEditModal && $editAssignmentID)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" wire:click="closeEditModal">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white" wire:click.stop>
+                <div class="mt-3">
+                    <!-- Header -->
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Edit Supervisor Assignment</h3>
+                        <button wire:click="closeEditModal" class="text-gray-400 hover:text-gray-500">
+                            <span class="text-2xl">&times;</span>
+                        </button>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p class="text-sm text-blue-800">
+                            <strong>Note:</strong> Select a new supervisor to replace the current assignment. This will update the quota counts accordingly.
+                        </p>
+                    </div>
+
+                    <!-- Available Supervisors -->
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-900 mb-2">Select New Supervisor (Nearest First)</h4>
+
+                        @if(!empty($recommendedSupervisors))
+                            <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                                @foreach($recommendedSupervisors as $supervisor)
+                                    <label class="flex items-start p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
+                                        <input type="radio" name="new_supervisor" value="{{ $supervisor->lecturerID }}"
+                                            wire:model="newSupervisorID"
+                                            class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        <div class="ml-3 flex-1">
+                                            <div class="flex justify-between">
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">{{ $supervisor->user->name }}</p>
+                                                    <p class="text-xs text-gray-500">
+                                                        {{ $supervisor->lecturerID }} |
+                                                        {{ $supervisor->department ?? 'N/A' }} |
+                                                        {{ $supervisor->researchGroup ?? 'N/A' }}
+                                                    </p>
+                                                </div>
+                                                <div class="text-right">
+                                                    @if(isset($supervisor->distance))
+                                                        <p class="text-sm font-medium text-gray-900">{{ number_format($supervisor->distance, 2) }} km</p>
+                                                    @endif
+                                                    <p class="text-xs text-gray-500">
+                                                        Quota: {{ $supervisor->current_assignments }}/{{ $supervisor->supervisor_quota }}
+                                                        @if(isset($supervisor->available_quota) && $supervisor->available_quota > 0)
+                                                            <span class="text-green-600">({{ $supervisor->available_quota }} available)</span>
+                                                        @else
+                                                            <span class="text-red-600">(Full)</span>
+                                                        @endif
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <p class="text-sm text-yellow-800">No supervisors available.</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Assignment Notes -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Assignment Notes (Optional)
+                        </label>
+                        <textarea wire:model="assignmentNotes" rows="3"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            placeholder="Add any notes about this assignment change..."></textarea>
+                    </div>
+
+                    <!-- Validation Errors -->
+                    @error('newSupervisorID')
+                        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p class="text-sm text-red-800">{{ $message }}</p>
+                        </div>
+                    @enderror
+
+                    <!-- Actions -->
+                    <div class="flex justify-end space-x-3">
+                        <button wire:click="closeEditModal"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button wire:click="updateAssignment"
+                            wire:loading.attr="disabled"
+                            wire:target="updateAssignment"
+                            class="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700 disabled:opacity-50">
+                            <span wire:loading.remove wire:target="updateAssignment">Update Assignment</span>
+                            <span wire:loading wire:target="updateAssignment">Updating...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Assignment Detail Modal -->
     @if($showDetailModal && $selectedAssignment)
         <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" wire:click="closeDetailModal">
@@ -366,8 +499,8 @@
                         <p><strong>Program:</strong> {{ $selectedAssignment['student_program'] ?? 'N/A' }}</p>
                         @if($selectedAssignment['company_name'])
                             <p><strong>Company:</strong> {{ $selectedAssignment['company_name'] }}</p>
-                            <p><strong>Location:</strong> 
-                                {{ $selectedAssignment['company_city'] }}, 
+                            <p><strong>Location:</strong>
+                                {{ $selectedAssignment['company_city'] }},
                                 {{ $selectedAssignment['company_state'] }}
                             </p>
                         @endif
@@ -400,7 +533,7 @@
                                 {{ $selectedAssignment['status_display'] }}
                             </span>
                         </p>
-                        <p><strong>Assigned By:</strong> 
+                        <p><strong>Assigned By:</strong>
                             {{ $selectedAssignment['assigned_by_name'] }}
                             @if($selectedAssignment['assigned_by_id'])
                                 ({{ $selectedAssignment['assigned_by_id'] }})

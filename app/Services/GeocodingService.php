@@ -241,7 +241,10 @@ class GeocodingService
             $query->whereRaw('(supervisor_quota - current_assignments) > 0');
         }
 
-        $supervisors = $query->get();
+        $supervisors = $query->get()
+            ->filter(function ($lecturer) {
+                return $lecturer->canSupervise(); // This checks for administrative positions
+            });
 
         return $supervisors->map(function ($supervisor) use ($latitude, $longitude) {
             $supervisor->distance = $this->calculateDistance(

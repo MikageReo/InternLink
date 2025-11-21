@@ -22,9 +22,10 @@ class SupervisorRecommendationService
      *
      * @param Student $student
      * @param int $limit
+     * @param bool $includeFullQuota Include supervisors at quota limit (for override scenarios)
      * @return Collection
      */
-    public function getRecommendedSupervisors(Student $student, int $limit = 3): Collection
+    public function getRecommendedSupervisors(Student $student, int $limit = 3, bool $includeFullQuota = false): Collection
     {
         $placement = $student->acceptedPlacementApplication;
 
@@ -33,10 +34,20 @@ class SupervisorRecommendationService
         }
 
         // Get all available supervisors (any department can supervise any student)
-        $supervisors = Lecturer::where('isSupervisorFaculty', true)
-            ->where('status', Lecturer::STATUS_ACTIVE)
-            ->whereRaw('(supervisor_quota - current_assignments) > 0')
-            ->get();
+        // Exclude lecturers with administrative positions (Dean, Deputy Dean, etc.)
+        // Only include active lecturers
+        $query = Lecturer::where('isSupervisorFaculty', true)
+            ->where('status', Lecturer::STATUS_ACTIVE);
+
+        // Filter by available quota (unless override is allowed)
+        if (!$includeFullQuota) {
+            $query->whereRaw('(supervisor_quota - current_assignments) > 0');
+        }
+
+        $supervisors = $query->get()
+            ->filter(function ($lecturer) {
+                return $lecturer->canSupervise(); // This checks for administrative positions
+            });
 
         if ($supervisors->isEmpty()) {
             return collect();

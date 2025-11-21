@@ -517,10 +517,10 @@
                                         @endif
                                     </div>
                                 </th>
-                                <!-- Student Quota -->
+                                <!-- Supervisor Quota -->
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Student Quota</th>
+                                    Supervisor Quota</th>
                                 <!-- Special Roles -->
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -559,7 +559,7 @@
                                         {{ $user->lecturer->department ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                        {{ $user->lecturer->studentQuota ?? '0' }}
+                                        {{ $user->lecturer->supervisor_quota ?? '0' }}
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
                                         <div class="flex flex-wrap gap-1">
@@ -1353,11 +1353,11 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Student Quota
+                                        Supervisor Quota
                                     </label>
-                                    <input type="number" wire:model="lecturerStudentQuota" min="0"
+                                    <input type="number" wire:model="lecturerSupervisorQuota" min="0"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    @error('lecturerStudentQuota')
+                                    @error('lecturerSupervisorQuota')
                                         <span class="text-red-500 text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
