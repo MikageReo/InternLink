@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Component;
@@ -11,8 +12,13 @@ new class extends Component
     use WithFileUploads;
 
     // Student fields
+    public string $studentEmail = '';
     public string $phone = '';
-    public string $address = '';
+    public string $studentAddress = '';
+    public string $studentCity = '';
+    public string $studentPostcode = '';
+    public string $studentState = '';
+    public string $studentCountry = '';
     public string $nationality = '';
     public string $program = '';
     public string $semester = '';
@@ -24,6 +30,11 @@ new class extends Component
     public ?string $currentProfilePhoto = null;
 
     // Lecturer fields
+    public string $email = '';
+    public string $lecturerAddress = '';
+    public string $city = '';
+    public string $postcode = '';
+    public string $country = '';
     public string $staffGrade = '';
     public string $role = '';
     public string $position = '';
@@ -33,11 +44,16 @@ new class extends Component
     public string $lecturerSemester = '';
     public string $lecturerYear = '';
     public string $supervisorQuota = '';
+    public array $preferredCoursework = [];
+    public string $travelPreference = 'local';
     public bool $isAcademicAdvisor = false;
     public bool $isSupervisorFaculty = false;
     public bool $isCommittee = false;
     public bool $isCoordinator = false;
     public bool $isAdmin = false;
+
+    // Geocoding service (lazy-loaded)
+    protected ?GeocodingService $geocodingService = null;
 
     // Academic advisor name for display
     public string $academicAdvisorName = '';
@@ -54,8 +70,13 @@ new class extends Component
 
         if ($user->isStudent() && $user->student) {
             $student = $user->student->load('academicAdvisor.user');
+            $this->studentEmail = $user->email ?? '';
             $this->phone = $student->phone ?? '';
-            $this->address = $student->address ?? '';
+            $this->studentAddress = $student->address ?? '';
+            $this->studentCity = $student->city ?? '';
+            $this->studentPostcode = $student->postcode ?? '';
+            $this->studentState = $student->state ?? '';
+            $this->studentCountry = $student->country ?? '';
             $this->nationality = $student->nationality ?? '';
             $this->program = $student->program ?? '';
             $this->semester = $student->semester ?? '';
@@ -72,6 +93,11 @@ new class extends Component
 
         } elseif ($user->isLecturer() && $user->lecturer) {
             $lecturer = $user->lecturer;
+            $this->email = $user->email ?? '';
+            $this->lecturerAddress = $lecturer->address ?? '';
+            $this->city = $lecturer->city ?? '';
+            $this->postcode = $lecturer->postcode ?? '';
+            $this->country = $lecturer->country ?? '';
             $this->staffGrade = $lecturer->staffGrade ?? '';
             $this->role = $lecturer->role ?? '';
             $this->position = $lecturer->position ?? '';
@@ -81,12 +107,20 @@ new class extends Component
             $this->lecturerSemester = $lecturer->semester ?? '';
             $this->lecturerYear = $lecturer->year ?? '';
             $this->supervisorQuota = $lecturer->supervisor_quota ?? '';
+            // Parse preferred coursework from comma-separated string to array
+            $this->preferredCoursework = $lecturer->preferred_coursework
+                ? array_map('trim', explode(',', $lecturer->preferred_coursework))
+                : [];
+            $this->travelPreference = $lecturer->travel_preference ?? 'local';
             $this->isAcademicAdvisor = $lecturer->isAcademicAdvisor ?? false;
             $this->isSupervisorFaculty = $lecturer->isSupervisorFaculty ?? false;
             $this->isCommittee = $lecturer->isCommittee ?? false;
             $this->isCoordinator = $lecturer->isCoordinator ?? false;
             $this->isAdmin = $lecturer->isAdmin ?? false;
         }
+
+        // Initialize geocoding service
+        $this->geocodingService = app(GeocodingService::class);
     }
 
     /**
@@ -132,8 +166,13 @@ new class extends Component
     private function updateStudentProfile(User $user): void
     {
         $validated = $this->validate([
+            'studentEmail' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'phone' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:500'],
+            'studentAddress' => ['nullable', 'string', 'max:500'],
+            'studentCity' => ['nullable', 'string', 'max:100'],
+            'studentPostcode' => ['nullable', 'string', 'max:20'],
+            'studentState' => ['nullable', 'string', 'max:100'],
+            'studentCountry' => ['nullable', 'string', 'max:100'],
             'industrySupervisorName' => ['nullable', 'string', 'max:255'],
             'profilePhoto' => ['nullable', 'image', 'max:2048'], // 2MB max
         ]);
@@ -142,6 +181,10 @@ new class extends Component
         if (!$student) {
             return;
         }
+
+        // Update user email
+        $user->email = $validated['studentEmail'];
+        $user->save();
 
         // Handle profile photo upload
         if ($this->profilePhoto) {
@@ -156,10 +199,38 @@ new class extends Component
             $this->currentProfilePhoto = $photoPath;
         }
 
-        // Only update editable fields
+        // Update student address fields
         $student->phone = $validated['phone'];
-        $student->address = $validated['address'];
+        $student->address = $validated['studentAddress'];
+        $student->city = $validated['studentCity'];
+        $student->postcode = $validated['studentPostcode'];
+        $student->state = $validated['studentState'];
+        $student->country = $validated['studentCountry'];
         $student->industrySupervisorName = $validated['industrySupervisorName'];
+
+        // Geocode the address if it's provided
+        if (!empty($validated['studentAddress']) || !empty($validated['studentCity']) || !empty($validated['studentState'])) {
+            if (!$this->geocodingService) {
+                $this->geocodingService = app(GeocodingService::class);
+            }
+            $geocodeResult = $this->geocodingService->geocodeStructuredAddress([
+                'street' => $validated['studentAddress'] ?? '',
+                'city' => $validated['studentCity'] ?? '',
+                'postcode' => $validated['studentPostcode'] ?? '',
+                'state' => $validated['studentState'] ?? '',
+                'country' => $validated['studentCountry'] ?? '',
+            ]);
+
+            if ($geocodeResult) {
+                $student->latitude = $geocodeResult['latitude'];
+                $student->longitude = $geocodeResult['longitude'];
+            } else {
+                // If geocoding fails, set coordinates to null
+                $student->latitude = null;
+                $student->longitude = null;
+            }
+        }
+
         $student->save();
 
         // Reset the file input
@@ -172,7 +243,15 @@ new class extends Component
     private function updateLecturerProfile(User $user): void
     {
         $validated = $this->validate([
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'lecturerAddress' => ['nullable', 'string', 'max:500'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'postcode' => ['nullable', 'string', 'max:20'],
+            'country' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
+            'preferredCoursework' => ['nullable', 'array'],
+            'preferredCoursework.*' => ['string', 'max:100'],
+            'travelPreference' => ['required', 'in:local,nationwide'],
         ]);
 
         $lecturer = $user->lecturer;
@@ -180,8 +259,48 @@ new class extends Component
             return;
         }
 
-        // Only update the state field
+        // Update user email
+        $user->email = $validated['email'];
+        $user->save();
+
+        // Update lecturer address fields
+        $lecturer->address = $validated['lecturerAddress'];
+        $lecturer->city = $validated['city'];
+        $lecturer->postcode = $validated['postcode'];
+        $lecturer->country = $validated['country'];
         $lecturer->state = $validated['state'];
+
+        // Update preferred coursework (store as comma-separated string)
+        $lecturer->preferred_coursework = !empty($validated['preferredCoursework'])
+            ? implode(', ', $validated['preferredCoursework'])
+            : null;
+
+        // Update travel preference
+        $lecturer->travel_preference = $validated['travelPreference'];
+
+        // Geocode the address if it's provided
+        if (!empty($validated['lecturerAddress']) || !empty($validated['city']) || !empty($validated['state'])) {
+            if (!$this->geocodingService) {
+                $this->geocodingService = app(GeocodingService::class);
+            }
+            $geocodeResult = $this->geocodingService->geocodeStructuredAddress([
+                'street' => $validated['lecturerAddress'] ?? '',
+                'city' => $validated['city'] ?? '',
+                'postcode' => $validated['postcode'] ?? '',
+                'state' => $validated['state'] ?? '',
+                'country' => $validated['country'] ?? '',
+            ]);
+
+            if ($geocodeResult) {
+                $lecturer->latitude = $geocodeResult['latitude'];
+                $lecturer->longitude = $geocodeResult['longitude'];
+            } else {
+                // If geocoding fails, set coordinates to null
+                $lecturer->latitude = null;
+                $lecturer->longitude = null;
+            }
+        }
+
         $lecturer->save();
     }
 
@@ -209,331 +328,424 @@ new class extends Component
 }; ?>
 
 <section>
-    <header class="flex justify-between items-start">
-        <div>
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                {{ __('Profile Information') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {{ __("View and update your profile information.") }}
-            </p>
-        </div>
-
-        @if(!$editMode)
-            <button type="button" wire:click="enableEditMode"
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
-                {{ __('Edit Profile') }}
-            </button>
-        @endif
-    </header>
-
-    <form wire:submit="updateRoleSpecificInformation" class="mt-6 space-y-6">
+    <form wire:submit="updateRoleSpecificInformation" class="space-y-6">
         @if(auth()->user()->isStudent())
-            <!-- Profile Photo Section - Centered and Small -->
-            <div class="flex flex-col items-center pb-6 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex-shrink-0 mb-4">
-                    @if($currentProfilePhoto)
-                        <div class="relative">
-                            <img src="{{ asset('storage/' . $currentProfilePhoto) }}" alt="Profile Photo"
-                                 class="w-24 h-24 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 shadow-md"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs font-medium shadow-md" style="display: none;">
-                                No Image
-                            </div>
-                        </div>
-                    @else
-                        <div class="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs font-medium shadow-md">
-                            No Photo
-                        </div>
-                    @endif
-                </div>
+            @php
+                $user = auth()->user();
+                $student = $user->student;
+                $name = $user->name;
+                $nameParts = array_filter(explode(' ', trim($name)));
+                if (count($nameParts) >= 2) {
+                    $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[count($nameParts) - 1], 0, 1));
+                } else {
+                    $initials = strtoupper(substr($name, 0, min(2, strlen($name))));
+                }
+                // Build full address from component properties
+                $addressParts = array_filter([$studentAddress, $studentCity, $studentPostcode, $studentState, $studentCountry]);
+                $fullAddress = !empty($addressParts) ? implode(', ', $addressParts) : ($student && $student->full_address ? $student->full_address : 'Not provided');
+            @endphp
 
-                @if($editMode)
-                    <div class="text-center">
-                        <x-input-label for="profilePhoto" :value="__('Profile Photo')" class="text-base font-medium mb-2" />
-                        <input wire:model="profilePhoto" id="profilePhoto" name="profilePhoto" type="file" accept="image/*"
-                               class="block w-full max-w-xs mx-auto text-sm text-gray-900 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 focus:outline-none">
-
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {{ __('PNG, JPG or JPEG (MAX. 2MB)') }}
-                        </p>
-
+            <!-- Profile Header -->
+            <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-4">
+                    <!-- Avatar with Initials or Photo -->
+                    <div class="w-16 h-16 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-white text-xl font-semibold overflow-hidden">
                         @if($currentProfilePhoto)
-                            <button type="button" wire:click="removeProfilePhoto"
-                                    class="mt-2 px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors duration-200">
-                                {{ __('Remove Photo') }}
-                            </button>
-                        @endif
-
-                        <x-input-error class="mt-2" :messages="$errors->get('profilePhoto')" />
-
-                        @if($profilePhoto)
-                            <div class="mt-2">
-                                <p class="text-sm text-green-600 dark:text-green-400">
-                                    {{ __('New photo selected: ') . $profilePhoto->getClientOriginalName() }}
-                                </p>
+                            <img src="{{ asset('storage/' . $currentProfilePhoto) }}" alt="Profile Photo"
+                                 class="w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-full h-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-white text-xl font-semibold" style="display: none;">
+                                {{ $initials }}
                             </div>
+                        @else
+                            {{ $initials }}
                         @endif
                     </div>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                            {{ $name }}
+                        </h2>
+                        @if($program)
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                {{ $program }}
+                            </p>
+                        @endif
+                    </div>
+                </div>
+                @if(!$editMode)
+                    <button type="button" wire:click="enableEditMode"
+                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+                        {{ __('Edit Profile') }}
+                    </button>
                 @endif
             </div>
 
-            <!-- Student Information Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Student ID (Read-only) -->
-                <div>
-                    <x-input-label for="studentID" :value="__('Student ID')" />
-                    <x-text-input id="studentID" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ auth()->user()->student->studentID ?? 'N/A' }}" readonly />
-                </div>
-
-                <!-- Name (Read-only) -->
-                <div>
-                    <x-input-label for="name" :value="__('Name')" />
-                    <x-text-input id="name" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ auth()->user()->name }}" readonly />
-                </div>
-
-                <!-- Email (Read-only) -->
-                <div>
-                    <x-input-label for="email" :value="__('Email')" />
-                    <x-text-input id="email" type="email" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ auth()->user()->email }}" readonly />
-                </div>
-                <!-- Phone Number -->
-                <div>
-                    <x-input-label for="phone" :value="__('Phone Number')" />
-                    @if($editMode)
-                        <x-text-input wire:model="phone" id="phone" name="phone" type="text" class="mt-1 block w-full" placeholder="e.g., +60123456789" />
-                        <x-input-error class="mt-2" :messages="$errors->get('phone')" />
-                    @else
-                        <x-text-input id="phone" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                      value="{{ $phone ?: 'Not provided' }}" readonly />
+            @if($editMode)
+                <!-- Profile Photo Upload Section -->
+                <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                    <x-input-label for="profilePhoto" :value="__('Profile Photo')" class="text-base font-medium mb-2" />
+                    <input wire:model="profilePhoto" id="profilePhoto" name="profilePhoto" type="file" accept="image/*"
+                           class="block w-full max-w-md text-sm text-gray-900 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 focus:outline-none">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {{ __('PNG, JPG or JPEG (MAX. 2MB)') }}
+                    </p>
+                    @if($currentProfilePhoto)
+                        <button type="button" wire:click="removeProfilePhoto"
+                                class="mt-2 px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors duration-200">
+                            {{ __('Remove Photo') }}
+                        </button>
+                    @endif
+                    <x-input-error class="mt-2" :messages="$errors->get('profilePhoto')" />
+                    @if($profilePhoto)
+                        <div class="mt-2">
+                            <p class="text-sm text-green-600 dark:text-green-400">
+                                {{ __('New photo selected: ') . $profilePhoto->getClientOriginalName() }}
+                            </p>
+                        </div>
                     @endif
                 </div>
+            @endif
 
-                <!-- Nationality (Read-only) -->
-                <div>
-                    <x-input-label for="nationality" :value="__('Nationality')" />
-                    <x-text-input id="nationality" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $nationality ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Program (Read-only) -->
-                <div>
-                    <x-input-label for="program" :value="__('Program')" />
-                    <x-text-input id="program" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $program ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Semester (Read-only) -->
-                <div>
-                    <x-input-label for="semester" :value="__('Semester')" />
-                    <x-text-input id="semester" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $semester ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Year (Read-only) -->
-                <div>
-                    <x-input-label for="year" :value="__('Year')" />
-                    <x-text-input id="year" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $year ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Status (Read-only) -->
-                <div>
-                    <x-input-label for="status" :value="__('Status')" />
-                    <x-text-input id="status" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $status ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Academic Advisor ID (Read-only) -->
-                <div>
-                    <x-input-label for="academicAdvisorID" :value="__('Academic Advisor ID')" />
-                    <x-text-input id="academicAdvisorID" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $academicAdvisorID ?: 'Not Assigned' }}" readonly />
-                </div>
-
-                <!-- Academic Advisor Name (Read-only) -->
-                <div>
-                    <x-input-label for="academicAdvisorName" :value="__('Academic Advisor Name')" />
-                    <x-text-input id="academicAdvisorName" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $academicAdvisorName ?: 'Not Assigned' }}" readonly />
-                </div>
-
-                <!-- Industry Supervisor Name -->
-                <div>
-                    <x-input-label for="industrySupervisorName" :value="__('Industry Supervisor Name')" />
-                    @if($editMode)
-                        <x-text-input wire:model="industrySupervisorName" id="industrySupervisorName" name="industrySupervisorName" type="text" class="mt-1 block w-full" placeholder="e.g., John Doe" />
-                        <x-input-error class="mt-2" :messages="$errors->get('industrySupervisorName')" />
-                    @else
-                        <x-text-input id="industrySupervisorName" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                      value="{{ $industrySupervisorName ?: 'Not assigned' }}" readonly />
-                    @endif
+            <!-- Contact Details Section -->
+            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Contact Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Email:</span>
+                        @if($editMode)
+                            <x-text-input wire:model="studentEmail" id="studentEmail" name="studentEmail" type="email" class="mt-1 block w-full" placeholder="your.email@example.com" />
+                            <x-input-error class="mt-2" :messages="$errors->get('studentEmail')" />
+                        @else
+                            <span class="text-gray-600 dark:text-gray-400">{{ $studentEmail }}</span>
+                        @endif
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Phone:</span>
+                        @if($editMode)
+                            <x-text-input wire:model="phone" id="phone" name="phone" type="text" class="mt-1 block w-full" placeholder="e.g., +60123456789" />
+                            <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+                        @else
+                            <span class="text-gray-600 dark:text-gray-400">{{ $phone ?: 'Not provided' }}</span>
+                        @endif
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">State:</span>
+                        @if($editMode)
+                            <x-text-input wire:model="studentState" id="studentState" name="studentState" type="text" class="mt-1 block w-full" placeholder="e.g., Pahang" />
+                            <x-input-error class="mt-2" :messages="$errors->get('studentState')" />
+                        @else
+                            <span class="text-gray-600 dark:text-gray-400">{{ $studentState ?: 'Not provided' }}</span>
+                        @endif
+                    </div>
+                    <div class="md:col-span-2">
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Address:</span>
+                        @if($editMode)
+                            <x-text-input wire:model="studentAddress" id="studentAddress" name="studentAddress" type="text" class="mt-1 block w-full" placeholder="Street address" />
+                            <x-input-error class="mt-2" :messages="$errors->get('studentAddress')" />
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                <div>
+                                    <x-input-label for="studentCity" :value="__('City')" />
+                                    <x-text-input wire:model="studentCity" id="studentCity" name="studentCity" type="text" class="mt-1 block w-full" placeholder="City" />
+                                    <x-input-error class="mt-2" :messages="$errors->get('studentCity')" />
+                                </div>
+                                <div>
+                                    <x-input-label for="studentPostcode" :value="__('Postcode')" />
+                                    <x-text-input wire:model="studentPostcode" id="studentPostcode" name="studentPostcode" type="text" class="mt-1 block w-full" placeholder="Postcode" />
+                                    <x-input-error class="mt-2" :messages="$errors->get('studentPostcode')" />
+                                </div>
+                                <div>
+                                    <x-input-label for="studentCountry" :value="__('Country')" />
+                                    <x-text-input wire:model="studentCountry" id="studentCountry" name="studentCountry" type="text" class="mt-1 block w-full" placeholder="Country" />
+                                    <x-input-error class="mt-2" :messages="$errors->get('studentCountry')" />
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                <span class="font-semibold">🗺️ Note:</span> Your address will be automatically geocoded to update your location coordinates when you save.
+                            </p>
+                        @else
+                            <span class="text-gray-600 dark:text-gray-400">{{ $fullAddress }}</span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
-            <!-- Address (Full width) -->
-            <div>
-                <x-input-label for="address" :value="__('Address')" />
-                @if($editMode)
-                    <textarea wire:model="address" id="address" name="address" rows="3"
-                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                        placeholder="Enter your full address"></textarea>
-                    <x-input-error class="mt-2" :messages="$errors->get('address')" />
-                @else
-                    <textarea id="address" name="address" rows="3" readonly
-                        class="mt-1 block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-700 dark:text-gray-300 rounded-md shadow-sm">{{ $address ?: 'Not provided' }}</textarea>
-                @endif
+            <!-- Academic Data Section -->
+            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Academic Data</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Student ID:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $student ? $student->studentID : 'N/A' }}</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Program:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $program ?: 'Not provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Nationality:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $nationality ?: 'Not provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Academic Advisor:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $academicAdvisorName ?: 'Not Assigned' }}</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Industry Supervisor:</span>
+                        @if($editMode)
+                            <x-text-input wire:model="industrySupervisorName" id="industrySupervisorName" name="industrySupervisorName" type="text" class="mt-1 block w-full" placeholder="e.g., John Doe" />
+                            <x-input-error class="mt-2" :messages="$errors->get('industrySupervisorName')" />
+                        @else
+                            <span class="text-gray-600 dark:text-gray-400">{{ $industrySupervisorName ?: 'Not assigned' }}</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Information Section -->
+            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">System Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Semester:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $semester ?: 'Not provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Year:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $year ?: 'Not provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Status:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $status ?: 'Not provided' }}</span>
+                    </div>
+                </div>
             </div>
 
         @elseif(auth()->user()->isLecturer())
-            <!-- Lecturer Information Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Lecturer ID (Read-only) -->
-                <div>
-                    <x-input-label for="lecturerID" :value="__('Lecturer ID')" />
-                    <x-text-input id="lecturerID" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ auth()->user()->lecturer->lecturerID ?? 'N/A' }}" readonly />
-                </div>
+            @php
+                $user = auth()->user();
+                $lecturer = $user->lecturer;
+                $name = $user->name;
+                $nameParts = array_filter(explode(' ', trim($name)));
+                if (count($nameParts) >= 2) {
+                    $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[count($nameParts) - 1], 0, 1));
+                } else {
+                    $initials = strtoupper(substr($name, 0, min(2, strlen($name))));
+                }
+                $title = trim(($position ?: '') . ($position && $staffGrade ? ' | ' : '') . ($staffGrade ?: ''));
+                // Build full address from component properties
+                $addressParts = array_filter([$lecturerAddress, $city, $postcode, $state, $country]);
+                $fullAddress = !empty($addressParts) ? implode(', ', $addressParts) : ($lecturer && $lecturer->full_address ? $lecturer->full_address : 'Not provided');
+                // Parse preferred coursework for display
+                $displayCoursework = !empty($preferredCoursework) ? $preferredCoursework : [];
+                $activeRoles = [];
+                if ($isAcademicAdvisor) $activeRoles[] = 'Academic Advisor';
+                if ($isCoordinator) $activeRoles[] = 'Coordinator';
+                if ($isSupervisorFaculty) $activeRoles[] = 'Supervisor Faculty';
+                if ($isAdmin) $activeRoles[] = 'Admin';
+                if ($isCommittee) $activeRoles[] = 'Committee';
+            @endphp
 
-                <!-- Name (Read-only) -->
-                <div>
-                    <x-input-label for="name" :value="__('Name')" />
-                    <x-text-input id="name" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ auth()->user()->name }}" readonly />
+            <!-- Profile Header -->
+            <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-4">
+                    <!-- Avatar with Initials -->
+                    <div class="w-16 h-16 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-white text-xl font-semibold">
+                        {{ $initials }}
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                            {{ $name }}
+                        </h2>
+                        @if($title)
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                {{ $title }}
+                            </p>
+                        @endif
+                    </div>
                 </div>
+                @if(!$editMode)
+                    <button type="button" wire:click="enableEditMode"
+                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+                        {{ __('Edit Profile') }}
+                    </button>
+                @endif
+            </div>
 
-                <!-- Email (Read-only) -->
-                <div>
-                    <x-input-label for="email" :value="__('Email')" />
-                    <x-text-input id="email" type="email" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ auth()->user()->email }}" readonly />
-                </div>
-
-                <!-- Staff Grade (Read-only) -->
-                <div>
-                    <x-input-label for="staffGrade" :value="__('Staff Grade')" />
-                    <x-text-input id="staffGrade" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $staffGrade ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Role (Read-only) -->
-                <div>
-                    <x-input-label for="role" :value="__('Role')" />
-                    <x-text-input id="role" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $role ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Position (Read-only) -->
-                <div>
-                    <x-input-label for="position" :value="__('Position')" />
-                    <x-text-input id="position" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $position ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- State -->
-                <div>
-                    <x-input-label for="state" :value="__('State')" />
-                    @if($editMode)
-                        <x-text-input wire:model="state" id="state" name="state" type="text" class="mt-1 block w-full" placeholder="e.g., Selangor" />
-                        <x-input-error class="mt-2" :messages="$errors->get('state')" />
-                    @else
-                        <x-text-input id="state" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                      value="{{ $state ?: 'Not provided' }}" readonly />
-                    @endif
-                </div>
-
-                <!-- Research Group (Read-only) -->
-                <div>
-                    <x-input-label for="researchGroup" :value="__('Research Group')" />
-                    <x-text-input id="researchGroup" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $researchGroup ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Department (Read-only) -->
-                <div>
-                    <x-input-label for="department" :value="__('Department')" />
-                    <x-text-input id="department" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $department ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Semester (Read-only) -->
-                <div>
-                    <x-input-label for="lecturerSemester" :value="__('Semester')" />
-                    <x-text-input id="lecturerSemester" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $lecturerSemester ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Year (Read-only) -->
-                <div>
-                    <x-input-label for="lecturerYear" :value="__('Year')" />
-                    <x-text-input id="lecturerYear" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $lecturerYear ?: 'Not provided' }}" readonly />
-                </div>
-
-                <!-- Supervisor Quota (Read-only) -->
-                <div>
-                    <x-input-label for="supervisorQuota" :value="__('Supervisor Quota')" />
-                    <x-text-input id="supervisorQuota" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700"
-                                  value="{{ $supervisorQuota ?: 'Not provided' }}" readonly />
+            <!-- Contact Details Section -->
+            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Contact Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Email:</span>
+                        @if($editMode)
+                            <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full" placeholder="your.email@example.com" />
+                            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+                        @else
+                            <span class="text-gray-600 dark:text-gray-400">{{ $email }}</span>
+                        @endif
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">State:</span>
+                        @if($editMode)
+                            <x-text-input wire:model="state" id="state" name="state" type="text" class="mt-1 block w-full" placeholder="e.g., Pahang" />
+                            <x-input-error class="mt-2" :messages="$errors->get('state')" />
+                        @else
+                            <span class="text-gray-600 dark:text-gray-400">{{ $state ?: 'Not provided' }}</span>
+                        @endif
+                    </div>
+                    <div class="md:col-span-2">
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Address:</span>
+                        @if($editMode)
+                            <x-text-input wire:model="lecturerAddress" id="lecturerAddress" name="lecturerAddress" type="text" class="mt-1 block w-full" placeholder="Street address" />
+                            <x-input-error class="mt-2" :messages="$errors->get('lecturerAddress')" />
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                <div>
+                                    <x-input-label for="city" :value="__('City')" />
+                                    <x-text-input wire:model="city" id="city" name="city" type="text" class="mt-1 block w-full" placeholder="City" />
+                                    <x-input-error class="mt-2" :messages="$errors->get('city')" />
+                                </div>
+                                <div>
+                                    <x-input-label for="postcode" :value="__('Postcode')" />
+                                    <x-text-input wire:model="postcode" id="postcode" name="postcode" type="text" class="mt-1 block w-full" placeholder="Postcode" />
+                                    <x-input-error class="mt-2" :messages="$errors->get('postcode')" />
+                                </div>
+                                <div>
+                                    <x-input-label for="country" :value="__('Country')" />
+                                    <x-text-input wire:model="country" id="country" name="country" type="text" class="mt-1 block w-full" placeholder="Country" />
+                                    <x-input-error class="mt-2" :messages="$errors->get('country')" />
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                <span class="font-semibold">🗺️ Note:</span> Your address will be automatically geocoded to update your location coordinates when you save.
+                            </p>
+                        @else
+                            <span class="text-gray-600 dark:text-gray-400">{{ $fullAddress }}</span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
-            <!-- Special Roles Section -->
-            <div>
-                <x-input-label :value="__('Special Roles')" class="text-base font-medium mb-3" />
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div class="flex items-center">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $isAcademicAdvisor ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' }}">
-                            @if($isAcademicAdvisor)
-                                ✓ Academic Advisor
-                            @else
-                                Academic Advisor
-                            @endif
-                        </span>
+            <!-- Academic Data Section -->
+            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Academic Data</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Lecturer ID:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $lecturer ? $lecturer->lecturerID : 'N/A' }}</span>
                     </div>
-                    <div class="flex items-center">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $isSupervisorFaculty ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' }}">
-                            @if($isSupervisorFaculty)
-                                ✓ Supervisor Faculty
-                            @else
-                                Supervisor Faculty
-                            @endif
-                        </span>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Department:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $department ?: 'Not provided' }}</span>
                     </div>
-                    <div class="flex items-center">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $isCommittee ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' }}">
-                            @if($isCommittee)
-                                ✓ Committee
-                            @else
-                                Committee
-                            @endif
-                        </span>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Research Group:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $researchGroup ?: 'Not provided' }}</span>
                     </div>
-                    <div class="flex items-center">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $isCoordinator ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' }}">
-                            @if($isCoordinator)
-                                ✓ Coordinator
-                            @else
-                                Coordinator
-                            @endif
-                        </span>
-                    </div>
-                    <div class="flex items-center">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $isAdmin ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' }}">
-                            @if($isAdmin)
-                                ✓ Admin
-                            @else
-                                Admin
-                            @endif
-                        </span>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Role:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $role ?: 'Not provided' }}</span>
                     </div>
                 </div>
-                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    {{ __('Special roles are managed by system administrators and cannot be modified here.') }}
-                </p>
+            </div>
+
+            <!-- System Information Section -->
+            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">System Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Semester:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $lecturerSemester ?: 'Not provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Year:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $lecturerYear ?: 'Not provided' }}</span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Supervisor Quota:</span>
+                        <span class="text-gray-600 dark:text-gray-400">{{ $supervisorQuota ?: 'Not provided' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supervisor Preferences Section -->
+            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Supervisor Preferences</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Preferred Coursework:</span>
+                        @if($editMode)
+                            <div class="mt-1">
+                                <select wire:model="preferredCoursework" multiple
+                                        class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm min-h-[120px]"
+                                        size="6">
+                                        <option value="Software Engineering">Software Engineering</option>
+                                        <option value="Computer Systems & Networking">Computer Systems & Networking</option>
+                                        <option value="Graphics & Multimedia Technology">Graphics & Multimedia Technology</option>
+                                        <option value="Cyber Security">Cyber Security</option>
+                                        <option value="Data Science & Analytics">Data Science & Analytics</option>
+                                        <option value="Artificial Intelligence">Artificial Intelligence</option>
+                                        <option value="Information Systems">Information Systems</option>
+                                        <option value="Database Systems">Database Systems</option>
+                                        <option value="Cloud & Distributed Computing">Cloud & Distributed Computing</option>
+                                        <option value="General Computing">General Computing</option>
+
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Hold Ctrl (Windows) or Cmd (Mac) to select multiple options
+                                </p>
+                                <x-input-error class="mt-2" :messages="$errors->get('preferredCoursework')" />
+                            </div>
+                        @else
+                            @if(!empty($displayCoursework))
+                                <div class="flex flex-wrap gap-2 mt-1">
+                                    @foreach($displayCoursework as $coursework)
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                            {{ trim($coursework) }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-gray-600 dark:text-gray-400">Not specified</span>
+                            @endif
+                        @endif
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Travel Preference:</span>
+                        @if($editMode)
+                            <div class="mt-1">
+                                <select wire:model="travelPreference"
+                                        class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                                    <option value="local">Local (within 50km)</option>
+                                    <option value="nationwide">Nationwide (any distance)</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Select your preferred travel range for supervision visits
+                                </p>
+                                <x-input-error class="mt-2" :messages="$errors->get('travelPreference')" />
+                            </div>
+                        @else
+                            <span class="text-gray-600 dark:text-gray-400">
+                                {{ $travelPreference === 'local' ? 'Local (within 50km)' : 'Nationwide (any distance)' }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Roles Section -->
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Active Roles</h3>
+                @if(count($activeRoles) > 0)
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($activeRoles as $roleName)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500 text-white">
+                                {{ $roleName }}
+                            </span>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">No active roles assigned.</p>
+                @endif
             </div>
         @endif
 

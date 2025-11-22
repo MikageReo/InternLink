@@ -29,15 +29,89 @@ new class extends Component
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex items-center">
                     @if(auth()->user()->isStudent())
                         <x-nav-link :href="route('student.dashboard')" :active="request()->routeIs('student.dashboard')" wire:navigate>
                             {{ __('Student Dashboard') }}
                         </x-nav-link>
+
+                        <a href="{{ route('student.courseVerification') }}"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('student.courseVerification') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            Course Verification
+                        </a>
+
+                        <a href="{{ route('student.placementApplications') }}"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('student.placementApplications') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            Internship Placement
+                        </a>
+
+                        <a href="{{ route('student.requestDefer') }}"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('student.requestDefer') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            Request Defer
+                        </a>
+
+                        <a href="{{ route('student.changeRequestHistory') }}"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('student.changeRequestHistory') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            Change Request
+                        </a>
                     @elseif(auth()->user()->isLecturer())
                         <x-nav-link :href="route('lecturer.dashboard')" :active="request()->routeIs('lecturer.dashboard')" wire:navigate>
                             {{ __('Lecturer Dashboard') }}
                         </x-nav-link>
+
+                        <a href="{{ route('lecturer.userDirectory') }}"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('lecturer.userDirectory') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            User Directory
+                        </a>
+
+                        <a href="{{ route('lecturer.courseVerificationManagement') }}"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('lecturer.courseVerificationManagement') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            Course Verification
+                        </a>
+
+                        <!-- Internship Dropdown -->
+                        <div x-data="{ open: false }" class="relative">
+                            <button @click="open = !open"
+                                    class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('lecturer.placementApplications') || request()->routeIs('lecturer.requestDefer') || request()->routeIs('lecturer.changeRequests') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                                Internship
+                                <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="open"
+                                 @click.away="open = false"
+                                 x-transition
+                                 class="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
+                                @if(auth()->user()->lecturer && (auth()->user()->lecturer->isCommittee || auth()->user()->lecturer->isCoordinator))
+                                    <a href="{{ route('lecturer.placementApplications') }}"
+                                       class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {{ request()->routeIs('lecturer.placementApplications') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                        Placement Application
+                                    </a>
+                                    <a href="{{ route('lecturer.requestDefer') }}"
+                                       class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {{ request()->routeIs('lecturer.requestDefer') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                        Defer Request
+                                    </a>
+                                    <a href="{{ route('lecturer.changeRequests') }}"
+                                       class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {{ request()->routeIs('lecturer.changeRequests') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                        Change Request
+                                    </a>
+                                @else
+                                    <div class="px-4 py-2 text-sm text-gray-400 dark:text-gray-500">
+                                        Access restricted
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <a href="{{ route('lecturer.supervisorAssignments') }}"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('lecturer.supervisorAssignments') || request()->routeIs('lecturer.autoSupervisorAssignments') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            Supervisor Assignment
+                        </a>
+
+                        <a href="{{ route('lecturer.ahpCalculator') }}"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('lecturer.ahpCalculator') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
+                            AHP Weight
+                        </a>
                     @endif
                 </div>
             </div>
@@ -64,6 +138,10 @@ new class extends Component
 
                         <x-dropdown-link :href="route('profile')" wire:navigate>
                             {{ __('Profile') }}
+                        </x-dropdown-link>
+
+                        <x-dropdown-link :href="route('password')" wire:navigate>
+                            {{ __('Change Password') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
@@ -113,6 +191,10 @@ new class extends Component
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile')" wire:navigate>
                     {{ __('Profile') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('password')" wire:navigate>
+                    {{ __('Change Password') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->
