@@ -47,6 +47,9 @@ class StudentPlacementApplicationTable extends Component
     public $companyLongitude = '';
     public $companyEmail = '';
     public $companyNumber = '';
+    public $industrySupervisorName = '';
+    public $industrySupervisorContact = '';
+    public $industrySupervisorEmail = '';
     public $allowance = '';
     public $position = '';
     public $jobscope = '';
@@ -85,6 +88,9 @@ class StudentPlacementApplicationTable extends Component
             'companyCountry' => 'nullable|string',
             'companyEmail' => 'required|email|max:255',
             'companyNumber' => 'required|string|max:20',
+            'industrySupervisorName' => 'required|string|max:255',
+            'industrySupervisorContact' => 'required|string|max:20',
+            'industrySupervisorEmail' => 'required|email|max:255',
             'allowance' => 'nullable|numeric|min:0',
             'position' => 'required|string|max:255',
             'jobscope' => 'required|string',
@@ -109,6 +115,10 @@ class StudentPlacementApplicationTable extends Component
         'companyEmail.required' => 'Company email is required.',
         'companyEmail.email' => 'Please provide a valid email address.',
         'companyNumber.required' => 'Company contact number is required.',
+        'industrySupervisorName.required' => 'Industry supervisor name is required.',
+        'industrySupervisorContact.required' => 'Industry supervisor contact number is required.',
+        'industrySupervisorEmail.required' => 'Industry supervisor email is required.',
+        'industrySupervisorEmail.email' => 'Please provide a valid email address for the industry supervisor.',
         'position.required' => 'Position is required.',
         'jobscope.required' => 'Job scope is required.',
         'methodOfWork.required' => 'Method of work is required.',
@@ -213,6 +223,9 @@ class StudentPlacementApplicationTable extends Component
             'companyCountry',
             'companyEmail',
             'companyNumber',
+            'industrySupervisorName',
+            'industrySupervisorContact',
+            'industrySupervisorEmail',
             'allowance',
             'position',
             'jobscope',
@@ -279,6 +292,9 @@ class StudentPlacementApplicationTable extends Component
         $this->companyLongitude = $application->companyLongitude ?? '';
         $this->companyEmail = $application->companyEmail;
         $this->companyNumber = $application->companyNumber;
+        $this->industrySupervisorName = $application->industrySupervisorName ?? '';
+        $this->industrySupervisorContact = $application->industrySupervisorContact ?? '';
+        $this->industrySupervisorEmail = $application->industrySupervisorEmail ?? '';
         $this->allowance = $application->allowance;
         $this->position = $application->position;
         $this->jobscope = $application->jobscope;
@@ -307,6 +323,9 @@ class StudentPlacementApplicationTable extends Component
                 'companyCountry' => $this->companyCountry,
                 'companyLatitude' => $this->companyLatitude,
                 'companyLongitude' => $this->companyLongitude,
+                'industrySupervisorName' => $this->industrySupervisorName,
+                'industrySupervisorContact' => $this->industrySupervisorContact,
+                'industrySupervisorEmail' => $this->industrySupervisorEmail,
                 'position' => $this->position,
                 'startDate' => $this->startDate,
                 'endDate' => $this->endDate
@@ -373,6 +392,9 @@ class StudentPlacementApplicationTable extends Component
                 'companyLongitude' => $companyLongitude,
                 'companyEmail' => $this->companyEmail,
                 'companyNumber' => $this->companyNumber,
+                'industrySupervisorName' => $this->industrySupervisorName,
+                'industrySupervisorContact' => $this->industrySupervisorContact,
+                'industrySupervisorEmail' => $this->industrySupervisorEmail,
                 'allowance' => $this->allowance ?: null,
                 'position' => $this->position,
                 'jobscope' => $this->jobscope,

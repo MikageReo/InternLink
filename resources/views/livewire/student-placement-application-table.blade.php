@@ -527,6 +527,38 @@
                             <p class="text-xs text-gray-500 mt-1">Leave blank if no allowance provided</p>
                         </div>
 
+                        <!-- Industry Supervisor Information Section -->
+                        <div class="md:col-span-2 mt-4">
+                            <h4 class="text-md font-semibold text-gray-900 mb-3">Industry Supervisor Information</h4>
+                        </div>
+
+                        <!-- Industry Supervisor Name -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Industry Supervisor Name *</label>
+                            <input type="text" wire:model="industrySupervisorName" 
+                                   placeholder="e.g., Dr. Ahmad bin Abdullah"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                            @error('industrySupervisorName')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <!-- Industry Supervisor Contact -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Industry Supervisor Contact Number *</label>
+                            <input type="text" wire:model="industrySupervisorContact" 
+                                   placeholder="e.g., +603-1234 5678 or 011-1234 5678"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                            @error('industrySupervisorContact')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+
+                        <!-- Industry Supervisor Email -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Industry Supervisor Email *</label>
+                            <input type="email" wire:model="industrySupervisorEmail" 
+                                   placeholder="e.g., ahmad.abdullah@company.com"
+                                   class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                            @error('industrySupervisorEmail')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+
                         <!-- Position Information Section -->
                         <div class="md:col-span-2 mt-4">
                             <h4 class="text-md font-semibold text-gray-900 mb-3">Position Details</h4>
@@ -705,6 +737,16 @@
                                 @if($viewingApplication->has_geocoding)
                                     <p><strong>Coordinates:</strong> {{ $viewingApplication->companyLatitude }}, {{ $viewingApplication->companyLongitude }}</p>
                                 @endif
+                            </div>
+                        </div>
+
+                        <!-- Industry Supervisor Information -->
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3">Industry Supervisor Information</h4>
+                            <div class="space-y-2 text-sm">
+                                <p><strong>Name:</strong> {{ $viewingApplication->industrySupervisorName ?? 'Not provided' }}</p>
+                                <p><strong>Contact:</strong> {{ $viewingApplication->industrySupervisorContact ?? 'Not provided' }}</p>
+                                <p><strong>Email:</strong> {{ $viewingApplication->industrySupervisorEmail ?? 'Not provided' }}</p>
                             </div>
                         </div>
 

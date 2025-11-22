@@ -477,6 +477,16 @@
                             </div>
                         </div>
 
+                        <!-- Industry Supervisor Information -->
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3">Industry Supervisor Information</h4>
+                            <div class="space-y-2 text-sm">
+                                <p><strong>Name:</strong> {{ $selectedApplication->industrySupervisorName ?? 'Not provided' }}</p>
+                                <p><strong>Contact:</strong> {{ $selectedApplication->industrySupervisorContact ?? 'Not provided' }}</p>
+                                <p><strong>Email:</strong> {{ $selectedApplication->industrySupervisorEmail ?? 'Not provided' }}</p>
+                            </div>
+                        </div>
+
                         <!-- Position Details -->
                         <div>
                             <h4 class="font-semibold text-gray-900 mb-3">Position Details</h4>
