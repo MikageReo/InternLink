@@ -46,6 +46,18 @@ class SupervisorAssignmentTable extends Component
     public $editAssignmentID = null;
     public $newSupervisorID = null;
 
+    // Bulk selection properties
+    public $selectedStudents = [];
+    public $selectAll = false;
+    public $isBulkAssigning = false;
+    public $bulkAssignProgress = 0;
+    public $bulkAssignTotal = 0;
+    public $bulkAssignResults = [
+        'success' => 0,
+        'failed' => 0,
+        'skipped' => 0,
+    ];
+
     protected $supervisorAssignmentService;
     protected $geocodingService;
 
@@ -218,6 +230,193 @@ class SupervisorAssignmentTable extends Component
         }
     }
 
+    /**
+     * Toggle student selection for bulk operations
+     */
+    public function toggleStudentSelection($studentID)
+    {
+        if (in_array($studentID, $this->selectedStudents)) {
+            $this->selectedStudents = array_values(array_diff($this->selectedStudents, [$studentID]));
+        } else {
+            $this->selectedStudents[] = $studentID;
+        }
+        $this->updateSelectAllState();
+    }
+
+    /**
+     * Toggle select all students on current page
+     */
+    public function toggleSelectAll()
+    {
+        // Get current page student IDs from the render query
+        $query = Student::query()
+            ->with(['user', 'acceptedPlacementApplication', 'supervisorAssignment.supervisor.user'])
+            ->whereHas('placementApplications', function ($q) {
+                $q->where('studentAcceptance', 'Accepted');
+            });
+
+        // Apply same filters as render method
+        if ($this->assignmentTypeFilter === 'assigned') {
+            $query->whereHas('supervisorAssignments', function ($q) {
+                $q->where('status', SupervisorAssignment::STATUS_ASSIGNED);
+            });
+        } elseif ($this->assignmentTypeFilter === 'unassigned') {
+            $query->whereDoesntHave('supervisorAssignments', function ($q) {
+                $q->where('status', SupervisorAssignment::STATUS_ASSIGNED);
+            });
+        }
+
+        if ($this->semesterFilter) {
+            $query->where('semester', $this->semesterFilter);
+        }
+
+        if ($this->yearFilter) {
+            $query->where('year', $this->yearFilter);
+        }
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('studentID', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('user', function ($userQuery) {
+                        $userQuery->where('name', 'like', '%' . $this->search . '%')
+                            ->orWhere('email', 'like', '%' . $this->search . '%');
+                    })
+                    ->orWhereHas('acceptedPlacementApplication', function ($appQuery) {
+                        $appQuery->where('companyName', 'like', '%' . $this->search . '%');
+                    });
+            });
+        }
+
+        // Sort
+        if ($this->sortField === 'assigned_at') {
+            $query->leftJoin('supervisor_assignments', function ($join) {
+                $join->on('students.studentID', '=', 'supervisor_assignments.studentID')
+                    ->where('supervisor_assignments.status', '=', SupervisorAssignment::STATUS_ASSIGNED);
+            })
+                ->orderBy('supervisor_assignments.assigned_at', $this->sortDirection)
+                ->select('students.*');
+        } else {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        }
+
+        $students = $query->paginate($this->perPage);
+        $currentPageStudentIDs = $students->pluck('studentID')->toArray();
+
+        // Check if all current page students are selected
+        $allSelected = !empty($currentPageStudentIDs) &&
+            count(array_intersect($this->selectedStudents, $currentPageStudentIDs)) === count($currentPageStudentIDs);
+
+        if ($allSelected) {
+            // Deselect all current page students
+            $this->selectedStudents = array_values(array_diff($this->selectedStudents, $currentPageStudentIDs));
+            $this->selectAll = false;
+        } else {
+            // Select all current page students
+            $this->selectedStudents = array_unique(array_merge($this->selectedStudents, $currentPageStudentIDs));
+            $this->selectAll = true;
+        }
+    }
+
+    /**
+     * Update select all state based on current selections
+     */
+    protected function updateSelectAllState()
+    {
+        // This will be called after render, so we'll check in the view instead
+        // The selectAll state will be computed in the view
+    }
+
+    /**
+     * Check if student is selected
+     */
+    public function isStudentSelected($studentID): bool
+    {
+        return in_array($studentID, $this->selectedStudents);
+    }
+
+    /**
+     * Clear all selections
+     */
+    public function clearSelection()
+    {
+        $this->selectedStudents = [];
+        $this->selectAll = false;
+    }
+
+    /**
+     * Bulk auto-assign supervisors to selected students
+     */
+    public function bulkAutoAssign()
+    {
+        if (empty($this->selectedStudents)) {
+            session()->flash('error', 'Please select at least one student.');
+            return;
+        }
+
+        $this->isBulkAssigning = true;
+        $this->bulkAssignTotal = count($this->selectedStudents);
+        $this->bulkAssignProgress = 0;
+        $this->bulkAssignResults = ['success' => 0, 'failed' => 0, 'skipped' => 0];
+
+        try {
+            foreach ($this->selectedStudents as $studentID) {
+                try {
+                    // Check if student already has an assignment
+                    $existingAssignment = SupervisorAssignment::where('studentID', $studentID)
+                        ->where('status', SupervisorAssignment::STATUS_ASSIGNED)
+                        ->first();
+
+                    if ($existingAssignment) {
+                        $this->bulkAssignResults['skipped']++;
+                        $this->bulkAssignProgress++;
+                        continue;
+                    }
+
+                    // Try to auto-assign
+                    $assignment = $this->supervisorAssignmentService->autoAssignNearestSupervisor($studentID);
+
+                    if ($assignment) {
+                        $this->bulkAssignResults['success']++;
+                    } else {
+                        $this->bulkAssignResults['failed']++;
+                    }
+                } catch (\Exception $e) {
+                    $this->bulkAssignResults['failed']++;
+                    Log::error('Failed to auto-assign supervisor in bulk operation', [
+                        'student_id' => $studentID,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                $this->bulkAssignProgress++;
+            }
+
+            // Show results
+            $message = sprintf(
+                'Bulk auto-assignment completed: %d successful, %d failed, %d skipped.',
+                $this->bulkAssignResults['success'],
+                $this->bulkAssignResults['failed'],
+                $this->bulkAssignResults['skipped']
+            );
+
+            if ($this->bulkAssignResults['success'] > 0) {
+                session()->flash('success', $message);
+            } elseif ($this->bulkAssignResults['failed'] > 0) {
+                session()->flash('error', $message);
+            } else {
+                session()->flash('info', $message);
+            }
+
+            // Clear selection and reset
+            $this->clearSelection();
+            $this->resetPage();
+        } finally {
+            $this->isBulkAssigning = false;
+            $this->bulkAssignProgress = 0;
+            $this->bulkAssignTotal = 0;
+        }
+    }
+
     public function viewAssignment($assignmentID)
     {
         $this->selectedAssignmentID = $assignmentID;
@@ -306,11 +505,45 @@ class SupervisorAssignmentTable extends Component
         try {
             $assignment = SupervisorAssignment::findOrFail($this->editAssignmentID);
             $oldSupervisor = $assignment->supervisor;
+            $student = $assignment->student;
+
+            // Calculate new distance if supervisor changed
+            $newDistance = $assignment->distance_km;
+            if ($oldSupervisor->lecturerID !== $this->newSupervisorID) {
+                $newSupervisor = Lecturer::where('lecturerID', $this->newSupervisorID)->first();
+                $placement = $student->acceptedPlacementApplication;
+
+                // Recalculate distance
+                if (
+                    $placement && $placement->companyLatitude && $placement->companyLongitude
+                    && $newSupervisor->latitude && $newSupervisor->longitude
+                ) {
+                    $newDistance = $this->geocodingService->calculateDistance(
+                        (float) $placement->companyLatitude,
+                        (float) $placement->companyLongitude,
+                        (float) $newSupervisor->latitude,
+                        (float) $newSupervisor->longitude
+                    );
+                } elseif (
+                    $student->latitude && $student->longitude
+                    && $newSupervisor->latitude && $newSupervisor->longitude
+                ) {
+                    $newDistance = $this->geocodingService->calculateDistance(
+                        (float) $student->latitude,
+                        (float) $student->longitude,
+                        (float) $newSupervisor->latitude,
+                        (float) $newSupervisor->longitude
+                    );
+                } else {
+                    $newDistance = null;
+                }
+            }
 
             // Update assignment
             $assignment->update([
-                'lecturerID' => $this->newSupervisorID,
+                'supervisorID' => $this->newSupervisorID,
                 'assignment_notes' => $this->assignmentNotes,
+                'distance_km' => $newDistance,
             ]);
 
             // Update quota counts

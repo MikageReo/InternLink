@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AHPWeight extends Model
 {
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'ahp_weights';
+
     protected $fillable = [
         'criteria_comparisons',
         'calculated_weights',

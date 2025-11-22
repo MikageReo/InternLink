@@ -9,4 +9,3 @@
         @livewire('a-h-p-weight-calculator')
     </div>
 </x-app-layout>
-

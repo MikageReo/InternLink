@@ -68,6 +68,44 @@
                     <h2 class="text-lg font-medium text-gray-900">Students Requiring Supervisor Assignment</h2>
                 </div>
 
+                <!-- Bulk Actions Bar -->
+                @if(count($selectedStudents) > 0 || $isBulkAssigning)
+                    <div class="px-6 py-3 border-b border-gray-200 bg-blue-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm font-medium text-gray-700">
+                                    {{ count($selectedStudents) }} student(s) selected
+                                </span>
+                                @if($isBulkAssigning)
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-48 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                                                 style="width: {{ $bulkAssignTotal > 0 ? ($bulkAssignProgress / $bulkAssignTotal * 100) : 0 }}%"></div>
+                                        </div>
+                                        <span class="text-xs text-gray-600">
+                                            {{ $bulkAssignProgress }} / {{ $bulkAssignTotal }}
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button wire:click="clearSelection" 
+                                        class="px-3 py-1 text-sm text-gray-700 hover:text-gray-900">
+                                    Clear Selection
+                                </button>
+                                <button wire:click="bulkAutoAssign" 
+                                        wire:loading.attr="disabled"
+                                        wire:target="bulkAutoAssign"
+                                        @if($isBulkAssigning) disabled @endif
+                                        class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                                    <span wire:loading.remove wire:target="bulkAutoAssign">Bulk Auto Assign</span>
+                                    <span wire:loading wire:target="bulkAutoAssign">Assigning...</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Advanced Filters -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                     <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
@@ -127,6 +165,20 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <label class="flex items-center cursor-pointer">
+                                        @php
+                                            $currentPageStudentIDs = $students->pluck('studentID')->toArray();
+                                            $allSelected = !empty($currentPageStudentIDs) && 
+                                                count(array_intersect($selectedStudents, $currentPageStudentIDs)) === count($currentPageStudentIDs);
+                                        @endphp
+                                        <input type="checkbox" 
+                                               @if($allSelected) checked @endif
+                                               wire:click="toggleSelectAll"
+                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        <span class="ml-2">Select</span>
+                                    </label>
+                                </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                                     wire:click="sortBy('studentID')">
                                     Student ID
@@ -157,7 +209,13 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($students as $student)
-                                <tr class="hover:bg-gray-50">
+                                <tr class="hover:bg-gray-50 {{ $this->isStudentSelected($student->studentID) ? 'bg-blue-50' : '' }}">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" 
+                                               @if($this->isStudentSelected($student->studentID)) checked @endif
+                                               wire:click="toggleStudentSelection('{{ $student->studentID }}')"
+                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $student->studentID }}
                                     </td>
@@ -232,7 +290,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
                                         No students found.
                                     </td>
                                 </tr>
