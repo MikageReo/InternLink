@@ -168,12 +168,17 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <label class="flex items-center cursor-pointer">
                                         @php
-                                            $currentPageStudentIDs = $students->pluck('studentID')->toArray();
-                                            $allSelected = !empty($currentPageStudentIDs) && 
-                                                count(array_intersect($selectedStudents, $currentPageStudentIDs)) === count($currentPageStudentIDs);
+                                            // Only count unassigned students for select all
+                                            $unassignedStudentIDs = $students->filter(function ($student) {
+                                                return !$student->supervisorAssignment || 
+                                                       $student->supervisorAssignment->status !== \App\Models\SupervisorAssignment::STATUS_ASSIGNED;
+                                            })->pluck('studentID')->toArray();
+                                            $selectedUnassigned = array_intersect($selectedStudents, $unassignedStudentIDs);
+                                            $allUnassignedSelected = !empty($unassignedStudentIDs) && 
+                                                count($selectedUnassigned) === count($unassignedStudentIDs);
                                         @endphp
                                         <input type="checkbox" 
-                                               @if($allSelected) checked @endif
+                                               @if($allUnassignedSelected) checked @endif
                                                wire:click="toggleSelectAll"
                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                         <span class="ml-2">Select</span>
@@ -209,12 +214,19 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($students as $student)
-                                <tr class="hover:bg-gray-50 {{ $this->isStudentSelected($student->studentID) ? 'bg-blue-50' : '' }}">
+                                @php
+                                    $hasAssignment = $student->supervisorAssignment && 
+                                                     $student->supervisorAssignment->status === \App\Models\SupervisorAssignment::STATUS_ASSIGNED;
+                                    $canSelect = !$hasAssignment;
+                                @endphp
+                                <tr class="hover:bg-gray-50 {{ $this->isStudentSelected($student->studentID) ? 'bg-blue-50' : '' }} {{ !$canSelect ? 'opacity-60' : '' }}">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <input type="checkbox" 
                                                @if($this->isStudentSelected($student->studentID)) checked @endif
+                                               @if(!$canSelect) disabled @endif
                                                wire:click="toggleStudentSelection('{{ $student->studentID }}')"
-                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                               title="{{ $canSelect ? 'Select for bulk auto-assignment' : 'Student already has a supervisor assigned' }}">
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $student->studentID }}

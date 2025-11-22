@@ -232,9 +232,20 @@ class SupervisorAssignmentTable extends Component
 
     /**
      * Toggle student selection for bulk operations
+     * Only allows selection of unassigned students
      */
     public function toggleStudentSelection($studentID)
     {
+        // Check if student already has an assignment
+        $hasAssignment = SupervisorAssignment::where('studentID', $studentID)
+            ->where('status', SupervisorAssignment::STATUS_ASSIGNED)
+            ->exists();
+
+        if ($hasAssignment) {
+            // Cannot select assigned students
+            return;
+        }
+
         if (in_array($studentID, $this->selectedStudents)) {
             $this->selectedStudents = array_values(array_diff($this->selectedStudents, [$studentID]));
         } else {
@@ -245,6 +256,7 @@ class SupervisorAssignmentTable extends Component
 
     /**
      * Toggle select all students on current page
+     * Only selects unassigned students
      */
     public function toggleSelectAll()
     {
@@ -300,19 +312,27 @@ class SupervisorAssignmentTable extends Component
         }
 
         $students = $query->paginate($this->perPage);
-        $currentPageStudentIDs = $students->pluck('studentID')->toArray();
 
-        // Check if all current page students are selected
-        $allSelected = !empty($currentPageStudentIDs) &&
-            count(array_intersect($this->selectedStudents, $currentPageStudentIDs)) === count($currentPageStudentIDs);
+        // Filter to only unassigned students
+        $unassignedStudentIDs = $students->filter(function ($student) {
+            return !$student->supervisorAssignment ||
+                $student->supervisorAssignment->status !== SupervisorAssignment::STATUS_ASSIGNED;
+        })->pluck('studentID')->toArray();
 
-        if ($allSelected) {
-            // Deselect all current page students
-            $this->selectedStudents = array_values(array_diff($this->selectedStudents, $currentPageStudentIDs));
+        // Get currently selected unassigned students from current page
+        $selectedUnassignedOnPage = array_intersect($this->selectedStudents, $unassignedStudentIDs);
+
+        // Check if all unassigned students on current page are selected
+        $allUnassignedSelected = !empty($unassignedStudentIDs) &&
+            count($selectedUnassignedOnPage) === count($unassignedStudentIDs);
+
+        if ($allUnassignedSelected) {
+            // Deselect all unassigned students from current page
+            $this->selectedStudents = array_values(array_diff($this->selectedStudents, $unassignedStudentIDs));
             $this->selectAll = false;
         } else {
-            // Select all current page students
-            $this->selectedStudents = array_unique(array_merge($this->selectedStudents, $currentPageStudentIDs));
+            // Select all unassigned students on current page
+            $this->selectedStudents = array_unique(array_merge($this->selectedStudents, $unassignedStudentIDs));
             $this->selectAll = true;
         }
     }
@@ -335,6 +355,18 @@ class SupervisorAssignmentTable extends Component
     }
 
     /**
+     * Check if student can be selected (must be unassigned)
+     */
+    public function canSelectStudent($studentID): bool
+    {
+        $hasAssignment = SupervisorAssignment::where('studentID', $studentID)
+            ->where('status', SupervisorAssignment::STATUS_ASSIGNED)
+            ->exists();
+
+        return !$hasAssignment;
+    }
+
+    /**
      * Clear all selections
      */
     public function clearSelection()
@@ -353,13 +385,30 @@ class SupervisorAssignmentTable extends Component
             return;
         }
 
+        // Filter out any assigned students (safety check)
+        $unassignedStudents = [];
+        foreach ($this->selectedStudents as $studentID) {
+            $hasAssignment = SupervisorAssignment::where('studentID', $studentID)
+                ->where('status', SupervisorAssignment::STATUS_ASSIGNED)
+                ->exists();
+
+            if (!$hasAssignment) {
+                $unassignedStudents[] = $studentID;
+            }
+        }
+
+        if (empty($unassignedStudents)) {
+            session()->flash('error', 'No unassigned students selected. Please select students without supervisors.');
+            return;
+        }
+
         $this->isBulkAssigning = true;
-        $this->bulkAssignTotal = count($this->selectedStudents);
+        $this->bulkAssignTotal = count($unassignedStudents);
         $this->bulkAssignProgress = 0;
         $this->bulkAssignResults = ['success' => 0, 'failed' => 0, 'skipped' => 0];
 
         try {
-            foreach ($this->selectedStudents as $studentID) {
+            foreach ($unassignedStudents as $studentID) {
                 try {
                     // Check if student already has an assignment
                     $existingAssignment = SupervisorAssignment::where('studentID', $studentID)
@@ -502,15 +551,18 @@ class SupervisorAssignmentTable extends Component
             'assignmentNotes' => 'nullable|string|max:1000',
         ]);
 
+        DB::beginTransaction();
         try {
-            $assignment = SupervisorAssignment::findOrFail($this->editAssignmentID);
-            $oldSupervisor = $assignment->supervisor;
+            // Get fresh assignment data
+            $assignment = SupervisorAssignment::lockForUpdate()->findOrFail($this->editAssignmentID);
+            $oldSupervisorID = $assignment->supervisorID;
+            $oldSupervisor = Lecturer::lockForUpdate()->where('lecturerID', $oldSupervisorID)->firstOrFail();
             $student = $assignment->student;
 
             // Calculate new distance if supervisor changed
             $newDistance = $assignment->distance_km;
-            if ($oldSupervisor->lecturerID !== $this->newSupervisorID) {
-                $newSupervisor = Lecturer::where('lecturerID', $this->newSupervisorID)->first();
+            if ($oldSupervisorID !== $this->newSupervisorID) {
+                $newSupervisor = Lecturer::lockForUpdate()->where('lecturerID', $this->newSupervisorID)->firstOrFail();
                 $placement = $student->acceptedPlacementApplication;
 
                 // Recalculate distance
@@ -537,32 +589,47 @@ class SupervisorAssignmentTable extends Component
                 } else {
                     $newDistance = null;
                 }
+
+                // Update quota counts BEFORE updating assignment
+                // Decrease old supervisor's count (only if assignment status is 'assigned')
+                if ($assignment->status === SupervisorAssignment::STATUS_ASSIGNED) {
+                    $oldSupervisor->decrement('current_assignments');
+                }
+
+                // Update assignment
+                $assignment->update([
+                    'supervisorID' => $this->newSupervisorID,
+                    'assignment_notes' => $this->assignmentNotes,
+                    'distance_km' => $newDistance,
+                ]);
+
+                // Increase new supervisor's count (only if assignment status is 'assigned')
+                if ($assignment->status === SupervisorAssignment::STATUS_ASSIGNED) {
+                    $newSupervisor->increment('current_assignments');
+                }
+
+                // Refresh models to get updated counts
+                $oldSupervisor->refresh();
+                $newSupervisor->refresh();
+            } else {
+                // Supervisor didn't change, just update notes
+                $assignment->update([
+                    'assignment_notes' => $this->assignmentNotes,
+                ]);
             }
 
-            // Update assignment
-            $assignment->update([
-                'supervisorID' => $this->newSupervisorID,
-                'assignment_notes' => $this->assignmentNotes,
-                'distance_km' => $newDistance,
-            ]);
-
-            // Update quota counts
-            if ($oldSupervisor->lecturerID !== $this->newSupervisorID) {
-                // Decrease old supervisor's count
-                $oldSupervisor->decrement('current_assignments');
-
-                // Increase new supervisor's count
-                $newSupervisor = Lecturer::where('lecturerID', $this->newSupervisorID)->first();
-                $newSupervisor->increment('current_assignments');
-            }
+            DB::commit();
 
             session()->flash('success', 'Supervisor assignment updated successfully!');
             $this->closeEditModal();
             $this->resetPage();
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Failed to update assignment: ' . $e->getMessage());
             Log::error('Failed to update supervisor assignment', [
                 'assignment_id' => $this->editAssignmentID,
+                'old_supervisor_id' => $oldSupervisorID ?? 'N/A',
+                'new_supervisor_id' => $this->newSupervisorID ?? 'N/A',
                 'error' => $e->getMessage(),
             ]);
         }
@@ -570,19 +637,30 @@ class SupervisorAssignmentTable extends Component
 
     public function removeAssignment($assignmentID)
     {
+        DB::beginTransaction();
         try {
-            $assignment = SupervisorAssignment::findOrFail($assignmentID);
-            $supervisor = $assignment->supervisor;
+            $assignment = SupervisorAssignment::lockForUpdate()->findOrFail($assignmentID);
+            $supervisorID = $assignment->supervisorID;
+            $assignmentStatus = $assignment->status;
+
+            // Get supervisor with lock
+            $supervisor = Lecturer::lockForUpdate()->where('lecturerID', $supervisorID)->firstOrFail();
 
             // Delete assignment
             $assignment->delete();
 
-            // Decrease supervisor's count
-            $supervisor->decrement('current_assignments');
+            // Decrease supervisor's count only if assignment was in 'assigned' status
+            if ($assignmentStatus === SupervisorAssignment::STATUS_ASSIGNED) {
+                $supervisor->decrement('current_assignments');
+                $supervisor->refresh();
+            }
+
+            DB::commit();
 
             session()->flash('success', 'Supervisor assignment removed successfully!');
             $this->resetPage();
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Failed to remove assignment: ' . $e->getMessage());
             Log::error('Failed to remove supervisor assignment', [
                 'assignment_id' => $assignmentID,
