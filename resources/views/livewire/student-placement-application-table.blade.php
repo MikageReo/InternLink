@@ -7,7 +7,7 @@
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">Internship Placement Applications</h1>
                 <p class="text-gray-600">Submit and manage your internship placement applications</p>
                 </div>
-                <a href="{{ asset('documents/placement-application-guide.pdf') }}" 
+                <a href="{{ asset('documents/placement-application-guide.pdf') }}"
                    target="_blank"
                    download
                    class="inline-flex items-center px-4 py-2 border border-blue-400 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
@@ -341,7 +341,7 @@
                         <!-- Company Name -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
-                            <input type="text" wire:model="companyName" 
+                            <input type="text" wire:model="companyName"
                                    placeholder="e.g., Tech Solutions Sdn Bhd"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyName')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -350,7 +350,7 @@
                         <!-- Company Email -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Company Email *</label>
-                            <input type="email" wire:model="companyEmail" 
+                            <input type="email" wire:model="companyEmail"
                                    placeholder="e.g., hr@company.com"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyEmail')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -364,7 +364,7 @@
 
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
-                            <input type="text" wire:model="companyAddressLine" 
+                            <input type="text" wire:model="companyAddressLine"
                                    placeholder="e.g., No. 123, Jalan Technology Park 2, Bukit Jalil"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyAddressLine')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -372,7 +372,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                            <input type="text" wire:model="companyCity" 
+                            <input type="text" wire:model="companyCity"
                                    placeholder="e.g., Kuala Lumpur, Johor Bahru"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyCity')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -380,7 +380,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
-                            <input type="text" wire:model="companyPostcode" 
+                            <input type="text" wire:model="companyPostcode"
                                    placeholder="e.g., 50400"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyPostcode')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -388,7 +388,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
-                            <select wire:model="companyState" 
+                            <select wire:model="companyState"
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select State</option>
                                 <option value="Johor">Johor</option>
@@ -413,7 +413,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                            <select wire:model="companyCountry" 
+                            <select wire:model="companyCountry"
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select Country</option>
                                 <option value="Malaysia">Malaysia</option>
@@ -511,7 +511,7 @@
                         <!-- Company Phone -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Company Phone *</label>
-                            <input type="text" wire:model="companyNumber" 
+                            <input type="text" wire:model="companyNumber"
                                    placeholder="e.g., +603-1234 5678 or 011-1234 5678"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('companyNumber')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -520,7 +520,7 @@
                         <!-- Monthly Allowance -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Allowance (RM)</label>
-                            <input type="number" wire:model="allowance" step="0.01" min="0" 
+                            <input type="number" wire:model="allowance" step="0.01" min="0"
                                    placeholder="e.g., 800.00"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('allowance')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -534,8 +534,8 @@
 
                         <!-- Industry Supervisor Name -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Industry Supervisor Name *</label>
-                            <input type="text" wire:model="industrySupervisorName" 
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Name *</label>
+                            <input type="text" wire:model="industrySupervisorName"
                                    placeholder="e.g., Dr. Ahmad bin Abdullah"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('industrySupervisorName')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -543,8 +543,8 @@
 
                         <!-- Industry Supervisor Contact -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Industry Supervisor Contact Number *</label>
-                            <input type="text" wire:model="industrySupervisorContact" 
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Contact Number *</label>
+                            <input type="text" wire:model="industrySupervisorContact"
                                    placeholder="e.g., +603-1234 5678 or 011-1234 5678"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('industrySupervisorContact')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -552,8 +552,8 @@
 
                         <!-- Industry Supervisor Email -->
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Industry Supervisor Email *</label>
-                            <input type="email" wire:model="industrySupervisorEmail" 
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Email *</label>
+                            <input type="email" wire:model="industrySupervisorEmail"
                                    placeholder="e.g., ahmad.abdullah@company.com"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('industrySupervisorEmail')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -567,7 +567,7 @@
                         <!-- Position -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Position *</label>
-                            <input type="text" wire:model="position" 
+                            <input type="text" wire:model="position"
                                    placeholder="e.g., Software Developer Intern, Marketing Intern"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('position')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -576,7 +576,7 @@
                         <!-- Method of Work -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Method of Work *</label>
-                            <select wire:model="methodOfWork" 
+                            <select wire:model="methodOfWork"
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select method of work</option>
                                 <option value="WFO">🏢 Work From Office (WFO)</option>
@@ -591,7 +591,7 @@
                         <!-- Job Scope -->
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Job Scope *</label>
-                            <textarea wire:model="jobscope" rows="5" 
+                            <textarea wire:model="jobscope" rows="5"
                                       class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                                       placeholder="Describe your main responsibilities and tasks during the internship. For example:&#10;• Assist in developing web applications using Laravel and Vue.js&#10;• Collaborate with team members on software projects&#10;• Participate in code reviews and testing&#10;• Document development processes"></textarea>
                             @error('jobscope')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -606,7 +606,7 @@
                         <!-- Start Date -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
-                            <input type="date" wire:model="startDate" 
+                            <input type="date" wire:model="startDate"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('startDate')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                             <p class="text-xs text-gray-500 mt-1">Internship start date</p>
@@ -615,7 +615,7 @@
                         <!-- End Date -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
-                            <input type="date" wire:model="endDate" 
+                            <input type="date" wire:model="endDate"
                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                             @error('endDate')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                             <p class="text-xs text-gray-500 mt-1">Internship end date (must be after start date)</p>

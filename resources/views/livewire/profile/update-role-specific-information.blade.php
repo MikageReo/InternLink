@@ -24,9 +24,18 @@ new class extends Component {
     public string $year = '';
     public string $status = '';
     public string $academicAdvisorID = '';
-    public string $industrySupervisorName = '';
     public $profilePhoto;
     public ?string $currentProfilePhoto = null;
+
+    // Industry supervisor info from accepted placement application (read-only)
+    public ?string $industrySupervisorName = null;
+    public ?string $industrySupervisorContact = null;
+    public ?string $industrySupervisorEmail = null;
+
+    // Supervisor faculty info from supervisor assignment (read-only)
+    public ?string $supervisorFacultyName = null;
+    public ?string $supervisorFacultyEmail = null;
+    public ?string $supervisorFacultyID = null;
 
     // Lecturer fields
     public string $email = '';
@@ -68,7 +77,7 @@ new class extends Component {
         $user = Auth::user();
 
         if ($user->isStudent() && $user->student) {
-            $student = $user->student->load('academicAdvisor.user');
+            $student = $user->student->load(['academicAdvisor.user', 'acceptedPlacementApplication', 'supervisorAssignment.supervisor.user']);
             $this->studentEmail = $user->email ?? '';
             $this->phone = $student->phone ?? '';
             $this->studentAddress = $student->address ?? '';
@@ -82,12 +91,28 @@ new class extends Component {
             $this->year = $student->year ?? '';
             $this->status = $student->status ?? '';
             $this->academicAdvisorID = $student->academicAdvisorID ?? '';
-            $this->industrySupervisorName = $student->industrySupervisorName ?? '';
             $this->currentProfilePhoto = $student->profilePhoto;
 
             // Get academic advisor name
             if ($student->academicAdvisor && $student->academicAdvisor->user) {
                 $this->academicAdvisorName = $student->academicAdvisor->user->name;
+            }
+
+            // Get industry supervisor info from accepted placement application
+            if ($student->acceptedPlacementApplication) {
+                $this->industrySupervisorName = $student->acceptedPlacementApplication->industrySupervisorName ?? null;
+                $this->industrySupervisorContact = $student->acceptedPlacementApplication->industrySupervisorContact ?? null;
+                $this->industrySupervisorEmail = $student->acceptedPlacementApplication->industrySupervisorEmail ?? null;
+            }
+
+            // Get supervisor faculty info from supervisor assignment
+            if ($student->supervisorAssignment && $student->supervisorAssignment->supervisor) {
+                $supervisor = $student->supervisorAssignment->supervisor;
+                $this->supervisorFacultyID = $supervisor->lecturerID ?? null;
+                if ($supervisor->user) {
+                    $this->supervisorFacultyName = $supervisor->user->name ?? null;
+                    $this->supervisorFacultyEmail = $supervisor->user->email ?? null;
+                }
             }
         } elseif ($user->isLecturer() && $user->lecturer) {
             $lecturer = $user->lecturer;
@@ -169,7 +194,6 @@ new class extends Component {
             'studentPostcode' => ['nullable', 'string', 'max:20'],
             'studentState' => ['nullable', 'string', 'max:100'],
             'studentCountry' => ['nullable', 'string', 'max:100'],
-            'industrySupervisorName' => ['nullable', 'string', 'max:255'],
             'profilePhoto' => ['nullable', 'image', 'max:2048'], // 2MB max
         ]);
 
@@ -202,7 +226,6 @@ new class extends Component {
         $student->postcode = $validated['studentPostcode'];
         $student->state = $validated['studentState'];
         $student->country = $validated['studentCountry'];
-        $student->industrySupervisorName = $validated['industrySupervisorName'];
 
         // Geocode the address if it's provided
         if (!empty($validated['studentAddress']) || !empty($validated['studentCity']) || !empty($validated['studentState'])) {
@@ -489,7 +512,7 @@ new class extends Component {
 
             <!-- Academic Data Section -->
             <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Academic Data</h3>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Academic Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Student ID:</span>
@@ -511,26 +534,6 @@ new class extends Component {
                             class="text-gray-600 dark:text-gray-400">{{ $academicAdvisorName ?: 'Not Assigned' }}</span>
                     </div>
                     <div>
-                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Industry
-                            Supervisor:</span>
-                        @if ($editMode)
-                            <x-text-input wire:model="industrySupervisorName" id="industrySupervisorName"
-                                name="industrySupervisorName" type="text" class="mt-1 block w-full"
-                                placeholder="e.g., John Doe" />
-                            <x-input-error class="mt-2" :messages="$errors->get('industrySupervisorName')" />
-                        @else
-                            <span
-                                class="text-gray-600 dark:text-gray-400">{{ $industrySupervisorName ?: 'Not assigned' }}</span>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- System Information Section -->
-            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">System Information</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Semester:</span>
                         <span class="text-gray-600 dark:text-gray-400">{{ $semester ?: 'Not provided' }}</span>
                     </div>
@@ -544,6 +547,64 @@ new class extends Component {
                     </div>
                 </div>
             </div>
+
+            <!-- Supervisor Information Section -->
+            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Supervisor Information</h3>
+
+                <!-- First Row: Supervisor Faculty -->
+                <div class="mb-4">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-2">Supervisor Faculty:</span>
+                    @if ($supervisorFacultyName)
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Name:</span>
+                                <span class="text-gray-600 dark:text-gray-400">{{ $supervisorFacultyName }}</span>
+                            </div>
+                            @if ($supervisorFacultyID)
+                                <div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">ID:</span>
+                                    <span class="text-gray-600 dark:text-gray-400">{{ $supervisorFacultyID }}</span>
+                                </div>
+                            @endif
+                            @if ($supervisorFacultyEmail)
+                                <div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Email:</span>
+                                    <span class="text-gray-600 dark:text-gray-400">{{ $supervisorFacultyEmail }}</span>
+                                </div>
+                            @endif
+                        </div>
+                    @else
+                        <span class="text-gray-600 dark:text-gray-400">Not Assigned</span>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+                            ℹ️ Supervisor faculty will be assigned by the coordinator once you have an accepted placement application.
+                        </p>
+                    @endif
+                </div>
+
+                <!-- Second Row: Industry Supervisor -->
+                <div>
+                    <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-2">Industry Supervisor:</span>
+                    @if ($industrySupervisorName || $industrySupervisorContact || $industrySupervisorEmail)
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Name:</span>
+                                <span class="text-gray-600 dark:text-gray-400">{{ $industrySupervisorName ?: 'Not provided' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Contact:</span>
+                                <span class="text-gray-600 dark:text-gray-400">{{ $industrySupervisorContact ?: 'Not provided' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Email:</span>
+                                <span class="text-gray-600 dark:text-gray-400">{{ $industrySupervisorEmail ?: 'Not provided' }}</span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+                </div>
+            </div>
+
         @elseif(auth()->user()->isLecturer())
             @php
                 $user = auth()->user();
@@ -675,7 +736,7 @@ new class extends Component {
 
             <!-- Academic Data Section -->
             <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Academic Data</h3>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Academic Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Lecturer ID:</span>
@@ -694,13 +755,6 @@ new class extends Component {
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Role:</span>
                         <span class="text-gray-600 dark:text-gray-400">{{ $role ?: 'Not provided' }}</span>
                     </div>
-                </div>
-            </div>
-
-            <!-- System Information Section -->
-            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">System Information</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Semester:</span>
                         <span
@@ -723,8 +777,7 @@ new class extends Component {
                 <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Supervisor Preferences</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Preferred
-                            Coursework:</span>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Program:</span>
                         @if ($editMode)
                             <div class="mt-1">
                                 <select wire:model="preferredCoursework" multiple
@@ -736,13 +789,8 @@ new class extends Component {
                                     <option value="Graphics & Multimedia Technology">Graphics & Multimedia Technology
                                     </option>
                                     <option value="Cyber Security">Cyber Security</option>
-                                    <option value="Data Science & Analytics">Data Science & Analytics</option>
-                                    <option value="Artificial Intelligence">Artificial Intelligence</option>
-                                    <option value="Information Systems">Information Systems</option>
-                                    <option value="Database Systems">Database Systems</option>
-                                    <option value="Cloud & Distributed Computing">Cloud & Distributed Computing
-                                    </option>
-                                    <option value="General Computing">General Computing</option>
+                                    <option value="Computer Science">Computer Science</option>
+
 
                                 </select>
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">

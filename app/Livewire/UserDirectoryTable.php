@@ -283,7 +283,7 @@ class UserDirectoryTable extends Component
                     $user->name,
                     $user->student->program ?? 'N/A',
                     $user->student->academicAdvisorID ?? 'Not Assigned',
-                    $user->student->industrySupervisorName ?? 'Not Assigned',
+                    $user->student->acceptedPlacementApplication->industrySupervisorName ?? 'Not Assigned',
                     $user->student->phone ?? 'N/A',
                     $user->student->status ?? 'N/A',
                     $user->student->address ?? 'N/A',
@@ -364,7 +364,7 @@ class UserDirectoryTable extends Component
             $query->where('role', $this->role);
 
             if ($this->role === 'student') {
-                $query->with(['student']);
+                $query->with(['student.acceptedPlacementApplication']);
 
                 if ($this->semester || $this->year) {
                     $query->whereHas('student', function ($q) {
@@ -498,7 +498,7 @@ class UserDirectoryTable extends Component
                     <td>' . $user->name . '</td>
                     <td>' . ($user->student->program ?? 'N/A') . '</td>
                     <td>' . ($user->student->academicAdvisorID ?? 'Not Assigned') . '</td>
-                    <td>' . ($user->student->industrySupervisorName ?? 'Not Assigned') . '</td>
+                    <td>' . ($user->student->acceptedPlacementApplication->industrySupervisorName ?? 'Not Assigned') . '</td>
                     <td>' . ($user->student->phone ?? 'N/A') . '</td>
                     <td>' . ($user->student->status ?? 'N/A') . '</td>
                     <td>' . ($user->student->address ?? 'N/A') . '</td>
@@ -622,7 +622,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     <td>' . $user->name . '</td>
                     <td>' . ($user->student->program ?? 'N/A') . '</td>
                     <td>' . ($user->student->academicAdvisorID ?? 'Not Assigned') . '</td>
-                    <td>' . ($user->student->industrySupervisorName ?? 'Not Assigned') . '</td>
+                    <td>' . ($user->student->acceptedPlacementApplication->industrySupervisorName ?? 'Not Assigned') . '</td>
                     <td>' . ($user->student->phone ?? 'N/A') . '</td>
                     <td>' . ($user->student->status ?? 'N/A') . '</td>
                     <td>' . ($user->student->address ?? 'N/A') . '</td>

@@ -80,7 +80,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
                 $user->student->year ?? 'N/A',
                 $user->student->status ?? 'N/A',
                 $user->student->academicAdvisorID ?? 'Not Assigned',
-                $user->student->industrySupervisorName ?? 'Not Assigned',
+                $user->student->acceptedPlacementApplication->industrySupervisorName ?? 'Not Assigned',
                 $user->created_at->format('Y-m-d H:i:s')
             ];
         } else {

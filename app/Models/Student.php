@@ -31,7 +31,6 @@ class Student extends Model
         'profilePhoto',
         'status',
         'academicAdvisorID',
-        'industrySupervisorName',
     ];
 
     protected $casts = [
