@@ -71,12 +71,6 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Page Header -->
-            <div class="mb-8">
-                <p class="text-3xl font-bold text-dark-900 mb-2">Course Verification Management</p>
-                <p class="text-gray-600">Review and approve student course verification applications</p>
-            </div>
-
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 <div class="bg-white rounded-lg shadow-md p-6">
@@ -185,27 +179,27 @@
                                 {{ count($selectedApplications) }} application(s) selected
                             </span>
                         </div>
-                        
+
                         <div class="flex flex-col md:flex-row gap-2">
                             <!-- Bulk Remarks Input -->
                             <input type="text" wire:model="remarks"
                                 class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 placeholder="Remarks (required for reject)">
-                            
+
                             <!-- Bulk Actions Buttons -->
                             <button wire:click="bulkDownload"
                                 class="px-4 py-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                 <i class="fa fa-download mr-2"></i>
                                 Download All
                             </button>
-                            
+
                             <button wire:click="bulkReject"
                                 wire:confirm="Are you sure you want to reject {{ count($selectedApplications) }} application(s)?"
                                 class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                 <i class="fa fa-times mr-2"></i>
                                 Reject Selected
                             </button>
-                            
+
                             <button wire:click="bulkApprove"
                                 wire:confirm="Are you sure you want to approve {{ count($selectedApplications) }} application(s)?"
                                 class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
@@ -347,8 +341,8 @@
                                     class="hover:bg-gray-50 {{ $application->status === 'pending' ? 'bg-yellow-50' : '' }}">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if ($application->status === 'pending')
-                                            <input type="checkbox" 
-                                                wire:model.live="selectedApplications" 
+                                            <input type="checkbox"
+                                                wire:model.live="selectedApplications"
                                                 value="{{ $application->courseVerificationID }}"
                                                 class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
                                         @else

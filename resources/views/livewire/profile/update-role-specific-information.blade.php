@@ -499,10 +499,6 @@ new class extends Component {
                                     <x-input-error class="mt-2" :messages="$errors->get('studentCountry')" />
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                <span class="font-semibold">🗺️ Note:</span> Your address will be automatically geocoded
-                                to update your location coordinates when you save.
-                            </p>
                         @else
                             <span class="text-gray-600 dark:text-gray-400">{{ $fullAddress }}</span>
                         @endif

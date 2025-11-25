@@ -1,22 +1,8 @@
 <div>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Page Header -->
-            <div class="mb-8">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900 mb-2">Internship Placement Applications</h1>
-                        <p class="text-gray-600">Review and approve student internship placement applications</p>
-                    </div>
-                    <button wire:click="toggleAnalytics"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        {{ $showAnalytics ? 'Hide Analytics' : 'Show Analytics' }}
-                    </button>
-                </div>
-            </div>
-
             <!-- Analytics Dashboard -->
-            @if ($showAnalytics && $analytics)
+            @if ($analytics)
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-lg shadow p-6">
                         <div class="flex items-center">
@@ -103,7 +89,7 @@
                                 <span class="text-sm font-medium text-gray-700">
                                     {{ count($selectedApplications) }} application(s) selected
                                 </span>
-                                <button wire:click="$set('selectedApplications', [])" 
+                                <button wire:click="$set('selectedApplications', [])"
                                         class="text-sm text-gray-600 hover:text-gray-900 underline">
                                     Clear Selection
                                 </button>
@@ -128,7 +114,7 @@
                                         Committee Reject
                                     </button>
                                 @endif
-                                
+
                                 <!-- Coordinator Actions -->
                                 @if(Auth::user()->lecturer->isCoordinator)
                                     <button wire:click="bulkApproveCoordinator"
@@ -148,7 +134,7 @@
                                         Coordinator Reject
                                     </button>
                                 @endif
-                                
+
                                 <!-- Download Button -->
                                 <button wire:click="bulkDownload"
                                         class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
@@ -211,7 +197,7 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-3 py-3 text-left">
-                                    <input type="checkbox" 
+                                    <input type="checkbox"
                                            wire:model.live="selectAll"
                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
                                 </th>
@@ -246,7 +232,7 @@
                                 @php
                                     $canSelect = false;
                                     $lecturer = Auth::user()->lecturer;
-                                    
+
                                     // Determine if this application can be selected based on user's role
                                     if ($lecturer->isCommittee && $application->committeeStatus === 'Pending') {
                                         $canSelect = true;
@@ -258,7 +244,7 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-3 py-4 whitespace-nowrap">
                                         @if($canSelect)
-                                            <input type="checkbox" 
+                                            <input type="checkbox"
                                                    wire:model.live="selectedApplications"
                                                    value="{{ $application->applicationID }}"
                                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">

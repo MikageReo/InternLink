@@ -1,18 +1,7 @@
 <div>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Page Header -->
-            <div class="mb-8">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900 mb-2">Change Request Management</h1>
-                        <p class="text-gray-600">Review and approve student placement change requests</p>
-                    </div>
-                    <button wire:click="toggleAnalytics" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        {{ $showAnalytics ? 'Hide Analytics' : 'Show Analytics' }}
-                    </button>
-                </div>
-            </div>
+
 
             <!-- Flash Messages -->
             @if (session()->has('message'))
@@ -28,7 +17,7 @@
             @endif
 
             <!-- Analytics Dashboard -->
-            @if ($showAnalytics && $analytics)
+            @if ($analytics)
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-lg shadow p-6">
                         <div class="flex items-center">

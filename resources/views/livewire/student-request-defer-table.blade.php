@@ -3,11 +3,8 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Page Header -->
             <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Request Defer</h1>
-                <p class="text-gray-600">Submit and manage your internship defer requests</p>
-
                 <!-- Important Notice -->
-                <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg mb-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
                             <span class="text-yellow-600 text-lg">⚠️</span>

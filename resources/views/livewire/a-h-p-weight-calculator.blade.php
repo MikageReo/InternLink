@@ -1,14 +1,6 @@
 <div>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Page Header -->
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">AHP Weight Calculator</h1>
-                <p class="text-gray-600">
-                    Configure weights for supervisor assignment criteria using the Analytic Hierarchy Process (AHP).
-                    Compare criteria pairwise to determine their relative importance.
-                </p>
-            </div>
 
             <!-- Flash Messages -->
             @if (session()->has('success'))

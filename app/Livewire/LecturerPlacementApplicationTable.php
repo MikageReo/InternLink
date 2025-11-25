@@ -36,7 +36,7 @@ class LecturerPlacementApplicationTable extends Component
     public $remarks = '';
 
     // Analytics properties
-    public $showAnalytics = false;
+    public $showAnalytics = true;
 
     // Bulk selection properties
     public $selectedApplications = [];
@@ -60,6 +60,9 @@ class LecturerPlacementApplicationTable extends Component
         if (!$user->lecturer) {
             abort(403, 'Access denied. Lecturer profile required.');
         }
+        
+        // Clear any flash messages from previous components
+        session()->forget(['message', 'error', 'warning']);
     }
 
     public function updatingSearch()
@@ -594,7 +597,7 @@ class LecturerPlacementApplicationTable extends Component
     public function render()
     {
         $applications = $this->getFilteredApplications()->paginate($this->perPage);
-        $analytics = $this->showAnalytics ? $this->getAnalyticsData() : null;
+        $analytics = $this->getAnalyticsData();
 
         // Get unique companies and students for filters
         $companies = PlacementApplication::distinct('companyName')->pluck('companyName')->sort();

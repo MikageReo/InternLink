@@ -35,7 +35,7 @@ class LecturerRequestDeferTable extends Component
     public $remarks = '';
 
     // Analytics properties
-    public $showAnalytics = false;
+    public $showAnalytics = true;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -53,6 +53,9 @@ class LecturerRequestDeferTable extends Component
         if (!$user->lecturer) {
             abort(403, 'Access denied. Lecturer profile required.');
         }
+        
+        // Clear any flash messages from previous components
+        session()->forget(['message', 'error', 'warning']);
     }
 
     public function updatingSearch()
@@ -365,7 +368,7 @@ class LecturerRequestDeferTable extends Component
     public function render()
     {
         $requests = $this->getFilteredRequests()->paginate($this->perPage);
-        $analytics = $this->showAnalytics ? $this->getAnalyticsData() : null;
+        $analytics = $this->getAnalyticsData();
 
         // Get unique students for filters
         $students = Student::with('user')->get()->pluck('user.name', 'studentID')->sort();

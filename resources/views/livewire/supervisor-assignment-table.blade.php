@@ -1,13 +1,6 @@
 <div>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Page Header -->
-            <div class="mb-8">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Manage Supervisor Assignments</h1>
-                    <p class="text-gray-600">Assign supervisors to students with accepted placement applications</p>
-                </div>
-            </div>
 
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -79,7 +72,7 @@
                                 @if($isBulkAssigning)
                                     <div class="flex items-center space-x-2">
                                         <div class="w-48 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
                                                  style="width: {{ $bulkAssignTotal > 0 ? ($bulkAssignProgress / $bulkAssignTotal * 100) : 0 }}%"></div>
                                         </div>
                                         <span class="text-xs text-gray-600">
@@ -89,11 +82,11 @@
                                 @endif
                             </div>
                             <div class="flex items-center space-x-2">
-                                <button wire:click="clearSelection" 
+                                <button wire:click="clearSelection"
                                         class="px-3 py-1 text-sm text-gray-700 hover:text-gray-900">
                                     Clear Selection
                                 </button>
-                                <button wire:click="bulkAutoAssign" 
+                                <button wire:click="bulkAutoAssign"
                                         wire:loading.attr="disabled"
                                         wire:target="bulkAutoAssign"
                                         @if($isBulkAssigning) disabled @endif
@@ -170,14 +163,14 @@
                                         @php
                                             // Only count unassigned students for select all
                                             $unassignedStudentIDs = $students->filter(function ($student) {
-                                                return !$student->supervisorAssignment || 
+                                                return !$student->supervisorAssignment ||
                                                        $student->supervisorAssignment->status !== \App\Models\SupervisorAssignment::STATUS_ASSIGNED;
                                             })->pluck('studentID')->toArray();
                                             $selectedUnassigned = array_intersect($selectedStudents, $unassignedStudentIDs);
-                                            $allUnassignedSelected = !empty($unassignedStudentIDs) && 
+                                            $allUnassignedSelected = !empty($unassignedStudentIDs) &&
                                                 count($selectedUnassigned) === count($unassignedStudentIDs);
                                         @endphp
-                                        <input type="checkbox" 
+                                        <input type="checkbox"
                                                @if($allUnassignedSelected) checked @endif
                                                wire:click="toggleSelectAll"
                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
@@ -215,13 +208,13 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($students as $student)
                                 @php
-                                    $hasAssignment = $student->supervisorAssignment && 
+                                    $hasAssignment = $student->supervisorAssignment &&
                                                      $student->supervisorAssignment->status === \App\Models\SupervisorAssignment::STATUS_ASSIGNED;
                                     $canSelect = !$hasAssignment;
                                 @endphp
                                 <tr class="hover:bg-gray-50 {{ $this->isStudentSelected($student->studentID) ? 'bg-blue-50' : '' }} {{ !$canSelect ? 'opacity-60' : '' }}">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" 
+                                        <input type="checkbox"
                                                @if($this->isStudentSelected($student->studentID)) checked @endif
                                                @if(!$canSelect) disabled @endif
                                                wire:click="toggleStudentSelection('{{ $student->studentID }}')"

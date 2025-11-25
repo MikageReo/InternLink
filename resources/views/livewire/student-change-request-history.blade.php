@@ -1,9 +1,4 @@
 <div class="space-y-6">
-    <!-- Page Header -->
-    <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-lg shadow-lg">
-        <h2 class="text-2xl font-bold mb-2">📋 Change Request History</h2>
-        <p class="text-orange-100">Track all your placement change requests across all applications</p>
-    </div>
 
     <!-- Flash Messages -->
     @if (session()->has('message'))

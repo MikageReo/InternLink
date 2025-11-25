@@ -7,6 +7,29 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// CSV Template Downloads (accessible to all authenticated users)
+Route::middleware('auth')->group(function () {
+    Route::get('/csv-templates/students', function () {
+        $filePath = base_path('csv_templates/students_bulk_registration_template.csv');
+        if (file_exists($filePath)) {
+            return response()->download($filePath, 'students_bulk_registration_template.csv', [
+                'Content-Type' => 'text/csv',
+            ]);
+        }
+        abort(404, 'Template file not found');
+    })->name('csv.template.students');
+
+    Route::get('/csv-templates/lecturers', function () {
+        $filePath = base_path('csv_templates/lecturers_bulk_registration_template.csv');
+        if (file_exists($filePath)) {
+            return response()->download($filePath, 'lecturers_bulk_registration_template.csv', [
+                'Content-Type' => 'text/csv',
+            ]);
+        }
+        abort(404, 'Template file not found');
+    })->name('csv.template.lecturers');
+});
+
 // Authentication routes using Livewire components
 Route::middleware('guest')->group(function () {
     Route::view('/login', 'livewire.pages.auth.login')->name('login');

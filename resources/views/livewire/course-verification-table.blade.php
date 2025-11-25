@@ -69,12 +69,6 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Page Header -->
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Course Verification</h1>
-                <p class="text-gray-600">Submit and manage your course verification applications</p>
-            </div>
-
             <!-- Total Credit Information -->
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <div class="flex items-center justify-between">

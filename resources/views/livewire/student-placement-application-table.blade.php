@@ -2,20 +2,29 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Page Header -->
-            <div class="mb-8 flex items-start justify-between">
-                <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Internship Placement Applications</h1>
-                <p class="text-gray-600">Submit and manage your internship placement applications</p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fa fa-info-circle text-blue-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-blue-900">Application Guide</h3>
+                            <p class="text-sm text-blue-600 mt-1">
+                                Download the placement application guide for detailed submission instructions.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0 ml-4">
+                        <a href="{{ asset('documents/placement-application-guide.pdf') }}"
+                           target="_blank"
+                           download
+                           class="inline-flex items-center px-4 py-2 border border-blue-400 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            <i class="fa fa-download mr-2"></i>
+                            Download Guide
+                        </a>
+                    </div>
                 </div>
-                <a href="{{ asset('documents/placement-application-guide.pdf') }}"
-                   target="_blank"
-                   download
-                   class="inline-flex items-center px-4 py-2 border border-blue-400 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Application Guide
-                </a>
             </div>
 
             <!-- Course Verification Alert -->
