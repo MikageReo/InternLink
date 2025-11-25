@@ -52,7 +52,7 @@ new class extends Component {
     public string $lecturerSemester = '';
     public string $lecturerYear = '';
     public string $supervisorQuota = '';
-    public array $preferredCoursework = [];
+    public string $lecturerProgram = '';
     public string $travelPreference = 'local';
     public bool $isAcademicAdvisor = false;
     public bool $isSupervisorFaculty = false;
@@ -130,8 +130,7 @@ new class extends Component {
             $this->lecturerSemester = $lecturer->semester ?? '';
             $this->lecturerYear = $lecturer->year ?? '';
             $this->supervisorQuota = $lecturer->supervisor_quota ?? '';
-            // Parse preferred coursework from comma-separated string to array
-            $this->preferredCoursework = $lecturer->preferred_coursework ? array_map('trim', explode(',', $lecturer->preferred_coursework)) : [];
+            $this->lecturerProgram = $lecturer->program ?? '';
             $this->travelPreference = $lecturer->travel_preference ?? 'local';
             $this->isAcademicAdvisor = $lecturer->isAcademicAdvisor ?? false;
             $this->isSupervisorFaculty = $lecturer->isSupervisorFaculty ?? false;
@@ -268,8 +267,6 @@ new class extends Component {
             'postcode' => ['nullable', 'string', 'max:20'],
             'country' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
-            'preferredCoursework' => ['nullable', 'array'],
-            'preferredCoursework.*' => ['string', 'max:100'],
             'travelPreference' => ['required', 'in:local,nationwide'],
         ]);
 
@@ -289,8 +286,7 @@ new class extends Component {
         $lecturer->country = $validated['country'];
         $lecturer->state = $validated['state'];
 
-        // Update preferred coursework (store as comma-separated string)
-        $lecturer->preferred_coursework = !empty($validated['preferredCoursework']) ? implode(', ', $validated['preferredCoursework']) : null;
+        // Program is not editable - it's set during registration only
 
         // Update travel preference
         $lecturer->travel_preference = $validated['travelPreference'];
@@ -622,8 +618,20 @@ new class extends Component {
                     : ($lecturer && $lecturer->full_address
                         ? $lecturer->full_address
                         : 'Not provided');
-                // Parse preferred coursework for display
-                $displayCoursework = !empty($preferredCoursework) ? $preferredCoursework : [];
+                // Get program display name
+                $programNames = [
+                    'BCS' => 'Bachelor of Computer Science (Software Engineering) with Honours',
+                    'BCN' => 'Bachelor of Computer Science (Computer Systems & Networking) with Honours',
+                    'BCM' => 'Bachelor of Computer Science (Multimedia Software) with Honours',
+                    'BCY' => 'Bachelor of Computer Science (Cyber Security) with Honours',
+                    'DRC' => 'Diploma in Computer Science'
+                ];
+                $displayProgram = null;
+                if (!empty($this->lecturerProgram) && is_string($this->lecturerProgram) && isset($programNames[$this->lecturerProgram])) {
+                    $displayProgram = $programNames[$this->lecturerProgram];
+                } elseif (!empty($this->lecturerProgram)) {
+                    $displayProgram = $this->lecturerProgram;
+                }
                 $activeRoles = [];
                 if ($isAcademicAdvisor) {
                     $activeRoles[] = 'Academic Advisor';
@@ -774,39 +782,10 @@ new class extends Component {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Program:</span>
-                        @if ($editMode)
-                            <div class="mt-1">
-                                <select wire:model="preferredCoursework" multiple
-                                    class="block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm min-h-[120px]"
-                                    size="6">
-                                    <option value="Software Engineering">Software Engineering</option>
-                                    <option value="Computer Systems & Networking">Computer Systems & Networking
-                                    </option>
-                                    <option value="Graphics & Multimedia Technology">Graphics & Multimedia Technology
-                                    </option>
-                                    <option value="Cyber Security">Cyber Security</option>
-                                    <option value="Computer Science">Computer Science</option>
-
-
-                                </select>
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    Hold Ctrl (Windows) or Cmd (Mac) to select multiple options
-                                </p>
-                                <x-input-error class="mt-2" :messages="$errors->get('preferredCoursework')" />
-                            </div>
+                        @if ($displayProgram)
+                            <span class="text-gray-900 dark:text-gray-100">{{ $displayProgram }}</span>
                         @else
-                            @if (!empty($displayCoursework))
-                                <div class="flex flex-wrap gap-2 mt-1">
-                                    @foreach ($displayCoursework as $coursework)
-                                        <span
-                                            class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                            {{ trim($coursework) }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            @else
-                                <span class="text-gray-600 dark:text-gray-400">Not specified</span>
-                            @endif
+                            <span class="text-gray-600 dark:text-gray-400">Not specified</span>
                         @endif
                     </div>
                     <div>

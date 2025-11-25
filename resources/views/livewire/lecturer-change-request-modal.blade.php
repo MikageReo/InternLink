@@ -21,7 +21,7 @@
                         <h4 class="text-sm font-medium text-gray-700 mb-3">Request Information</h4>
                         <div class="space-y-2">
                             <div>
-                                <span class="text-sm font-medium text-gray-600">Request ID:</span>
+                                <span class="text-sm font-medium text-gray-900">Request ID:</span>
                                 <span class="text-sm text-gray-900 ml-2">#{{ $selectedRequest->justificationID }}</span>
                             </div>
                             <div>

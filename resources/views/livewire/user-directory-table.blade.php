@@ -1365,6 +1365,23 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Program
+                                    </label>
+                                    <select wire:model="lecturerProgram"
+                                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
+                                        <option value="">Select Program</option>
+                                        <option value="BCS">BCS - Bachelor of Computer Science (Software Engineering) with Honours</option>
+                                        <option value="BCN">BCN - Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
+                                        <option value="BCM">BCM - Bachelor of Computer Science (Multimedia Software) with Honours</option>
+                                        <option value="BCY">BCY - Bachelor of Computer Science (Cyber Security) with Honours</option>
+                                        <option value="DRC">DRC - Diploma in Computer Science</option>
+                                    </select>
+                                    @error('lecturerProgram')
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
                                         Semester *
                                     </label>
                                     <select wire:model="lecturerSemester"

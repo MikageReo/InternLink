@@ -29,7 +29,7 @@ class Lecturer extends Model
         'status',
         'researchGroup',
         'department',
-        'preferred_coursework',
+        'program',
         'travel_preference',
         'semester',
         'year',

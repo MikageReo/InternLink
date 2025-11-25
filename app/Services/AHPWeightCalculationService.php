@@ -250,6 +250,43 @@ class AHPWeightCalculationService
     }
 
     /**
+     * Calculate weights without strict consistency validation (for simple mode)
+     * Returns weights even if consistency ratio is high
+     *
+     * @param array $comparisonMatrix 4x4 pairwise comparison matrix
+     * @return array ['weights' => [...], 'consistency_ratio' => float, 'is_consistent' => bool]
+     */
+    public function calculateWeightsWithoutValidation(array $comparisonMatrix): array
+    {
+        $this->validateMatrix($comparisonMatrix);
+
+        // Calculate weights using normalized geometric mean method
+        $weights = $this->calculateEigenvector($comparisonMatrix);
+
+        // Calculate consistency ratio
+        $consistencyRatio = $this->calculateConsistencyRatio($comparisonMatrix, $weights);
+
+        // Check consistency but don't throw error
+        $isConsistent = $consistencyRatio < 0.1;
+
+        // Normalize weights to ensure they sum to 1.0
+        $weights = $this->normalizeWeights($weights);
+
+        // Map weights to criteria names
+        $weightMap = [];
+        foreach (self::CRITERIA_NAMES as $index => $criterion) {
+            $weightMap[$criterion] = $weights[$index];
+        }
+
+        return [
+            'weights' => $weightMap,
+            'consistency_ratio' => round($consistencyRatio, 4),
+            'is_consistent' => $isConsistent,
+            'lambda_max' => $this->calculateLambdaMax($comparisonMatrix, $weights),
+        ];
+    }
+
+    /**
      * Get criteria names
      *
      * @return array

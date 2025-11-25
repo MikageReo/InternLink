@@ -173,27 +173,87 @@ class SupervisorRecommendationService
 
     /**
      * Calculate course match score
-     * Returns 1 if student's program matches lecturer's preferred coursework, else 0
+     * Returns 1 if student's program matches lecturer's program, else 0
      */
     protected function calculateCourseMatch(Lecturer $lecturer, Student $student, $placement): float
     {
-        // Match by program
-        if ($lecturer->preferred_coursework && $student->program) {
-            if (
-                stripos($student->program, $lecturer->preferred_coursework) !== false ||
-                stripos($lecturer->preferred_coursework, $student->program) !== false
-            ) {
+        // Match by program - exact match
+        if ($lecturer->program && $student->program) {
+            if ($lecturer->program === $student->program) {
                 return 1.0;
             }
         }
 
-        // Fallback: match by jobscope keywords
-        if ($lecturer->preferred_coursework && $placement->jobscope) {
-            $keywords = explode(' ', strtolower($lecturer->preferred_coursework));
+        // Fallback: match by jobscope keywords if program doesn't match
+        if ($lecturer->program && $placement->jobscope) {
+            // Map program codes to keywords
+            $programKeywords = [
+                'BCS' => [
+                    'software',
+                    'engineering',
+                    'development',
+                    'programming',
+                    'requirements',
+                    'testing',
+                    'web',
+                    'mobile',
+                    'application',
+                    'devops'
+                ],
+
+                'BCN' => [
+                    'network',
+                    'system',
+                    'infrastructure',
+                    'server',
+                    'routing',
+                    'switching',
+                    'wireless',
+                    'hardware',
+                    'iot'
+                ],
+
+                'BCM' => [
+                    'multimedia',
+                    'graphics',
+                    'design',
+                    'animation',
+                    'visual',
+                    'rendering',
+                    '3d',
+                    '2d',
+                    'interactive'
+                ],
+
+                'BCY' => [
+                    'security',
+                    'cyber',
+                    'encryption',
+                    'firewall',
+                    'penetration',
+                    'malware',
+                    'attack',
+                    'defense',
+                    'forensics'
+                ],
+
+                'DRC' => [
+                    'computer',
+                    'science',
+                    'basic',
+                    'fundamental',
+                    'intro',
+                    'logic',
+                    'algorithm',
+                    'foundation'
+                ]
+            ];
+
+            $keywords = $programKeywords[$lecturer->program] ?? [];
             $jobscope = strtolower($placement->jobscope);
 
             foreach ($keywords as $keyword) {
-                if (strlen($keyword) > 3 && strpos($jobscope, $keyword) !== false) {
+                if (strpos($jobscope, $keyword) !== false) {
                     return 0.7; // Partial match
                 }
             }

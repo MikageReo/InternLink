@@ -20,22 +20,53 @@
     @endif
 
     <!-- Analytics Dashboard -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div class="text-blue-600 font-semibold text-sm">Total Requests</div>
-            <div class="text-2xl font-bold text-blue-800">{{ $analytics['total'] }}</div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100">
+                    <span class="text-blue-600 text-xl">📊</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Requests</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $analytics['total'] }}</p>
+                </div>
+            </div>
         </div>
-        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-            <div class="text-yellow-600 font-semibold text-sm">Pending</div>
-            <div class="text-2xl font-bold text-yellow-800">{{ $analytics['pending'] }}</div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100">
+                    <span class="text-yellow-600 text-xl">⏳</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Pending Review</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $analytics['pending'] }}</p>
+                </div>
+            </div>
         </div>
-        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-            <div class="text-green-600 font-semibold text-sm">Approved</div>
-            <div class="text-2xl font-bold text-green-800">{{ $analytics['approved'] }}</div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100">
+                    <span class="text-green-600 text-xl">✅</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Approved</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $analytics['approved'] }}</p>
+                </div>
+            </div>
         </div>
-        <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-            <div class="text-red-600 font-semibold text-sm">Rejected</div>
-            <div class="text-2xl font-bold text-red-800">{{ $analytics['rejected'] }}</div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-100">
+                    <span class="text-red-600 text-xl">❌</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Rejected</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $analytics['rejected'] }}</p>
+                </div>
+            </div>
         </div>
     </div>
 

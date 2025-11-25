@@ -273,8 +273,8 @@ class SupervisorLecturerSeeder extends Seeder
             $semester = rand(1, 2);
             $year = 2025;
 
-            // Get preferred coursework based on department and research group
-            $preferredCoursework = $this->getPreferredCoursework($data['department'], $data['researchGroup']);
+            // Get program based on department and research group
+            $program = $this->getProgram($data['department'], $data['researchGroup']);
 
             // Create lecturer profile
             $lecturer = Lecturer::create([
@@ -303,7 +303,7 @@ class SupervisorLecturerSeeder extends Seeder
                 'isCoordinator' => $isCoordinator,
                 'isAdmin' => false,
                 'travel_preference' => ['local', 'nationwide'][rand(0, 1)],
-                'preferred_coursework' => $preferredCoursework,
+                'program' => $program,
             ]);
 
             $rolesText = [];
@@ -362,25 +362,23 @@ class SupervisorLecturerSeeder extends Seeder
     }
 
     /**
-     * Get preferred coursework based on department and research group
+     * Get program based on department and research group
      */
-    private function getPreferredCoursework(string $department, string $researchGroup): string
+    private function getProgram(string $department, string $researchGroup): ?string
     {
-        // Map research groups to coursework preferences
+        // Map research groups to programs
+        // BCS - Software Engineering
+        // BCN - Computer Systems & Networking
+        // BCM - Multimedia Software
+        // BCY - Cyber Security
+        // DRC - Diploma in Computer Science
         return match($researchGroup) {
-            'SERG' => 'Software Engineering, Systems Design',
-            'CSRG' => 'Computer Science, Algorithms',
-            'VISIC' => 'Visual Computing, Image Processing, Multimedia',
-            'MIRG' => 'Multimedia, Interactive Systems',
-            'Cy-SIG' => 'Cybersecurity, Information Security',
-            'DSSIM' => 'Data Science, Simulation, Modeling',
-            'DBIS' => 'Database Systems, Information Systems',
-            'EDU-TECH' => 'Educational Technology, E-Learning',
-            'ISP' => 'Intelligent Systems, Programming',
-            'CNRG' => 'Computer Networks, Cloud Computing',
-            'KECL' => 'Knowledge Engineering, Cloud',
-            'SCORE' => 'Software Computing, Research',
-            default => 'General Computing',
+            'SERG', 'CSRG', 'SCORE' => 'BCS', // Software Engineering related
+            'CNRG', 'KECL' => 'BCN', // Networking related
+            'VISIC', 'MIRG' => 'BCM', // Multimedia related
+            'Cy-SIG' => 'BCY', // Cybersecurity related
+            'DSSIM', 'DBIS', 'EDU-TECH', 'ISP' => 'BCS', // General computing -> Software Engineering
+            default => ['BCS', 'BCN', 'BCM', 'BCY', 'DRC'][rand(0, 4)], // Random program for unknown groups
         };
     }
 }

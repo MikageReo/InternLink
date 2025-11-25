@@ -83,7 +83,7 @@
 
                 <!-- Advanced Filters -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         <!-- Search -->
                         <div class="lg:col-span-2">
                             <input type="text" wire:model.live.debounce.300ms="search"
@@ -93,7 +93,7 @@
 
                         <!-- Status Filter -->
                         <div>
-                            <select wire:model.live="statusFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                            <select wire:model.live="statusFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                                 <option value="">All Status</option>
                                 <option value="Pending">Pending</option>
                                 <option value="Approved">Approved</option>
@@ -103,45 +103,22 @@
 
                         <!-- Role Filter -->
                         <div>
-                            <select wire:model.live="roleFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                            <select wire:model.live="roleFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                                 <option value="">All Requests</option>
                                 <option value="committee_pending">Committee Pending</option>
                                 <option value="coordinator_pending">Coordinator Pending</option>
                             </select>
                         </div>
 
-                        <!-- Company Filter -->
-                        <div>
-                            <select wire:model.live="companyFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
-                                <option value="">All Companies</option>
-                                @foreach($companies as $company)
-                                    <option value="{{ $company }}">{{ $company }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
                         <!-- Per Page -->
                         <div>
-                            <select wire:model.live="perPage" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                            <select wire:model.live="perPage" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                                 <option value="10">10 per page</option>
                                 <option value="25">25 per page</option>
                                 <option value="50">50 per page</option>
                             </select>
                         </div>
                     </div>
-
-                    <!-- Date Range Filter -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">From Date</label>
-                            <input type="date" wire:model.live="dateFrom" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">To Date</label>
-                            <input type="date" wire:model.live="dateTo" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Change Requests Table -->
                 <div class="overflow-x-auto">
@@ -156,25 +133,25 @@
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <button wire:click="sortBy('studentName')" class="flex items-center space-x-1 hover:text-gray-700">
-                                        <span>Student</span>
+                                        <span>STUDENT</span>
                                         <span>{{ $sortField === 'studentName' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
                                     </button>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <button wire:click="sortBy('companyName')" class="flex items-center space-x-1 hover:text-gray-700">
-                                        <span>Current Company</span>
+                                        <span>CURRENT COMPANY</span>
                                         <span>{{ $sortField === 'companyName' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
                                     </button>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">REASON</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <button wire:click="sortBy('requestDate')" class="flex items-center space-x-1 hover:text-gray-700">
-                                        <span>Request Date</span>
+                                        <span>REQUEST DATE</span>
                                         <span>{{ $sortField === 'requestDate' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
                                     </button>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">

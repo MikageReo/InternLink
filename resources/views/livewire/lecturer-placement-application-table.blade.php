@@ -161,7 +161,7 @@
                         <!-- Status Filter -->
                         <div>
                             <select wire:model.live="statusFilter"
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                                 <option value="">All Status</option>
                                 <option value="Pending">Pending</option>
                                 <option value="Approved">Approved</option>
@@ -172,7 +172,7 @@
                         <!-- Role Filter -->
                         <div>
                             <select wire:model.live="roleFilter"
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                                 <option value="">All Applications</option>
                                 <option value="committee_pending">Committee Pending</option>
                                 <option value="coordinator_pending">Coordinator Pending</option>
@@ -182,7 +182,7 @@
                         <!-- Per Page -->
                         <div>
                             <select wire:model.live="perPage"
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                                 <option value="10">10 per page</option>
                                 <option value="25">25 per page</option>
                                 <option value="50">50 per page</option>
@@ -253,7 +253,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        #{{ $application->applicationID }}
+                                        {{ $application->applicationID }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">
@@ -269,7 +269,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $application->applicationDate->format('M d, Y') }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-900">
                                         <div class="text-xs space-y-1">
                                             <div>
                                                 <span class="font-medium">Committee:</span>
@@ -428,7 +428,7 @@
             wire:click="closeDetailModal"></div>
         <div
             style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
-            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
+            <div class="bg-white dark:text-gray-900 rounded-lg shadow-xl max-w-4xl w-full mx-4">
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200">
                     <div class="flex items-center justify-between">

@@ -21,9 +21,9 @@
                     <div>
                         <h4 class="font-semibold text-gray-900 mb-3">Student Information</h4>
                         <div class="space-y-2 text-sm">
-                            <p><strong>Student ID:</strong> {{ $selectedRequest->student->studentID }}</p>
-                            <p><strong>Name:</strong> {{ $selectedRequest->student->user->name }}</p>
-                            <p><strong>Email:</strong> {{ $selectedRequest->student->user->email }}</p>
+                            <p class="text-gray-900"><strong class="text-gray-700">Student ID:</strong> <span class="text-gray-900">{{ $selectedRequest->student->studentID }}</span></p>
+                            <p class="text-gray-900"><strong class="text-gray-700">Name:</strong> <span class="text-gray-900">{{ $selectedRequest->student->user->name }}</span></p>
+                            <p class="text-gray-900"><strong class="text-gray-700">Email:</strong> <span class="text-gray-900">{{ $selectedRequest->student->user->email }}</span></p>
                         </div>
                     </div>
 
@@ -31,10 +31,10 @@
                     <div>
                         <h4 class="font-semibold text-gray-900 mb-3">Request Information</h4>
                         <div class="space-y-2 text-sm">
-                            <p><strong>Request ID:</strong> #{{ $selectedRequest->deferID }}</p>
-                            <p><strong>Start Date:</strong> {{ $selectedRequest->startDate->format('M d, Y') }}</p>
-                            <p><strong>End Date:</strong> {{ $selectedRequest->endDate->format('M d, Y') }}</p>
-                            <p><strong>Application Date:</strong> {{ $selectedRequest->applicationDate->format('M d, Y') }}</p>
+                            <p class="text-gray-900"><strong class="text-gray-700">Request ID:</strong> <span class="text-gray-900">#{{ $selectedRequest->deferID }}</span></p>
+                            <p class="text-gray-900"><strong class="text-gray-700">Start Date:</strong> <span class="text-gray-900">{{ $selectedRequest->startDate->format('M d, Y') }}</span></p>
+                            <p class="text-gray-900"><strong class="text-gray-700">End Date:</strong> <span class="text-gray-900">{{ $selectedRequest->endDate->format('M d, Y') }}</span></p>
+                            <p class="text-gray-900"><strong class="text-gray-700">Application Date:</strong> <span class="text-gray-900">{{ $selectedRequest->applicationDate->format('M d, Y') }}</span></p>
                         </div>
                     </div>
 
@@ -43,19 +43,19 @@
                         <h4 class="font-semibold text-gray-900 mb-3">Approval Status</h4>
                         <div class="space-y-2 text-sm">
                             <div class="flex items-center space-x-2">
-                                <span class="font-medium">Committee:</span>
+                                <span class="font-medium text-gray-700">Committee:</span>
                                 <span class="px-2 py-1 text-xs rounded-full {{ $selectedRequest->committeeStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($selectedRequest->committeeStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                     {{ $selectedRequest->committeeStatus }}
                                 </span>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <span class="font-medium">Coordinator:</span>
+                                <span class="font-medium text-gray-700">Coordinator:</span>
                                 <span class="px-2 py-1 text-xs rounded-full {{ $selectedRequest->coordinatorStatus === 'Approved' ? 'bg-green-100 text-green-800' : ($selectedRequest->coordinatorStatus === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                     {{ $selectedRequest->coordinatorStatus }}
                                 </span>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <span class="font-medium">Overall Status:</span>
+                                <span class="font-medium text-gray-700">Overall Status:</span>
                                 <span class="px-2 py-1 text-xs rounded-full {{ $selectedRequest->overall_status === 'Approved' ? 'bg-green-100 text-green-800' : ($selectedRequest->overall_status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                     {{ $selectedRequest->overall_status }}
                                 </span>
@@ -69,10 +69,10 @@
                             <h4 class="font-semibold text-gray-900 mb-3">Reviewers</h4>
                             <div class="space-y-2 text-sm">
                                 @if($selectedRequest->committee)
-                                    <p><strong>Committee Member:</strong> {{ $selectedRequest->committee->user->name }}</p>
+                                    <p class="text-gray-900"><strong class="text-gray-700">Committee Member:</strong> <span class="text-gray-900">{{ $selectedRequest->committee->user->name }}</span></p>
                                 @endif
                                 @if($selectedRequest->coordinator)
-                                    <p><strong>Coordinator:</strong> {{ $selectedRequest->coordinator->user->name }}</p>
+                                    <p class="text-gray-900"><strong class="text-gray-700">Coordinator:</strong> <span class="text-gray-900">{{ $selectedRequest->coordinator->user->name }}</span></p>
                                 @endif
                             </div>
                         </div>
@@ -81,7 +81,7 @@
                     <!-- Reason -->
                     <div class="md:col-span-2">
                         <h4 class="font-semibold text-gray-900 mb-3">Reason for Defer</h4>
-                        <div class="bg-gray-50 p-3 rounded border text-sm">
+                        <div class="bg-gray-50 p-3 rounded border text-sm text-gray-900">
                             {{ $selectedRequest->reason }}
                         </div>
                     </div>
@@ -96,12 +96,12 @@
                                         <div class="flex items-center space-x-3">
                                             <span>📄</span>
                                             <div>
-                                                <p class="text-sm font-medium">{{ $file->original_name }}</p>
-                                                <p class="text-xs text-gray-500">{{ $file->mime_type }} • {{ number_format($file->file_size / 1024, 1) }} KB</p>
+                                                <p class="text-sm font-medium text-gray-900">{{ $file->original_name }}</p>
+                                                <p class="text-xs text-gray-600">{{ $file->mime_type }} • {{ number_format($file->file_size / 1024, 1) }} KB</p>
                                             </div>
                                         </div>
                                         <button wire:click="downloadFile({{ $file->id }})"
-                                               class="text-blue-600 hover:text-blue-900 text-sm">
+                                               class="text-blue-600 hover:text-blue-900 text-sm font-medium">
                                             Download
                                         </button>
                                     </div>
@@ -122,7 +122,7 @@
                     @if($selectedRequest->remarks)
                         <div class="md:col-span-2">
                             <h4 class="font-semibold text-gray-900 mb-3">Current Remarks</h4>
-                            <div class="bg-blue-50 p-3 rounded border text-sm">
+                            <div class="bg-blue-50 p-3 rounded border text-sm text-gray-900">
                                 {{ $selectedRequest->remarks }}
                             </div>
                         </div>

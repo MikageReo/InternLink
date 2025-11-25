@@ -1,4 +1,4 @@
-lecturerID,name,email,staffGrade,role,position,address,city,postcode,state,country,researchGroup,department,preferred_coursework,travel_preference,supervisor_quota,isAcademicAdvisor,isSupervisorFaculty,isCommittee,isCoordinator,isAdmin,latitude,longitude
-LEC001,Dr. Abdullah Rahman,mharizhaikal7@gmail.com,DG54,Lecturer,Senior Lecturer,Faculty of Computing,Kuantan,26300,Pahang,Malaysia,Software Engineering,Faculty of Computing,Software Engineering,local,9,TRUE,TRUE,TRUE,TRUE,TRUE,,
-LEC002,Prof. Dr. Noor Azlina,noor.azlina@example.com,VK7,Professor,Professor,Faculty of Computing,Kuantan,26300,Pahang,Malaysia,Artificial Intelligence,Faculty of Computing,Computer Science,nationwide,5,TRUE,TRUE,TRUE,TRUE,FALSE,,
-LEC003,Dr. Muhammad Faiz,faiz.muhammad@example.com,DG52,Lecturer,Lecturer,Faculty of Computing,Kuantan,26300,Pahang,Malaysia,Computer Networks,Faculty of Computing,Networking,local,8,TRUE,TRUE,FALSE,FALSE,FALSE,,
+lecturerID,name,email,staffGrade,role,position,address,city,postcode,state,country,researchGroup,department,program,travel_preference,supervisor_quota,isAcademicAdvisor,isSupervisorFaculty,isCommittee,isCoordinator,isAdmin,latitude,longitude
+LEC001,Dr. Abdullah Rahman,mharizhaikal7@gmail.com,DG54-A,Management,Dean,Faculty of Computing,Kuantan,26300,Pahang,Malaysia,SERG,CS,BCS,local,9,TRUE,TRUE,TRUE,TRUE,TRUE,,
+LEC002,Prof. Dr. Noor Azlina,noor.azlina@example.com,VK7-A,Management,Head of Program,Faculty of Computing,Kuantan,26300,Pahang,Malaysia,MIRG,SN,BCS,nationwide,5,TRUE,TRUE,TRUE,TRUE,FALSE,,
+LEC003,Dr. Muhammad Faiz,faiz.muhammad@example.com,DG52-A,Non-Management,Deputy Dean (Research),Faculty of Computing,Kuantan,26300,Pahang,Malaysia,DBIS,GMM,BCN,local,8,TRUE,TRUE,FALSE,FALSE,FALSE,,

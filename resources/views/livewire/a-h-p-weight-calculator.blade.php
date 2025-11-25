@@ -1,4 +1,54 @@
 <div>
+    <style>
+        /* Slider Styling */
+        input[type="range"].slider {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        input[type="range"].slider::-webkit-slider-track {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        input[type="range"].slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #3b82f6;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            margin-top: -6px;
+            transition: background 0.2s;
+        }
+
+        input[type="range"].slider::-webkit-slider-thumb:hover {
+            background: #2563eb;
+        }
+
+        input[type="range"].slider::-moz-range-track {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        input[type="range"].slider::-moz-range-thumb {
+            background: #3b82f6;
+            height: 20px;
+            width: 20px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        input[type="range"].slider::-moz-range-thumb:hover {
+            background: #2563eb;
+        }
+    </style>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
@@ -54,99 +104,201 @@
                 </div>
             @endif
 
+            <!-- Mode Toggle -->
+            <div class="bg-white rounded-lg shadow p-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-1">Configuration Mode</h3>
+                        <p class="text-sm text-gray-600">
+                            Choose how you want to set the weights for supervisor assignment scoring
+                        </p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button wire:click="switchMode('simple')"
+                            class="px-4 py-2 rounded-md text-sm font-medium transition {{ $mode === 'simple' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                            🎯 Simple Mode (Sliders)
+                        </button>
+                        <button wire:click="switchMode('advanced')"
+                            class="px-4 py-2 rounded-md text-sm font-medium transition {{ $mode === 'advanced' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                            📊 Advanced Mode (AHP Matrix)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left Column: Pairwise Comparison Matrix -->
+                <!-- Left Column: Configuration Interface -->
                 <div class="lg:col-span-2">
-                    <div class="bg-white rounded-lg shadow">
-                        <div class="px-6 py-4 border-b border-gray-200">
-                            <h2 class="text-lg font-medium text-gray-900">Pairwise Comparison Matrix</h2>
-                            <p class="text-sm text-gray-600 mt-1">
-                                Compare each criterion with others. Values are automatically reciprocated.
-                            </p>
-                        </div>
-
-                        <div class="p-6">
-                            @if ($errorMessage)
-                                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                                    <p class="text-red-700 text-sm">{{ $errorMessage }}</p>
-                                </div>
-                            @endif
-
-                            <!-- AHP Scale Reference -->
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                                <h4 class="text-sm font-semibold text-blue-900 mb-2">AHP Scale Reference:</h4>
-                                <div class="grid grid-cols-2 gap-2 text-xs text-blue-800">
-                                    <div>1 = Equal Importance</div>
-                                    <div>3 = Moderate Importance</div>
-                                    <div>5 = Strong Importance</div>
-                                    <div>7 = Very Strong Importance</div>
-                                    <div>9 = Extreme Importance</div>
-                                    <div>1/3, 1/5, 1/7, 1/9 = Inverse values</div>
-                                </div>
+                    @if ($mode === 'simple')
+                        <!-- Simple Mode: Slider Interface -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h2 class="text-lg font-medium text-gray-900">Simple Weight Configuration</h2>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    Adjust the sliders to set the importance of each factor. Weights will automatically
+                                    normalize to 100%.
+                                </p>
                             </div>
 
-                            <!-- Matrix Table -->
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead>
-                                        <tr>
-                                            <th
-                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                            </th>
-                                            @foreach ($criteriaLabels as $label)
-                                                <th
-                                                    class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                                    {{ $label }}
-                                                </th>
-                                            @endforeach
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
-                                        @foreach ($matrix as $rowIndex => $row)
+                            <div class="p-6 space-y-6">
+                                @foreach (['course_match' => 'Course Match', 'preference_match' => 'Preference Match', 'distance_score' => 'Distance Score', 'workload_score' => 'Workload Score'] as $key => $label)
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-sm font-medium text-gray-700">
+                                                {{ $label }}
+                                            </label>
+                                            <div class="flex items-center gap-3">
+                                                <input type="number"
+                                                    wire:model.live.debounce.300ms="directWeights.{{ $key }}"
+                                                    min="0" max="100" step="0.1"
+                                                    class="w-20 text-center border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <span class="text-sm font-bold text-gray-900 w-12 text-right">
+                                                    {{ number_format($directWeights[$key] ?? 0, 1) }}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <input type="range"
+                                            wire:model.live.debounce.300ms="directWeights.{{ $key }}"
+                                            min="0" max="100" step="0.1"
+                                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                            <span>0%</span>
+                                            <span>50%</span>
+                                            <span>100%</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            @if ($key === 'course_match')
+                                                How important is matching the student's program with the supervisor's
+                                                program?
+                                            @elseif($key === 'preference_match')
+                                                How important is matching the supervisor's travel preference with the
+                                                placement location?
+                                            @elseif($key === 'distance_score')
+                                                How important is the distance between supervisor and placement location?
+                                            @elseif($key === 'workload_score')
+                                                How important is the supervisor's current workload (availability)?
+                                            @endif
+                                        </p>
+                                    </div>
+                                @endforeach
+
+                                <!-- Total Display -->
+                                <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-blue-900">Total Weight:</span>
+                                        <span
+                                            class="text-lg font-bold {{ abs(array_sum($directWeights) - 100) < 0.1 ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ number_format(array_sum($directWeights), 1) }}%
+                                        </span>
+                                    </div>
+                                    @if (abs(array_sum($directWeights) - 100) >= 0.1)
+                                        <p class="text-xs text-red-600 mt-1">Weights will be automatically normalized to
+                                            100%</p>
+                                    @endif
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="mt-6 flex gap-3">
+                                    <button wire:click="resetToEqual"
+                                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium transition">
+                                        Reset to Equal (25% each)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <!-- Advanced Mode: Pairwise Comparison Matrix -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h2 class="text-lg font-medium text-gray-900">Pairwise Comparison Matrix</h2>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    Compare each criterion with others. Values are automatically reciprocated.
+                                </p>
+                            </div>
+
+                            <div class="p-6">
+                                @if ($errorMessage)
+                                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                                        <p class="text-red-700 text-sm">{{ $errorMessage }}</p>
+                                    </div>
+                                @endif
+
+                                <!-- AHP Scale Reference -->
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                    <h4 class="text-sm font-semibold text-blue-900 mb-2">AHP Scale Reference:</h4>
+                                    <div class="grid grid-cols-2 gap-2 text-xs text-blue-800">
+                                        <div>1 = Equal Importance</div>
+                                        <div>3 = Moderate Importance</div>
+                                        <div>5 = Strong Importance</div>
+                                        <div>7 = Very Strong Importance</div>
+                                        <div>9 = Extreme Importance</div>
+                                        <div>1/3, 1/5, 1/7, 1/9 = Inverse values</div>
+                                    </div>
+                                </div>
+
+                                <!-- Matrix Table -->
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead>
                                             <tr>
-                                                <td class="px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50">
-                                                    {{ $criteriaLabels[$rowIndex] }}
-                                                </td>
-                                                @foreach ($row as $colIndex => $value)
-                                                    <td class="px-4 py-3 text-center">
-                                                        @if ($rowIndex == $colIndex)
-                                                            <!-- Diagonal: Always 1 -->
-                                                            <input type="text" value="1" disabled
-                                                                class="w-20 text-center border border-gray-300 rounded-md px-2 py-1 text-sm bg-gray-100">
-                                                        @elseif($rowIndex < $colIndex)
-                                                            <!-- Upper triangle: Editable -->
-                                                            <input type="number" step="0.01" min="0.11"
-                                                                max="9"
-                                                                wire:model.live.debounce.500ms="matrix.{{ $rowIndex }}.{{ $colIndex }}"
-                                                                class="w-20 text-center border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                                placeholder="1.0">
-                                                        @else
-                                                            <!-- Lower triangle: Auto-calculated reciprocal (read-only) -->
-                                                            <input type="text"
-                                                                value="{{ number_format($value, 3) }}" disabled
-                                                                class="w-20 text-center border border-gray-300 rounded-md px-2 py-1 text-sm bg-gray-100 text-gray-600">
-                                                        @endif
-                                                    </td>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                                                </th>
+                                                @foreach ($criteriaLabels as $label)
+                                                    <th
+                                                        class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                                                        {{ $label }}
+                                                    </th>
                                                 @endforeach
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach ($matrix as $rowIndex => $row)
+                                                <tr>
+                                                    <td class="px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50">
+                                                        {{ $criteriaLabels[$rowIndex] }}
+                                                    </td>
+                                                    @foreach ($row as $colIndex => $value)
+                                                        <td class="px-4 py-3 text-center">
+                                                            @if ($rowIndex == $colIndex)
+                                                                <!-- Diagonal: Always 1 -->
+                                                                <input type="text" value="1" disabled
+                                                                    class="w-20 text-center border border-gray-300 rounded-md px-2 py-1 text-sm bg-gray-100">
+                                                            @elseif($rowIndex < $colIndex)
+                                                                <!-- Upper triangle: Editable -->
+                                                                <input type="number" step="0.01" min="0.11"
+                                                                    max="9"
+                                                                    wire:model.live.debounce.500ms="matrix.{{ $rowIndex }}.{{ $colIndex }}"
+                                                                    class="w-20 text-center border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                                    placeholder="1.0">
+                                                            @else
+                                                                <!-- Lower triangle: Auto-calculated reciprocal (read-only) -->
+                                                                <input type="text"
+                                                                    value="{{ number_format($value, 3) }}" disabled
+                                                                    class="w-20 text-center border border-gray-300 rounded-md px-2 py-1 text-sm bg-gray-100 text-gray-600">
+                                                            @endif
+                                                        </td>
+                                                    @endforeach
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                            <!-- Action Buttons -->
-                            <div class="mt-6 flex gap-3">
-                                <button wire:click="resetToDefault"
-                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium transition">
-                                    Reset to Default
-                                </button>
-                                <button wire:click="resetToEqual"
-                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium transition">
-                                    Reset to Equal (25% each)
-                                </button>
+                                <!-- Action Buttons -->
+                                <div class="mt-6 flex gap-3">
+                                    <button wire:click="resetToDefault"
+                                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium transition">
+                                        Reset to Default
+                                    </button>
+                                    <button wire:click="resetToEqual"
+                                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium transition">
+                                        Reset to Equal (25% each)
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
 
                 <!-- Right Column: Results -->
@@ -157,28 +309,32 @@
                         </div>
 
                         <div class="p-6">
-                            @if (!empty($calculatedWeights))
+                            @if (!empty($calculatedWeights) || $mode === 'simple')
                                 <!-- Consistency Ratio -->
-                                <div class="mb-6">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span class="text-sm font-medium text-gray-700">Consistency Ratio (CR)</span>
-                                        <span
-                                            class="text-sm font-bold {{ $isConsistent ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ $consistencyRatio ? number_format($consistencyRatio, 4) : 'N/A' }}
-                                        </span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="h-2 rounded-full {{ $isConsistent ? 'bg-green-500' : 'bg-red-500' }}"
-                                            style="width: {{ min(($consistencyRatio ?? 0) * 1000, 100) }}%"></div>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-1">
-                                        {{ $isConsistent ? '✓ Acceptable (CR < 0.1)' : '✗ Inconsistent (CR ≥ 0.1)' }}
-                                    </p>
-                                    @if ($lambdaMax)
-                                        <p class="text-xs text-gray-400 mt-1">λ_max: {{ number_format($lambdaMax, 4) }}
+                                @if ($mode === 'advanced')
+                                    <div class="mb-6">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Consistency Ratio
+                                                (CR)</span>
+                                            <span
+                                                class="text-sm font-bold {{ $isConsistent ? 'text-green-600' : 'text-red-600' }}">
+                                                {{ $consistencyRatio ? number_format($consistencyRatio, 4) : 'N/A' }}
+                                            </span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="h-2 rounded-full {{ $isConsistent ? 'bg-green-500' : 'bg-red-500' }}"
+                                                style="width: {{ min(($consistencyRatio ?? 0) * 1000, 100) }}%"></div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            {{ $isConsistent ? '✓ Acceptable (CR < 0.1)' : '✗ Inconsistent (CR ≥ 0.1)' }}
                                         </p>
-                                    @endif
-                                </div>
+                                        @if ($lambdaMax)
+                                            <p class="text-xs text-gray-400 mt-1">λ_max:
+                                                {{ number_format($lambdaMax, 4) }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                @endif
 
                                 <!-- Weights Display -->
                                 <div class="space-y-4">
@@ -203,13 +359,18 @@
 
                                 <!-- Save Button -->
                                 <div class="mt-6">
-                                    <button wire:click="saveWeights" @if (!$isConsistent) disabled @endif
-                                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium transition">
+                                    <button wire:click="saveWeights"
+                                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition">
                                         Save Weights
                                     </button>
-                                    @if (!$isConsistent)
+                                    @if ($mode === 'advanced' && !$isConsistent)
                                         <p class="text-xs text-red-600 mt-2 text-center">
                                             Fix consistency issues before saving
+                                        </p>
+                                    @endif
+                                    @if ($mode === 'simple')
+                                        <p class="text-xs text-gray-500 mt-2 text-center">
+                                            Simple mode automatically ensures consistency
                                         </p>
                                     @endif
                                 </div>
@@ -227,13 +388,29 @@
                             <h3 class="text-lg font-medium text-gray-900">Instructions</h3>
                         </div>
                         <div class="p-6">
-                            <ol class="list-decimal list-inside space-y-2 text-sm text-gray-600">
-                                <li>Compare each criterion in the upper triangle of the matrix</li>
-                                <li>Use values from 1 (equal) to 9 (extreme importance)</li>
-                                <li>Lower triangle values are automatically calculated</li>
-                                <li>Ensure Consistency Ratio (CR) is below 0.1</li>
-                                <li>Click "Save Weights" to apply for supervisor assignments</li>
-                            </ol>
+                            @if ($mode === 'simple')
+                                <div class="space-y-2 text-sm text-gray-600">
+                                    <p class="font-semibold text-gray-900 mb-2">Simple Mode:</p>
+                                    <ol class="list-decimal list-inside space-y-1">
+                                        <li>Use the sliders to adjust the importance of each factor</li>
+                                        <li>You can also type values directly in the number inputs</li>
+                                        <li>Weights automatically normalize to 100% total</li>
+                                        <li>The system converts your weights to an AHP-compatible format</li>
+                                        <li>Click "Save Weights" to apply for supervisor assignments</li>
+                                    </ol>
+                                    <p class="mt-3 text-xs text-gray-500 italic">
+                                        💡 Tip: Start with equal weights (25% each) and adjust based on your priorities
+                                    </p>
+                                </div>
+                            @else
+                                <ol class="list-decimal list-inside space-y-2 text-sm text-gray-600">
+                                    <li>Compare each criterion in the upper triangle of the matrix</li>
+                                    <li>Use values from 1 (equal) to 9 (extreme importance)</li>
+                                    <li>Lower triangle values are automatically calculated</li>
+                                    <li>Ensure Consistency Ratio (CR) is below 0.1</li>
+                                    <li>Click "Save Weights" to apply for supervisor assignments</li>
+                                </ol>
+                            @endif
                         </div>
                     </div>
                 </div>
