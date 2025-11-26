@@ -221,7 +221,25 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($requests as $request)
-                                <tr class="hover:bg-gray-50">
+                                @php
+                                    $isSelected = in_array($request->justificationID, $selectedRequests);
+                                    $canSelect = false;
+                                    if (Auth::user()->lecturer->isCommittee && $request->committeeStatus === 'Pending') {
+                                        $canSelect = true;
+                                    }
+                                    if (Auth::user()->lecturer->isCoordinator && $request->coordinatorStatus === 'Pending' && $request->committeeStatus === 'Approved') {
+                                        $canSelect = true;
+                                    }
+                                @endphp
+                                <tr class="hover:bg-gray-50 {{ $isSelected ? 'bg-blue-50' : '' }}">
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <input type="checkbox"
+                                               @if($isSelected) checked @endif
+                                               @if(!$canSelect) disabled @endif
+                                               wire:click="toggleRequestSelection({{ $request->justificationID }})"
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                               title="{{ $canSelect ? 'Select for bulk action' : 'Request cannot be selected' }}">
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         #{{ $request->justificationID }}
                                     </td>
@@ -352,7 +370,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                                         <p class="text-lg font-medium mb-2">No change requests found</p>
                                         <p class="text-sm">No change requests match your current filters.</p>
                                     </td>
