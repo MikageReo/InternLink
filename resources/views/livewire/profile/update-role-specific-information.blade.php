@@ -727,10 +727,6 @@ new class extends Component {
                                     <x-input-error class="mt-2" :messages="$errors->get('country')" />
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                <span class="font-semibold">🗺️ Note:</span> Your address will be automatically
-                                geocoded to update your location coordinates when you save.
-                            </p>
                         @else
                             <span class="text-gray-600 dark:text-gray-400">{{ $fullAddress }}</span>
                         @endif
@@ -783,7 +779,7 @@ new class extends Component {
                     <div>
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Program:</span>
                         @if ($displayProgram)
-                            <span class="text-gray-900 dark:text-gray-100">{{ $displayProgram }}</span>
+                            <span class="text-gray-700 dark:text-gray-400">{{ $displayProgram }}</span>
                         @else
                             <span class="text-gray-600 dark:text-gray-400">Not specified</span>
                         @endif
@@ -836,7 +832,7 @@ new class extends Component {
 
                 <button type="button" wire:click="cancelEdit"
                     class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-md transition-colors duration-200">
-                    {{ __('Cancel') }}
+                    {{ __('CANCEL') }}
                 </button>
 
                 <x-action-message class="me-3" on="role-profile-updated">

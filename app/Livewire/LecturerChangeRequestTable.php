@@ -39,6 +39,11 @@ class LecturerChangeRequestTable extends Component
     // Analytics properties
     public $showAnalytics = true;
 
+    // Bulk selection properties
+    public $selectedRequests = [];
+    public $selectAll = false;
+    public $bulkRemarks = '';
+
     protected $queryString = [
         'search' => ['except' => ''],
         'sortField' => ['except' => 'requestDate'],
@@ -198,6 +203,18 @@ class LecturerChangeRequestTable extends Component
 
             $request->update($updateData);
 
+            // Refresh the request to get updated status
+            $request->refresh();
+
+            // If both committee and coordinator have approved the change request,
+            // update the original application's studentAcceptance to 'Changed'
+            if ($request->committeeStatus === 'Approved' && $request->coordinatorStatus === 'Approved') {
+                $originalApplication = $request->placementApplication;
+                if ($originalApplication && $originalApplication->studentAcceptance === 'Accepted') {
+                    $originalApplication->update(['studentAcceptance' => 'Changed']);
+                }
+            }
+
             // Refresh the selected request
             if ($this->selectedRequest) {
                 $this->selectedRequest = RequestJustification::with([
@@ -262,6 +279,257 @@ class LecturerChangeRequestTable extends Component
         }
 
         return response()->download(Storage::disk('public')->path($file->file_path), $file->original_name);
+    }
+
+    // Bulk selection methods
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            // Select all requests on current filtered results (only pending ones for the user's role)
+            $lecturer = Auth::user()->lecturer;
+            $query = $this->getFilteredRequests();
+            
+            if ($lecturer->isCommittee && !$lecturer->isCoordinator) {
+                // Committee members can only select requests pending committee review
+                $query->where('committeeStatus', 'Pending');
+            } elseif ($lecturer->isCoordinator && !$lecturer->isCommittee) {
+                // Coordinators can only select requests pending coordinator review
+                $query->where('coordinatorStatus', 'Pending')
+                      ->where('committeeStatus', 'Approved');
+            } elseif ($lecturer->isCommittee && $lecturer->isCoordinator) {
+                // If user is both, select all pending
+                $query->where(function($q) {
+                    $q->where('committeeStatus', 'Pending')
+                      ->orWhere(function($q2) {
+                          $q2->where('coordinatorStatus', 'Pending')
+                             ->where('committeeStatus', 'Approved');
+                      });
+                });
+            }
+            
+            $this->selectedRequests = $query->pluck('justificationID')->toArray();
+        } else {
+            $this->selectedRequests = [];
+        }
+    }
+
+    public function toggleRequestSelection($id)
+    {
+        if (in_array($id, $this->selectedRequests)) {
+            $this->selectedRequests = array_values(array_diff($this->selectedRequests, [$id]));
+        } else {
+            $this->selectedRequests[] = $id;
+        }
+        $this->selectAll = false;
+    }
+
+    public function bulkApproveCommittee()
+    {
+        $lecturer = Auth::user()->lecturer;
+
+        if (!$lecturer || !$lecturer->isCommittee) {
+            session()->flash('error', 'Access denied. Only committee members can approve requests as committee.');
+            return;
+        }
+
+        if (empty($this->selectedRequests)) {
+            session()->flash('error', 'Please select at least one request to approve.');
+            return;
+        }
+
+        $this->processBulkApproval('committee', 'Approved');
+    }
+
+    public function bulkRejectCommittee()
+    {
+        $lecturer = Auth::user()->lecturer;
+
+        if (!$lecturer || !$lecturer->isCommittee) {
+            session()->flash('error', 'Access denied. Only committee members can reject requests as committee.');
+            return;
+        }
+
+        if (empty($this->selectedRequests)) {
+            session()->flash('error', 'Please select at least one request to reject.');
+            return;
+        }
+
+        $this->processBulkApproval('committee', 'Rejected');
+    }
+
+    public function bulkApproveCoordinator()
+    {
+        $lecturer = Auth::user()->lecturer;
+
+        if (!$lecturer || !$lecturer->isCoordinator) {
+            session()->flash('error', 'Access denied. Only coordinators can approve requests as coordinator.');
+            return;
+        }
+
+        if (empty($this->selectedRequests)) {
+            session()->flash('error', 'Please select at least one request to approve.');
+            return;
+        }
+
+        $this->processBulkApproval('coordinator', 'Approved');
+    }
+
+    public function bulkRejectCoordinator()
+    {
+        $lecturer = Auth::user()->lecturer;
+
+        if (!$lecturer || !$lecturer->isCoordinator) {
+            session()->flash('error', 'Access denied. Only coordinators can reject requests as coordinator.');
+            return;
+        }
+
+        if (empty($this->selectedRequests)) {
+            session()->flash('error', 'Please select at least one request to reject.');
+            return;
+        }
+
+        $this->processBulkApproval('coordinator', 'Rejected');
+    }
+
+    private function processBulkApproval($role, $status)
+    {
+        try {
+            $lecturer = Auth::user()->lecturer;
+            $count = 0;
+
+            foreach ($this->selectedRequests as $id) {
+                $request = RequestJustification::find($id);
+                
+                if (!$request) {
+                    continue;
+                }
+
+                // Verify the request can be processed by this role
+                if ($role === 'committee' && $request->committeeStatus !== 'Pending') {
+                    continue;
+                }
+                if ($role === 'coordinator' && $request->coordinatorStatus !== 'Pending') {
+                    continue;
+                }
+                if ($role === 'coordinator' && $request->committeeStatus !== 'Approved') {
+                    continue;
+                }
+
+                // Update request based on role
+                $updateData = [
+                    'remarks' => $this->bulkRemarks ?: ($status === 'Approved' ? 'Bulk approved' : 'Bulk rejected'),
+                ];
+
+                if ($role === 'committee') {
+                    $updateData['committeeID'] = $lecturer->lecturerID;
+                    $updateData['committeeStatus'] = $status;
+                    
+                    // If committee rejects, also set coordinator to rejected
+                    if ($status === 'Rejected') {
+                        $updateData['coordinatorStatus'] = 'Rejected';
+                    }
+                } else {
+                    $updateData['coordinatorID'] = $lecturer->lecturerID;
+                    $updateData['coordinatorStatus'] = $status;
+                }
+
+                // Set decision date when both approvals are complete
+                if (($role === 'committee' && $status === 'Rejected') ||
+                    ($role === 'coordinator' && ($status === 'Approved' || $status === 'Rejected'))) {
+                    $updateData['decisionDate'] = now()->format('Y-m-d');
+                }
+
+                $request->update($updateData);
+
+                // Refresh the request to get updated status
+                $request->refresh();
+
+                // If both committee and coordinator have approved the change request,
+                // update the original application's studentAcceptance to 'Changed'
+                if ($request->committeeStatus === 'Approved' && $request->coordinatorStatus === 'Approved') {
+                    $originalApplication = $request->placementApplication;
+                    if ($originalApplication && $originalApplication->studentAcceptance === 'Accepted') {
+                        $originalApplication->update(['studentAcceptance' => 'Changed']);
+                    }
+                }
+                
+                // Send email notification
+                $this->sendStatusNotification($request);
+                
+                $count++;
+            }
+
+            if ($count > 0) {
+                $roleText = $role === 'committee' ? 'committee' : 'coordinator';
+                $actionText = $status === 'Approved' ? 'approved' : 'rejected';
+                session()->flash('message', "Successfully {$actionText} {$count} change request(s) as {$roleText}!");
+            } else {
+                session()->flash('error', 'No valid requests were processed. They may have already been reviewed.');
+            }
+
+            // Clear selections
+            $this->selectedRequests = [];
+            $this->selectAll = false;
+            $this->bulkRemarks = '';
+            $this->resetPage();
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred during bulk processing: ' . $e->getMessage());
+            Log::error('Bulk approval error: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkDownload()
+    {
+        if (empty($this->selectedRequests)) {
+            session()->flash('error', 'Please select at least one request to download documents.');
+            return;
+        }
+
+        try {
+            $requests = RequestJustification::with('files', 'placementApplication.student')
+                ->whereIn('justificationID', $this->selectedRequests)
+                ->get();
+
+            if ($requests->isEmpty()) {
+                session()->flash('error', 'No requests found.');
+                return;
+            }
+
+            // Create a temporary zip file
+            $zipFileName = 'change_request_documents_' . date('Y-m-d_His') . '.zip';
+            $zipPath = storage_path('app/temp/' . $zipFileName);
+
+            // Ensure temp directory exists
+            if (!file_exists(storage_path('app/temp'))) {
+                mkdir(storage_path('app/temp'), 0755, true);
+            }
+
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                foreach ($requests as $request) {
+                    // Create a folder for each request
+                    $folderName = 'Change_' . $request->justificationID . '_' . $request->placementApplication->student->studentID;
+                    
+                    foreach ($request->files as $file) {
+                        $filePath = storage_path('app/public/' . $file->file_path);
+                        if (file_exists($filePath)) {
+                            // Add file to zip with organized structure
+                            $zip->addFile($filePath, $folderName . '/' . $file->original_name);
+                        }
+                    }
+                }
+                $zip->close();
+
+                // Return download and cleanup
+                return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+            } else {
+                session()->flash('error', 'Failed to create zip file.');
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred during bulk download: ' . $e->getMessage());
+            Log::error('Bulk download error: ' . $e->getMessage());
+        }
     }
 
     public function clearFilters()

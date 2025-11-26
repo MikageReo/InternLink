@@ -149,18 +149,6 @@
                                         </p>
                                     @endif
                                 @endif
-
-                                @if (in_array($currentApplication->status, ['approved', 'rejected']) && $currentApplication->remarks)
-                                    <div class="mt-4 p-3 bg-white border border-gray-200 rounded-md">
-                                        <h5 class="text-sm font-semibold text-gray-900 mb-2">Lecturer's Remarks:</h5>
-                                        <p class="text-sm text-gray-700 whitespace-pre-wrap">
-                                            {{ $currentApplication->remarks }}</p>
-                                        @if ($currentApplication->lecturerID)
-                                            <p class="text-xs text-gray-500 mt-2">Reviewed by:
-                                                {{ $currentApplication->lecturerID }}</p>
-                                        @endif
-                                    </div>
-                                @endif
                             </div>
                         </div>
                     </div>

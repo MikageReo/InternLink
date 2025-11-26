@@ -79,6 +79,66 @@
                     </div>
                 </div>
 
+                <!-- Bulk Actions Section -->
+                @if (count($selectedRequests) > 0)
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mx-6 mt-4 mb-4">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div class="flex items-center">
+                                <i class="fa fa-check text-blue-600 text-lg mr-3"></i>
+                                <span class="text-sm font-medium text-blue-900">
+                                    {{ count($selectedRequests) }} request(s) selected
+                                </span>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row gap-2">
+                                <!-- Bulk Remarks Input -->
+                                <input type="text" wire:model="bulkRemarks"
+                                    class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    placeholder="Remarks (optional)">
+
+                                <!-- Committee Actions -->
+                                @if (Auth::user()->lecturer->isCommittee)
+                                    <button wire:click="bulkApproveCommittee"
+                                        wire:confirm="Are you sure you want to approve these requests as committee?"
+                                        class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        <i class="fa fa-check mr-2"></i>
+                                        Committee Approve
+                                    </button>
+                                    <button wire:click="bulkRejectCommittee"
+                                        wire:confirm="Are you sure you want to reject these requests as committee?"
+                                        class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <i class="fa fa-times mr-2"></i>
+                                        Committee Reject
+                                    </button>
+                                @endif
+
+                                <!-- Coordinator Actions -->
+                                @if (Auth::user()->lecturer->isCoordinator)
+                                    <button wire:click="bulkApproveCoordinator"
+                                        wire:confirm="Are you sure you want to approve these requests as coordinator?"
+                                        class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fa fa-check mr-2"></i>
+                                        Coordinator Approve
+                                    </button>
+                                    <button wire:click="bulkRejectCoordinator"
+                                        wire:confirm="Are you sure you want to reject these requests as coordinator?"
+                                        class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                                        <i class="fa fa-times mr-2"></i>
+                                        Coordinator Reject
+                                    </button>
+                                @endif
+
+                                <!-- Download Button -->
+                                <button wire:click="bulkDownload"
+                                    class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                    <i class="fa fa-download mr-2"></i>
+                                    Download All Files
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Advanced Filters -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -127,6 +187,11 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-3 py-3 text-left">
+                                    <input type="checkbox"
+                                           wire:model.live="selectAll"
+                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <button wire:click="sortBy('deferID')"
@@ -172,7 +237,25 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($requests as $request)
-                                <tr class="hover:bg-gray-50">
+                                @php
+                                    $isSelected = in_array($request->deferID, $selectedRequests);
+                                    $canSelect = false;
+                                    if (Auth::user()->lecturer->isCommittee && $request->committeeStatus === 'Pending') {
+                                        $canSelect = true;
+                                    }
+                                    if (Auth::user()->lecturer->isCoordinator && $request->coordinatorStatus === 'Pending' && $request->committeeStatus === 'Approved') {
+                                        $canSelect = true;
+                                    }
+                                @endphp
+                                <tr class="hover:bg-gray-50 {{ $isSelected ? 'bg-blue-50' : '' }}">
+                                    <td class="px-3 py-4 whitespace-nowrap">
+                                        <input type="checkbox"
+                                               @if($isSelected) checked @endif
+                                               @if(!$canSelect) disabled @endif
+                                               wire:click="toggleRequestSelection({{ $request->deferID }})"
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                               title="{{ $canSelect ? 'Select for bulk action' : 'Request cannot be selected' }}">
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $request->deferID }}
                                     </td>
@@ -324,7 +407,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                                         <p class="text-lg font-medium mb-2">No defer requests found</p>
                                         <p class="text-sm">No defer requests match your current filters.</p>
                                     </td>

@@ -203,28 +203,74 @@
                                 </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    ID</th>
+                                    <button wire:click="sortBy('applicationID')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
+                                        <span>ID</span>
+                                        <span>{{ $sortField === 'applicationID' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                                    </button>
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Student ID</th>
+                                    <button wire:click="sortBy('studentID')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
+                                        <span>STUDENT ID</span>
+                                        <span>{{ $sortField === 'studentID' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                                    </button>
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Company Name</th>
+                                    <button wire:click="sortBy('applyCount')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
+                                        <span>APPLY COUNT</span>
+                                        <span>{{ $sortField === 'applyCount' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                                    </button>
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Position</th>
+                                    <button wire:click="sortBy('companyName')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
+                                        <span>COMPANY NAME</span>
+                                        <span>{{ $sortField === 'companyName' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                                    </button>
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Application Date</th>
+                                    <button wire:click="sortBy('position')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
+                                        <span>POSITION</span>
+                                        <span>{{ $sortField === 'position' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                                    </button>
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status</th>
+                                    <button wire:click="sortBy('applicationDate')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
+                                        <span>APPLICATION DATE</span>
+                                        <span>{{ $sortField === 'applicationDate' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                                    </button>
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Remarks</th>
+                                    <button wire:click="sortBy('committeeStatus')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
+                                        <span>APPROVAL STATUS</span>
+                                        <span>{{ $sortField === 'committeeStatus' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                                    </button>
+                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions</th>
+                                    <button wire:click="sortBy('placementStatus')"
+                                        class="flex items-center space-x-1 hover:text-gray-700">
+                                        <span>PLACEMENT STATUS</span>
+                                        <span>{{ $sortField === 'placementStatus' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                                    </button>
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    REMARKS</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -259,6 +305,11 @@
                                         <div class="text-sm font-medium text-gray-900">
                                             {{ $application->student->studentID }}</div>
                                         <div class="text-sm text-gray-500">{{ $application->student->user->name }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {{ $application->applyCount ?? 0 }} {{ ($application->applyCount ?? 0) === 1 ? 'time' : 'times' }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $application->companyName }}
@@ -307,12 +358,35 @@
                                                     <span class="font-medium">Student:</span>
                                                     <span
                                                         class="inline-flex px-2 py-1 text-xs rounded-full
-                                                        {{ $application->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+                                                        {{ $application->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' :
+                                                           ($application->studentAcceptance === 'Changed' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800') }}">
                                                         {{ $application->studentAcceptance }}
                                                     </span>
                                                 </div>
                                             @endif
                                         </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        @php
+                                            $placementStatus = $application->placement_status;
+                                        @endphp
+                                        @if($placementStatus === 'Active')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                ✓ Active
+                                            </span>
+                                        @elseif($placementStatus === 'Defer')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                ⏸ Defer
+                                            </span>
+                                        @elseif($placementStatus === 'Inactive')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                ⊘ Inactive
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                                -
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
                                         @if ($application->remarks)
@@ -320,7 +394,7 @@
                                                 {{ $application->remarks }}
                                             </div>
                                         @else
-                                            <span class="text-gray-400">-</span>
+                                            <span class="text-gray-400 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100">-</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -508,7 +582,8 @@
                                 @if ($selectedApplication->studentAcceptance)
                                     <p><strong>Student Response:</strong>
                                         <span
-                                            class="px-2 py-1 text-xs rounded-full {{ $selectedApplication->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+                                            class="px-2 py-1 text-xs rounded-full {{ $selectedApplication->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' :
+                                               ($selectedApplication->studentAcceptance === 'Changed' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800') }}">
                                             {{ $selectedApplication->studentAcceptance }}
                                         </span>
                                     </p>

@@ -483,7 +483,22 @@ class StudentPlacementApplicationTable extends Component
         }
 
         if (!$application->can_accept) {
-            session()->flash('error', 'This application cannot be accepted at this time.');
+            // Check if this is because of a change request
+            $hasApprovedChangeRequest = RequestJustification::where('applicationID', '!=', $application->applicationID)
+                ->whereHas('placementApplication', function ($query) use ($application) {
+                    $query->where('studentID', $application->studentID)
+                        ->whereIn('studentAcceptance', ['Accepted', 'Changed']);
+                })
+                ->where('committeeStatus', 'Approved')
+                ->where('coordinatorStatus', 'Approved')
+                ->where('updated_at', '<=', $application->created_at)
+                ->exists();
+
+            if ($hasApprovedChangeRequest) {
+                session()->flash('error', 'This application was submitted after an approved change request. It cannot be accepted as it automatically replaces your previous accepted application.');
+            } else {
+                session()->flash('error', 'This application cannot be accepted at this time.');
+            }
             return;
         }
 
@@ -548,9 +563,9 @@ class StudentPlacementApplicationTable extends Component
             $hasApprovedChangeRequest = RequestJustification::whereHas('placementApplication', function ($query) use ($student) {
                 $query->where('studentID', $student->studentID);
             })
-                ->where('committeeStatus', 'Approved')
-                ->where('coordinatorStatus', 'Approved')
-                ->exists();
+            ->where('committeeStatus', 'Approved')
+            ->where('coordinatorStatus', 'Approved')
+            ->exists();
 
             return $hasApprovedChangeRequest;
         }
@@ -657,7 +672,7 @@ class StudentPlacementApplicationTable extends Component
         $pendingChangeRequest = $application->changeRequests()
             ->where(function ($q) {
                 $q->where('committeeStatus', 'Pending')
-                    ->orWhere('coordinatorStatus', 'Pending');
+                  ->orWhere('coordinatorStatus', 'Pending');
             })
             ->exists();
 
@@ -747,8 +762,8 @@ class StudentPlacementApplicationTable extends Component
 
         foreach ($this->changeRequestFiles as $file) {
             try {
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $path = $file->storeAs('change_requests', $filename, 'public');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('change_requests', $filename, 'public');
 
                 if (!$path) {
                     \Log::error('File storage failed', [
@@ -758,22 +773,22 @@ class StudentPlacementApplicationTable extends Component
                     continue;
                 }
 
-                $fileRecord = File::create([
-                    'fileable_id' => $changeRequest->justificationID,
+            $fileRecord = File::create([
+                'fileable_id' => $changeRequest->justificationID,
                     'fileable_type' => RequestJustification::class,
-                    'file_path' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ]);
+                'file_path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+            ]);
 
                 \Log::info('File created successfully', [
-                    'file_id' => $fileRecord->id,
-                    'fileable_id' => $changeRequest->justificationID,
+                'file_id' => $fileRecord->id,
+                'fileable_id' => $changeRequest->justificationID,
                     'fileable_type' => RequestJustification::class,
-                    'file_path' => $path,
-                    'original_name' => $file->getClientOriginalName()
-                ]);
+                'file_path' => $path,
+                'original_name' => $file->getClientOriginalName()
+            ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to upload file for change request', [
                     'error' => $e->getMessage(),
@@ -846,9 +861,9 @@ class StudentPlacementApplicationTable extends Component
             $hasApprovedChangeRequest = RequestJustification::whereHas('placementApplication', function ($query) {
                 $query->where('studentID', Auth::user()->student->studentID);
             })
-                ->where('committeeStatus', 'Approved')
-                ->where('coordinatorStatus', 'Approved')
-                ->exists();
+            ->where('committeeStatus', 'Approved')
+            ->where('coordinatorStatus', 'Approved')
+            ->exists();
         }
 
         // Check course verification status separately

@@ -484,7 +484,7 @@ class LecturerPlacementApplicationTable extends Component
 
     private function getFilteredApplications()
     {
-        $query = PlacementApplication::with(['student.user', 'committee', 'coordinator', 'files']);
+        $query = PlacementApplication::with(['student.user', 'committee', 'coordinator', 'files', 'changeRequests']);
 
         // Advanced search
         if ($this->search) {
@@ -553,12 +553,39 @@ class LecturerPlacementApplicationTable extends Component
         if ($this->sortField) {
             if (in_array($this->sortField, ['applicationID', 'companyName', 'position', 'applicationDate', 'committeeStatus', 'coordinatorStatus'])) {
                 $query->orderBy($this->sortField, $this->sortDirection);
+            } elseif ($this->sortField === 'studentID') {
+                $query->join('students', 'placement_applications.studentID', '=', 'students.studentID')
+                    ->orderBy('students.studentID', $this->sortDirection)
+                    ->select('placement_applications.*');
             } elseif ($this->sortField === 'studentName') {
                 $query->join('students', 'placement_applications.studentID', '=', 'students.studentID')
                     ->join('users', 'students.user_id', '=', 'users.id')
                     ->orderBy('users.name', $this->sortDirection)
                     ->select('placement_applications.*');
+            } elseif ($this->sortField === 'applyCount') {
+                // Sort by the number of applications per student
+                $query->selectRaw('placement_applications.*, 
+                    (SELECT COUNT(*) FROM placement_applications pa2 
+                     WHERE pa2.studentID = placement_applications.studentID) as apply_count')
+                    ->orderBy('apply_count', $this->sortDirection);
+            } elseif ($this->sortField === 'placementStatus') {
+                // Sort by placement status (computed from overall status and student acceptance)
+                // Priority: Active (Approved+Accepted) > Defer (Approved but not accepted) > Inactive (Rejected) > Pending
+                $query->selectRaw('placement_applications.*,
+                    CASE 
+                        WHEN (committeeStatus = "Approved" AND coordinatorStatus = "Approved" AND studentAcceptance = "Accepted") THEN 1
+                        WHEN (committeeStatus = "Approved" AND coordinatorStatus = "Approved" AND studentAcceptance IS NULL) THEN 2
+                        WHEN (committeeStatus = "Rejected" OR coordinatorStatus = "Rejected") THEN 3
+                        ELSE 4
+                    END as placement_status_order')
+                    ->orderBy('placement_status_order', $this->sortDirection)
+                    ->orderBy('studentAcceptance', $this->sortDirection === 'asc' ? 'desc' : 'asc')
+                    ->orderBy('committeeStatus', $this->sortDirection)
+                    ->orderBy('coordinatorStatus', $this->sortDirection);
             }
+        } else {
+            // Default sorting if no sort field is specified
+            $query->orderBy('applicationDate', 'desc');
         }
 
         return $query;
@@ -602,6 +629,22 @@ class LecturerPlacementApplicationTable extends Component
         // Get unique companies and students for filters
         $companies = PlacementApplication::distinct('companyName')->pluck('companyName')->sort();
         $students = Student::with('user')->get()->pluck('user.name', 'studentID')->sort();
+
+        // Calculate applyCount for each student
+        $applyCounts = PlacementApplication::selectRaw('studentID, COUNT(*) as count')
+            ->groupBy('studentID')
+            ->pluck('count', 'studentID')
+            ->toArray();
+
+        // Add applyCount to each application
+        foreach ($applications as $application) {
+            // If sorting by applyCount, use the calculated value from the query
+            if ($this->sortField === 'applyCount' && isset($application->apply_count)) {
+                $application->applyCount = $application->apply_count;
+            } else {
+                $application->applyCount = $applyCounts[$application->studentID] ?? 0;
+            }
+        }
 
         return view('livewire.lecturer-placement-application-table', [
             'applications' => $applications,

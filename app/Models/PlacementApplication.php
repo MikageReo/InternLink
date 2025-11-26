@@ -111,7 +111,31 @@ class PlacementApplication extends Model
      */
     public function getCanAcceptAttribute(): bool
     {
-        return $this->overall_status === 'Approved' && $this->studentAcceptance === null;
+        // Application must be approved and not already accepted/declined
+        if ($this->overall_status !== 'Approved' || $this->studentAcceptance !== null) {
+            return false;
+        }
+
+        // Check if this application was submitted after an approved change request
+        // If so, student cannot accept it as it replaces their previous accepted application
+        $hasApprovedChangeRequest = \App\Models\RequestJustification::where('applicationID', '!=', $this->applicationID)
+            ->whereHas('placementApplication', function ($query) {
+                $query->where('studentID', $this->studentID)
+                    ->whereIn('studentAcceptance', ['Accepted', 'Changed']);
+            })
+            ->where('committeeStatus', 'Approved')
+            ->where('coordinatorStatus', 'Approved')
+            ->where('updated_at', '<=', $this->created_at)
+            ->exists();
+
+        // If there's an approved change request for a previous accepted application,
+        // and this new application was created after that change request was approved,
+        // then this application cannot be accepted (it automatically replaces the old one)
+        if ($hasApprovedChangeRequest) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

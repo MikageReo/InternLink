@@ -99,18 +99,36 @@
                     </div>
                 </div>
 
-                <!-- Search and Filters -->
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <div class="flex items-center space-x-4">
-                        <input type="text" wire:model.live.debounce.300ms="search"
-                               class="flex-1 border border-gray-300 rounded-md px-3 py-2"
-                               placeholder="Search applications...">
-                        <select wire:model.live="statusFilter" class="border border-gray-300 rounded-md px-3 py-2">
-                            <option value="">All Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
+                <!-- Filters -->
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- Search -->
+                        <div class="md:col-span-2">
+                            <input type="text" wire:model.live.debounce.300ms="search"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                placeholder="Search applications...">
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div>
+                            <select wire:model.live="statusFilter"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                <option value="">All Status</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+
+                        <!-- Per Page -->
+                        <div>
+                            <select wire:model.live="perPage"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                <option value="10">10 per page</option>
+                                <option value="25">25 per page</option>
+                                <option value="50">50 per page</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -206,7 +224,8 @@
                                                 </button>
                                             @elseif ($application->studentAcceptance)
                                                 <span class="inline-flex px-2 py-1 text-xs rounded-full
-                                                    {{ $application->studentAcceptance === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                                    {{ $application->studentAcceptance === 'Accepted' ? 'bg-green-100 text-green-800' : 
+                                                       ($application->studentAcceptance === 'Changed' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800') }}">
                                                     {{ $application->studentAcceptance }}
                                                 </span>
                                             @endif
@@ -226,16 +245,19 @@
                                                 </button>
                                             @endif
 
-                                            <!-- Change Request Actions - only for approved and accepted applications -->
+                                            <!-- Change Request Actions - only for approved and accepted applications (not Changed) -->
                                             @if ($application->overall_status === 'Approved' && $application->studentAcceptance === 'Accepted')
                                                 @php
                                                     $hasChangeRequests = $application->changeRequests->count() > 0;
                                                     $hasPendingChangeRequest = $application->changeRequests->where(function($cr) {
                                                         return $cr->committeeStatus === 'Pending' || $cr->coordinatorStatus === 'Pending';
                                                     })->count() > 0;
+                                                    $hasApprovedChangeRequest = $application->changeRequests->where(function($cr) {
+                                                        return $cr->committeeStatus === 'Approved' && $cr->coordinatorStatus === 'Approved';
+                                                    })->count() > 0;
                                                 @endphp
 
-                                                @if (!$hasPendingChangeRequest)
+                                                @if (!$hasPendingChangeRequest && !$hasApprovedChangeRequest)
                                                     <button wire:click="openChangeRequestForm({{ $application->applicationID }})"
                                                         class="inline-flex items-center px-2 py-1 text-xs rounded bg-orange-100 text-orange-700 hover:bg-orange-200"
                                                         title="Request changes to this application">
@@ -796,7 +818,8 @@
                                 @if($viewingApplication->studentAcceptance)
                                     <div class="flex items-center space-x-2">
                                         <span class="font-medium">Your Response:</span>
-                                        <span class="px-2 py-1 text-xs rounded-full {{ $viewingApplication->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+                                        <span class="px-2 py-1 text-xs rounded-full {{ $viewingApplication->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' : 
+                                           ($viewingApplication->studentAcceptance === 'Changed' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800') }}">
                                             {{ $viewingApplication->studentAcceptance }}
                                         </span>
                                     </div>

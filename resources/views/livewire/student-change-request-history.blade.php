@@ -70,46 +70,36 @@
         </div>
     </div>
 
-    <!-- Filters and Search -->
-    <div class="bg-white p-6 rounded-lg shadow border">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Filters -->
+    <div class="px-6 py-4 border-b rounded-lg border-gray-200 bg-gray-50">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <!-- Search -->
             <div class="md:col-span-2">
-                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                <input wire:model.live.debounce.300ms="search" type="text" id="search"
-                       placeholder="Search by reason, company, position..."
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                <input type="text" wire:model.live.debounce.300ms="search"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    placeholder="Search requests...">
             </div>
 
             <!-- Status Filter -->
             <div>
-                <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select wire:model.live="statusFilter" id="statusFilter"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
-                    <option value="">All Statuses</option>
+                <select wire:model.live="statusFilter"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                    <option value="">All Status</option>
                     <option value="Pending">Pending</option>
                     <option value="Approved">Approved</option>
                     <option value="Rejected">Rejected</option>
                 </select>
             </div>
-        </div>
 
-        <div class="flex justify-between items-center mt-4">
-            <div class="flex items-center space-x-4">
-                <label for="perPage" class="text-sm font-medium text-gray-700">Show:</label>
-                <select wire:model.live="perPage" id="perPage"
-                        class="px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
+            <!-- Per Page -->
+            <div>
+                <select wire:model.live="perPage"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                    <option value="10">10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
                 </select>
-                <span class="text-sm text-gray-500">entries</span>
             </div>
-
-            <button wire:click="clearFilters"
-                    class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm">
-                🗑️ Clear Filters
-            </button>
         </div>
     </div>
 
@@ -124,7 +114,7 @@
                             <div class="flex items-center space-x-1">
                                 <span>ID</span>
                                 @if($sortField === 'justificationID')
-                                    <span class="text-orange-500">
+                                    <span class="text-gray-500">
                                         @if($sortDirection === 'asc') ↑ @else ↓ @endif
                                     </span>
                                 @endif
@@ -135,7 +125,7 @@
                             <div class="flex items-center space-x-1">
                                 <span>Application</span>
                                 @if($sortField === 'applicationID')
-                                    <span class="text-orange-500">
+                                    <span class="text-gray-500">
                                         @if($sortDirection === 'asc') ↑ @else ↓ @endif
                                     </span>
                                 @endif
@@ -146,7 +136,7 @@
                             <div class="flex items-center space-x-1">
                                 <span>Company & Position</span>
                                 @if($sortField === 'companyName')
-                                    <span class="text-orange-500">
+                                    <span class="text-gray-500">
                                         @if($sortDirection === 'asc') ↑ @else ↓ @endif
                                     </span>
                                 @endif
@@ -160,7 +150,7 @@
                             <div class="flex items-center space-x-1">
                                 <span>Request Date</span>
                                 @if($sortField === 'requestDate')
-                                    <span class="text-orange-500">
+                                    <span class="text-gray-500">
                                         @if($sortDirection === 'asc') ↑ @else ↓ @endif
                                     </span>
                                 @endif
@@ -171,7 +161,7 @@
                             <div class="flex items-center space-x-1">
                                 <span>Status</span>
                                 @if($sortField === 'overallStatus')
-                                    <span class="text-orange-500">
+                                    <span class="text-gray-500">
                                         @if($sortDirection === 'asc') ↑ @else ↓ @endif
                                     </span>
                                 @endif
@@ -191,11 +181,6 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 <div class="flex items-center">
                                     <span class="font-medium">#{{ $request->applicationID }}</span>
-                                    <a href="{{ route('student.placementApplications') }}"
-                                       class="ml-2 text-orange-600 hover:text-orange-800 text-xs"
-                                       title="View application">
-                                        🔗
-                                    </a>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
@@ -244,7 +229,7 @@
                                 <div class="flex items-center space-x-2">
                                     <!-- View Details -->
                                     <button wire:click="viewRequest({{ $request->justificationID }})"
-                                        class="text-orange-600 hover:text-orange-900" title="View details">
+                                        class="text-gray-600 hover:text-gray-900" title="View details">
                                         👁️ View
                                     </button>
 
@@ -266,14 +251,6 @@
                                             </div>
                                         </div>
                                     @endif
-
-                                    <!-- Overall Status Badge -->
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                        @if($request->overall_status === 'Approved') bg-green-100 text-green-800
-                                        @elseif($request->overall_status === 'Rejected') bg-red-100 text-red-800
-                                        @else bg-yellow-100 text-yellow-800 @endif">
-                                        {{ $request->overall_status }}
-                                    </span>
                                 </div>
                             </td>
                         </tr>
@@ -285,7 +262,7 @@
                                     <h3 class="text-lg font-medium text-gray-900 mb-2">No Change Requests Found</h3>
                                     <p class="text-gray-500">You haven't submitted any change requests yet.</p>
                                     <a href="{{ route('student.placementApplications') }}"
-                                       class="mt-4 inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-700">
+                                       class="mt-4 inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                                         Go to Placement Applications
                                     </a>
                                 </div>
@@ -354,23 +331,23 @@
                     </div>
 
                     <!-- Change Request Information -->
-                    <div class="bg-orange-50 p-4 rounded-lg">
-                        <h4 class="font-semibold text-orange-800 mb-2">🔄 Change Request Information</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">🔄 Change Request Information</h4>
                         <div class="space-y-3">
                             <div>
-                                <span class="font-medium text-orange-700">Request Date:</span>
-                                <span class="text-orange-900">{{ $selectedRequest->requestDate->format('M d, Y') }}</span>
+                                <span class="font-medium text-gray-700">Request Date:</span>
+                                <span class="text-gray-900">{{ $selectedRequest->requestDate->format('M d, Y') }}</span>
                             </div>
                             <div>
-                                <span class="font-medium text-orange-700">Reason for Change:</span>
-                                <div class="text-orange-900 mt-1 p-3 bg-white rounded border">
+                                <span class="font-medium text-gray-700">Reason for Change:</span>
+                                <div class="text-gray-900 mt-1 p-3 bg-white rounded border">
                                     {{ $selectedRequest->reason }}
                                 </div>
                             </div>
                             @if($selectedRequest->decisionDate)
                                 <div>
-                                    <span class="font-medium text-orange-700">Decision Date:</span>
-                                    <span class="text-orange-900">{{ $selectedRequest->decisionDate->format('M d, Y') }}</span>
+                                    <span class="font-medium text-gray-700">Decision Date:</span>
+                                    <span class="text-gray-900">{{ $selectedRequest->decisionDate->format('M d, Y') }}</span>
                                 </div>
                             @endif
                         </div>
