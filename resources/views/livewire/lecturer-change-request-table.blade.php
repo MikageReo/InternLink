@@ -86,7 +86,9 @@
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mx-6 mt-4 mb-4">
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div class="flex items-center">
-                                <i class="fa fa-check text-blue-600 text-lg mr-3"></i>
+                                <svg class="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                                 <span class="text-sm font-medium text-blue-900">
                                     {{ count($selectedRequests) }} request(s) selected
                                 </span>
@@ -102,14 +104,18 @@
                                 @if (Auth::user()->lecturer->isCommittee)
                                     <button wire:click="bulkApproveCommittee"
                                         wire:confirm="Are you sure you want to approve these requests as committee?"
-                                        class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                        <i class="fa fa-check mr-2"></i>
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
                                         Committee Approve
                                     </button>
                                     <button wire:click="bulkRejectCommittee"
                                         wire:confirm="Are you sure you want to reject these requests as committee?"
-                                        class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                        <i class="fa fa-times mr-2"></i>
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
                                         Committee Reject
                                     </button>
                                 @endif
@@ -118,22 +124,28 @@
                                 @if (Auth::user()->lecturer->isCoordinator)
                                     <button wire:click="bulkApproveCoordinator"
                                         wire:confirm="Are you sure you want to approve these requests as coordinator?"
-                                        class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                        <i class="fa fa-check mr-2"></i>
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
                                         Coordinator Approve
                                     </button>
                                     <button wire:click="bulkRejectCoordinator"
                                         wire:confirm="Are you sure you want to reject these requests as coordinator?"
-                                        class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
-                                        <i class="fa fa-times mr-2"></i>
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
                                         Coordinator Reject
                                     </button>
                                 @endif
 
                                 <!-- Download Button -->
                                 <button wire:click="bulkDownload"
-                                    class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                    <i class="fa fa-download mr-2"></i>
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
                                     Download All Files
                                 </button>
                             </div>
