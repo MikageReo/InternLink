@@ -249,7 +249,7 @@
                                         @endif
                                     </div>
                                     <div class="ml-6 flex-1">
-                                        <h4 class="font-medium text-gray-900 dark:text-gray-100">Supervisor Assignment</h4>
+                                        <h4 class="font-medium text-gray-900 dark:text-gray-100">Assigned Supervisor</h4>
                                         <p class="text-sm text-gray-600 dark:text-gray-400">
                                             @if($supervisorAssignment)
                                                 Assigned - {{ $supervisorAssignment->supervisor->user->name ?? 'N/A' }}

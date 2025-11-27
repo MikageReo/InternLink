@@ -69,6 +69,13 @@ class StudentPlacementApplicationTable extends Component
     public $changeRequestFiles = [];
     public $viewingChangeRequests = false;
     public $selectedApplicationForChange = null;
+    
+    // Guide visibility
+    public $showGuide = false;
+    
+    // Company selection
+    public $selectedCompanyId = null;
+    public $isNewCompany = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -234,7 +241,9 @@ class StudentPlacementApplicationTable extends Component
             'startDate',
             'endDate',
             'applicationFiles',
-            'existingFiles'
+            'existingFiles',
+            'selectedCompanyId',
+            'isNewCompany'
         ]);
 
         // Reset coordinates manually
@@ -244,6 +253,50 @@ class StudentPlacementApplicationTable extends Component
         $this->editingId = null;
         $this->resetErrorBag();
         $this->resetValidation();
+    }
+
+    public function updatedSelectedCompanyId($value)
+    {
+        $this->isNewCompany = false;
+        if ($value) {
+            // Get company name from existing application
+            $application = PlacementApplication::where('applicationID', $value)
+                ->select('companyName')
+                ->first();
+            if ($application) {
+                $this->companyName = $application->companyName;
+            }
+        } else {
+            $this->companyName = '';
+        }
+    }
+
+    public function updatedIsNewCompany($value)
+    {
+        if ($value) {
+            $this->selectedCompanyId = null;
+            $this->companyName = '';
+        }
+    }
+
+    public function getExistingCompanies()
+    {
+        // Get unique company names from all placement applications
+        $companies = PlacementApplication::select('companyName', 'applicationID')
+            ->whereNotNull('companyName')
+            ->where('companyName', '!=', '')
+            ->orderBy('companyName', 'asc')
+            ->get()
+            ->unique('companyName')
+            ->map(function ($app) {
+                return [
+                    'id' => $app->applicationID,
+                    'name' => $app->companyName
+                ];
+            })
+            ->values();
+
+        return $companies;
     }
 
     public function view($id)
@@ -284,6 +337,18 @@ class StudentPlacementApplicationTable extends Component
 
         $this->editingId = $id;
         $this->companyName = $application->companyName;
+        
+        // Try to find if this company name exists in the dropdown
+        $existingCompanies = $this->getExistingCompanies();
+        $existingCompany = $existingCompanies->firstWhere('name', $application->companyName);
+        if ($existingCompany) {
+            $this->selectedCompanyId = $existingCompany['id'];
+            $this->isNewCompany = false;
+        } else {
+            $this->selectedCompanyId = 'new';
+            $this->isNewCompany = true;
+        }
+        
         $this->companyAddressLine = $application->companyAddressLine ?? '';
         $this->companyCity = $application->companyCity ?? '';
         $this->companyPostcode = $application->companyPostcode ?? '';
@@ -967,6 +1032,8 @@ class StudentPlacementApplicationTable extends Component
                 ->exists();
         }
 
+        $existingCompanies = $this->getExistingCompanies();
+
         return view('livewire.student-placement-application-table', [
             'applications' => $applications,
             'canApply' => $canApply,
@@ -974,6 +1041,7 @@ class StudentPlacementApplicationTable extends Component
             'hasApprovedChangeRequest' => $hasApprovedChangeRequest,
             'hasCourseVerification' => $hasCourseVerification,
             'analytics' => $analytics,
+            'existingCompanies' => $existingCompanies,
         ]);
     }
 }

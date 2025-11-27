@@ -70,8 +70,8 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Course Verification Guide -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-                <div class="flex items-center justify-between mb-4">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
                             <i class="fa fa-info-circle text-blue-500 text-xl"></i>
@@ -79,13 +79,23 @@
                         <div class="ml-3">
                             <h3 class="text-lg font-medium text-blue-900">Course Verification Guide</h3>
                             <p class="text-sm text-blue-600 mt-1">
-                                Follow these steps to complete your course verification submission.
+                                @if (!$showGuide)
+                                    Fill in verification form → Get advisor approval → Prepare Documents → Merge files → Submit
+                                @else
+                                    Follow these steps to complete your course verification submission.
+                                @endif
                             </p>
                         </div>
                     </div>
+                    <button wire:click="$set('showGuide', {{ $showGuide ? 'false' : 'true' }})"
+                        class="ml-4 inline-flex items-center px-3 py-2 border border-blue-400 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <i class="fa {{ $showGuide ? 'fa-chevron-up' : 'fa-chevron-down' }} mr-2"></i>
+                        {{ $showGuide ? 'Hide Guide' : 'Show Full Guide' }}
+                    </button>
                 </div>
 
-                <div class="space-y-4">
+                @if ($showGuide)
+                <div class="mt-4 space-y-4">
                     <!-- Step 1 -->
                     <div class="bg-white rounded-lg p-4 border border-blue-200">
                         <div class="flex items-start">
@@ -161,10 +171,12 @@
                             </div>
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900 mb-2">
-                                    Once approved, please merge the <strong>List of Taken / Untaken Courses</strong> and <strong>Registered Courses</strong> together with verification form and save the file as PDF.
+                                    Once approved, please merge the <strong>List of Taken / Untaken Courses</strong> and <strong>Registered Courses</strong> together with verification form and save the file as PDF or ZIP file.
                                 </p>
                                 <p class="text-sm text-gray-700 mt-2">
-                                    <strong>File naming convention:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-xs">{{ Auth::user()->student->studentID ?? 'matricID' }}_CClist.pdf</code>
+                                    <strong>File naming convention:</strong><br>
+                                    For PDF: <code class="bg-gray-100 px-2 py-1 rounded text-xs">{{ Auth::user()->student->studentID ?? 'matricID' }}_CClist.pdf</code><br>
+                                    For ZIP: <code class="bg-gray-100 px-2 py-1 rounded text-xs">{{ Auth::user()->student->studentID ?? 'matricID' }}_CClist.zip</code>
                                 </p>
                             </div>
                         </div>
@@ -191,6 +203,7 @@
                         <strong>Total Credits Required:</strong> {{ $totalCreditRequired }} credits
                     </p>
                 </div>
+                @endif
             </div>
 
             <!-- Current Application Status -->

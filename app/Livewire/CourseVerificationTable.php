@@ -30,6 +30,9 @@ class CourseVerificationTable extends Component
 
     // Student properties
     public $totalCreditRequired = 130; // Default total credit required
+    
+    // Guide visibility
+    public $showGuide = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
