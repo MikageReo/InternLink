@@ -483,33 +483,38 @@ class StudentPlacementApplicationTable extends Component
         }
 
         if (!$application->can_accept) {
-            // Check if this is because of a change request
-            $hasApprovedChangeRequest = RequestJustification::where('applicationID', '!=', $application->applicationID)
-                ->whereHas('placementApplication', function ($query) use ($application) {
-                    $query->where('studentID', $application->studentID)
-                        ->whereIn('studentAcceptance', ['Accepted', 'Changed']);
-                })
-                ->where('committeeStatus', 'Approved')
-                ->where('coordinatorStatus', 'Approved')
-                ->where('updated_at', '<=', $application->created_at)
-                ->exists();
-
-            if ($hasApprovedChangeRequest) {
-                session()->flash('error', 'This application was submitted after an approved change request. It cannot be accepted as it automatically replaces your previous accepted application.');
-            } else {
-                session()->flash('error', 'This application cannot be accepted at this time.');
-            }
+            session()->flash('error', 'This application cannot be accepted at this time.');
             return;
         }
 
-        // Check if student already has an accepted application
+        // Check if student already has an accepted application (excluding this one)
         $existingAccepted = PlacementApplication::where('studentID', Auth::user()->student->studentID)
             ->where('studentAcceptance', 'Accepted')
+            ->where('applicationID', '!=', $application->applicationID)
             ->exists();
 
         if ($existingAccepted) {
-            session()->flash('error', 'You can only accept one internship placement application.');
-            return;
+            // Check if this is a new application after an approved change request
+            $approvedChangeRequest = RequestJustification::whereHas('placementApplication', function ($query) use ($application) {
+                $query->where('studentID', $application->studentID)
+                    ->where('studentAcceptance', 'Accepted');
+            })
+                ->where('committeeStatus', 'Approved')
+                ->where('coordinatorStatus', 'Approved')
+                ->orderBy('updated_at', 'desc')
+                ->first();
+
+            if ($approvedChangeRequest && $application->created_at > $approvedChangeRequest->updated_at) {
+                // This is a new application after approved change request, allow acceptance
+                // Update old application to 'Changed' status
+                PlacementApplication::where('studentID', $application->studentID)
+                    ->where('studentAcceptance', 'Accepted')
+                    ->where('applicationID', '!=', $application->applicationID)
+                    ->update(['studentAcceptance' => 'Changed']);
+            } else {
+                session()->flash('error', 'You can only accept one internship placement application.');
+                return;
+            }
         }
 
         $application->update(['studentAcceptance' => 'Accepted']);
@@ -552,24 +557,46 @@ class StudentPlacementApplicationTable extends Component
         }
 
         // Check if student has an accepted placement application
-        $hasAcceptedApplication = PlacementApplication::where('studentID', $student->studentID)
+        $acceptedApplication = PlacementApplication::where('studentID', $student->studentID)
             ->where('committeeStatus', 'Approved')
             ->where('coordinatorStatus', 'Approved')
             ->where('studentAcceptance', 'Accepted')
-            ->exists();
+            ->first();
 
-        // If student has accepted application, they can only apply if they have approved change request
-        if ($hasAcceptedApplication) {
-            $hasApprovedChangeRequest = RequestJustification::whereHas('placementApplication', function ($query) use ($student) {
-                $query->where('studentID', $student->studentID);
-            })
-            ->where('committeeStatus', 'Approved')
-            ->where('coordinatorStatus', 'Approved')
-            ->exists();
-
-            return $hasApprovedChangeRequest;
+        // If student has NO accepted application, they can apply
+        if (!$acceptedApplication) {
+            return true;
         }
 
+        // Student has an accepted application - check if they can still apply
+        // They can only apply if they have an approved change request AND haven't accepted a new application yet
+
+        // Check if they have an approved change request
+        $approvedChangeRequest = RequestJustification::whereHas('placementApplication', function ($query) use ($student) {
+            $query->where('studentID', $student->studentID);
+        })
+            ->where('committeeStatus', 'Approved')
+            ->where('coordinatorStatus', 'Approved')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if (!$approvedChangeRequest) {
+            // No approved change request, cannot apply (they have an accepted application)
+            return false;
+        }
+
+        // They have an approved change request
+        // Check if the accepted application was created AFTER the change request was approved
+        // If yes, it means they already accepted a new application, so they cannot apply again
+        // If no, it means the accepted application is the old one, so they can apply for a new one
+        $acceptedApplicationIsNew = $acceptedApplication->created_at > $approvedChangeRequest->updated_at;
+
+        if ($acceptedApplicationIsNew) {
+            // They already accepted a new application after the change request, cannot apply again
+            return false;
+        }
+
+        // The accepted application is the old one (before change request), they can apply for a new one
         return true;
     }
 
@@ -593,13 +620,37 @@ class StudentPlacementApplicationTable extends Component
         }
 
         // Check if student has accepted application
-        $hasAcceptedApplication = PlacementApplication::where('studentID', $student->studentID)
+        $acceptedApplication = PlacementApplication::where('studentID', $student->studentID)
             ->where('committeeStatus', 'Approved')
             ->where('coordinatorStatus', 'Approved')
             ->where('studentAcceptance', 'Accepted')
-            ->exists();
+            ->first();
 
-        if ($hasAcceptedApplication) {
+        if ($acceptedApplication) {
+            // Check if they have an approved change request
+            $approvedChangeRequest = RequestJustification::whereHas('placementApplication', function ($query) use ($student) {
+                $query->where('studentID', $student->studentID);
+            })
+                ->where('committeeStatus', 'Approved')
+                ->where('coordinatorStatus', 'Approved')
+                ->orderBy('updated_at', 'desc')
+                ->first();
+
+            if (!$approvedChangeRequest) {
+                session()->flash('error', 'You already have an accepted placement application. You can only submit a new application if you have an approved change request.');
+                return;
+            }
+
+            // Check if the accepted application was created after the change request was approved
+            $acceptedApplicationIsNew = $acceptedApplication->created_at > $approvedChangeRequest->updated_at;
+
+            if ($acceptedApplicationIsNew) {
+                session()->flash('error', 'You already have an accepted placement application. You cannot submit additional applications after accepting a new placement following a change request.');
+                return;
+            }
+
+            // They have approved change request and the accepted application is the old one
+            // This shouldn't happen if logic is correct, but just in case
             session()->flash('error', 'You already have an accepted placement application. You can only submit a new application if you have an approved change request.');
             return;
         }
@@ -672,7 +723,7 @@ class StudentPlacementApplicationTable extends Component
         $pendingChangeRequest = $application->changeRequests()
             ->where(function ($q) {
                 $q->where('committeeStatus', 'Pending')
-                  ->orWhere('coordinatorStatus', 'Pending');
+                    ->orWhere('coordinatorStatus', 'Pending');
             })
             ->exists();
 
@@ -762,8 +813,8 @@ class StudentPlacementApplicationTable extends Component
 
         foreach ($this->changeRequestFiles as $file) {
             try {
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('change_requests', $filename, 'public');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $path = $file->storeAs('change_requests', $filename, 'public');
 
                 if (!$path) {
                     \Log::error('File storage failed', [
@@ -773,22 +824,22 @@ class StudentPlacementApplicationTable extends Component
                     continue;
                 }
 
-            $fileRecord = File::create([
-                'fileable_id' => $changeRequest->justificationID,
+                $fileRecord = File::create([
+                    'fileable_id' => $changeRequest->justificationID,
                     'fileable_type' => RequestJustification::class,
-                'file_path' => $path,
-                'original_name' => $file->getClientOriginalName(),
-                'file_size' => $file->getSize(),
-                'mime_type' => $file->getMimeType(),
-            ]);
+                    'file_path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ]);
 
                 \Log::info('File created successfully', [
-                'file_id' => $fileRecord->id,
-                'fileable_id' => $changeRequest->justificationID,
+                    'file_id' => $fileRecord->id,
+                    'fileable_id' => $changeRequest->justificationID,
                     'fileable_type' => RequestJustification::class,
-                'file_path' => $path,
-                'original_name' => $file->getClientOriginalName()
-            ]);
+                    'file_path' => $path,
+                    'original_name' => $file->getClientOriginalName()
+                ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to upload file for change request', [
                     'error' => $e->getMessage(),
@@ -842,10 +893,52 @@ class StudentPlacementApplicationTable extends Component
         $this->selectedApplicationForChange = null;
     }
 
+    public function getAnalyticsData()
+    {
+        $student = Auth::user()->student;
+
+        if (!$student) {
+            return null;
+        }
+
+        $studentID = $student->studentID;
+
+        $analytics = [
+            'total_applications' => PlacementApplication::where('studentID', $studentID)->count(),
+            'pending_applications' => PlacementApplication::where('studentID', $studentID)
+                ->where(function ($q) {
+                    $q->where('committeeStatus', 'Pending')
+                        ->orWhere('coordinatorStatus', 'Pending');
+                })->count(),
+            'approved_applications' => PlacementApplication::where('studentID', $studentID)
+                ->where('committeeStatus', 'Approved')
+                ->where('coordinatorStatus', 'Approved')
+                ->count(),
+            'rejected_applications' => PlacementApplication::where('studentID', $studentID)
+                ->where(function ($q) {
+                    $q->where('committeeStatus', 'Rejected')
+                        ->orWhere('coordinatorStatus', 'Rejected');
+                })->count(),
+            'accepted_applications' => PlacementApplication::where('studentID', $studentID)
+                ->where('studentAcceptance', 'Accepted')
+                ->count(),
+            'declined_applications' => PlacementApplication::where('studentID', $studentID)
+                ->where('studentAcceptance', 'Declined')
+                ->count(),
+            'applications_this_month' => PlacementApplication::where('studentID', $studentID)
+                ->whereMonth('applicationDate', now()->month)
+                ->whereYear('applicationDate', now()->year)
+                ->count(),
+        ];
+
+        return $analytics;
+    }
+
     public function render()
     {
         $applications = $this->getFilteredApplications()->paginate($this->perPage);
         $canApply = $this->canStudentApply();
+        $analytics = $this->getAnalyticsData();
 
         // Check if student has any accepted application
         $hasAcceptedApplication = false;
@@ -861,9 +954,9 @@ class StudentPlacementApplicationTable extends Component
             $hasApprovedChangeRequest = RequestJustification::whereHas('placementApplication', function ($query) {
                 $query->where('studentID', Auth::user()->student->studentID);
             })
-            ->where('committeeStatus', 'Approved')
-            ->where('coordinatorStatus', 'Approved')
-            ->exists();
+                ->where('committeeStatus', 'Approved')
+                ->where('coordinatorStatus', 'Approved')
+                ->exists();
         }
 
         // Check course verification status separately
@@ -880,6 +973,7 @@ class StudentPlacementApplicationTable extends Component
             'hasAcceptedApplication' => $hasAcceptedApplication,
             'hasApprovedChangeRequest' => $hasApprovedChangeRequest,
             'hasCourseVerification' => $hasCourseVerification,
+            'analytics' => $analytics,
         ]);
     }
 }

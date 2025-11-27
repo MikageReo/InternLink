@@ -60,7 +60,7 @@ class LecturerPlacementApplicationTable extends Component
         if (!$user->lecturer) {
             abort(403, 'Access denied. Lecturer profile required.');
         }
-        
+
         // Clear any flash messages from previous components
         session()->forget(['message', 'error', 'warning']);
     }
@@ -269,25 +269,25 @@ class LecturerPlacementApplicationTable extends Component
             // Select all applications on current filtered results (only pending ones for the user's role)
             $lecturer = Auth::user()->lecturer;
             $query = $this->getFilteredApplications();
-            
+
             if ($lecturer->isCommittee && !$lecturer->isCoordinator) {
                 // Committee members can only select applications pending committee review
                 $query->where('committeeStatus', 'Pending');
             } elseif ($lecturer->isCoordinator && !$lecturer->isCommittee) {
                 // Coordinators can only select applications pending coordinator review
                 $query->where('coordinatorStatus', 'Pending')
-                      ->where('committeeStatus', 'Approved');
+                    ->where('committeeStatus', 'Approved');
             } elseif ($lecturer->isCommittee && $lecturer->isCoordinator) {
                 // If user is both, select all pending
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->where('committeeStatus', 'Pending')
-                      ->orWhere(function($q2) {
-                          $q2->where('coordinatorStatus', 'Pending')
-                             ->where('committeeStatus', 'Approved');
-                      });
+                        ->orWhere(function ($q2) {
+                            $q2->where('coordinatorStatus', 'Pending')
+                                ->where('committeeStatus', 'Approved');
+                        });
                 });
             }
-            
+
             $this->selectedApplications = $query->pluck('applicationID')->toArray();
         } else {
             $this->selectedApplications = [];
@@ -370,7 +370,7 @@ class LecturerPlacementApplicationTable extends Component
 
             foreach ($this->selectedApplications as $id) {
                 $application = PlacementApplication::find($id);
-                
+
                 if (!$application) {
                     continue;
                 }
@@ -391,7 +391,7 @@ class LecturerPlacementApplicationTable extends Component
                 if ($role === 'committee') {
                     $updateData['committeeID'] = $lecturer->lecturerID;
                     $updateData['committeeStatus'] = $status;
-                    
+
                     // If committee rejects, also set coordinator to rejected
                     if ($status === 'Rejected') {
                         $updateData['coordinatorStatus'] = 'Rejected';
@@ -402,10 +402,10 @@ class LecturerPlacementApplicationTable extends Component
                 }
 
                 $application->update($updateData);
-                
+
                 // Send email notification
                 $this->sendStatusNotification($application);
-                
+
                 $count++;
             }
 
@@ -422,7 +422,6 @@ class LecturerPlacementApplicationTable extends Component
             $this->selectAll = false;
             $this->bulkRemarks = '';
             $this->resetPage();
-            
         } catch (\Exception $e) {
             session()->flash('error', 'An error occurred during bulk processing: ' . $e->getMessage());
             Log::error('Bulk approval error: ' . $e->getMessage());
@@ -460,7 +459,7 @@ class LecturerPlacementApplicationTable extends Component
                 foreach ($applications as $application) {
                     // Create a folder for each application
                     $folderName = 'App_' . $application->applicationID . '_' . $application->student->studentID;
-                    
+
                     foreach ($application->files as $file) {
                         $filePath = storage_path('app/public/' . $file->file_path);
                         if (file_exists($filePath)) {
@@ -564,15 +563,15 @@ class LecturerPlacementApplicationTable extends Component
                     ->select('placement_applications.*');
             } elseif ($this->sortField === 'applyCount') {
                 // Sort by the number of applications per student
-                $query->selectRaw('placement_applications.*, 
-                    (SELECT COUNT(*) FROM placement_applications pa2 
+                $query->selectRaw('placement_applications.*,
+                    (SELECT COUNT(*) FROM placement_applications pa2
                      WHERE pa2.studentID = placement_applications.studentID) as apply_count')
                     ->orderBy('apply_count', $this->sortDirection);
             } elseif ($this->sortField === 'placementStatus') {
                 // Sort by placement status (computed from overall status and student acceptance)
                 // Priority: Active (Approved+Accepted) > Defer (Approved but not accepted) > Inactive (Rejected) > Pending
                 $query->selectRaw('placement_applications.*,
-                    CASE 
+                    CASE
                         WHEN (committeeStatus = "Approved" AND coordinatorStatus = "Approved" AND studentAcceptance = "Accepted") THEN 1
                         WHEN (committeeStatus = "Approved" AND coordinatorStatus = "Approved" AND studentAcceptance IS NULL) THEN 2
                         WHEN (committeeStatus = "Rejected" OR coordinatorStatus = "Rejected") THEN 3

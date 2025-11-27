@@ -116,25 +116,42 @@ class PlacementApplication extends Model
             return false;
         }
 
-        // Check if this application was submitted after an approved change request
-        // If so, student cannot accept it as it replaces their previous accepted application
-        $hasApprovedChangeRequest = \App\Models\RequestJustification::where('applicationID', '!=', $this->applicationID)
-            ->whereHas('placementApplication', function ($query) {
+        // Check if student already has an accepted application
+        $hasAcceptedApplication = PlacementApplication::where('studentID', $this->studentID)
+            ->where('studentAcceptance', 'Accepted')
+            ->where('applicationID', '!=', $this->applicationID)
+            ->exists();
+
+        // If student has an accepted application, they can only accept this one if:
+        // 1. They have an approved change request for the old application
+        // 2. This new application was created after the change request was approved
+        if ($hasAcceptedApplication) {
+            // Check if there's an approved change request for the old accepted application
+            $approvedChangeRequest = \App\Models\RequestJustification::whereHas('placementApplication', function ($query) {
                 $query->where('studentID', $this->studentID)
-                    ->whereIn('studentAcceptance', ['Accepted', 'Changed']);
+                    ->where('studentAcceptance', 'Accepted');
             })
             ->where('committeeStatus', 'Approved')
             ->where('coordinatorStatus', 'Approved')
-            ->where('updated_at', '<=', $this->created_at)
-            ->exists();
+            ->orderBy('updated_at', 'desc')
+            ->first();
 
-        // If there's an approved change request for a previous accepted application,
-        // and this new application was created after that change request was approved,
-        // then this application cannot be accepted (it automatically replaces the old one)
-        if ($hasApprovedChangeRequest) {
-            return false;
+            if (!$approvedChangeRequest) {
+                // No approved change request, cannot accept this new application
+                return false;
+            }
+
+            // Check if this application was created after the change request was approved
+            if ($this->created_at <= $approvedChangeRequest->updated_at) {
+                // This application was created before or at the same time as change request approval
+                return false;
+            }
+
+            // This application was created after change request approval, student can accept it
+            return true;
         }
 
+        // No existing accepted application, student can accept this one
         return true;
     }
 

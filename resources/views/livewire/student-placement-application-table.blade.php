@@ -39,21 +39,7 @@
                 </div>
             @endif
 
-            <!-- Approved Change Request Alert -->
-            @if ($hasApprovedChangeRequest)
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <span class="text-blue-400 text-xl">🔄</span>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-lg font-medium text-blue-900">Change Request Approved</h3>
-                            <p class="text-blue-700">Your placement change request has been approved! You can now submit a new placement application below.</p>
-                            <p class="text-blue-600 text-sm mt-1">Note: Your current placement will remain active until you accept a new placement.</p>
-                        </div>
-                    </div>
-                </div>
-            @elseif ($hasAcceptedApplication && !$canApply)
+            @if ($hasAcceptedApplication && !$canApply)
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -78,6 +64,59 @@
             @if (session()->has('error'))
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                     <p class="text-red-700">{{ session('error') }}</p>
+                </div>
+            @endif
+
+            <!-- Analytics Dashboard -->
+            @if ($analytics)
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100">
+                                <span class="text-blue-600 text-xl">📊</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Total Applications</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['total_applications'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100">
+                                <span class="text-yellow-600 text-xl">⏳</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Pending Review</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['pending_applications'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100">
+                                <span class="text-green-600 text-xl">✅</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Approved</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['approved_applications'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-red-100">
+                                <span class="text-red-600 text-xl">❌</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Rejected</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['rejected_applications'] }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endif
 
@@ -224,7 +263,7 @@
                                                 </button>
                                             @elseif ($application->studentAcceptance)
                                                 <span class="inline-flex px-2 py-1 text-xs rounded-full
-                                                    {{ $application->studentAcceptance === 'Accepted' ? 'bg-green-100 text-green-800' : 
+                                                    {{ $application->studentAcceptance === 'Accepted' ? 'bg-green-100 text-green-800' :
                                                        ($application->studentAcceptance === 'Changed' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800') }}">
                                                     {{ $application->studentAcceptance }}
                                                 </span>
@@ -530,11 +569,7 @@
                                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                                         </svg>
                                     </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm text-blue-700">
-                                            <strong>🗺️ Smart Geocoding:</strong> Company location coordinates will be automatically determined from the address using Google Maps API.
-                                        </p>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -818,7 +853,7 @@
                                 @if($viewingApplication->studentAcceptance)
                                     <div class="flex items-center space-x-2">
                                         <span class="font-medium">Your Response:</span>
-                                        <span class="px-2 py-1 text-xs rounded-full {{ $viewingApplication->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' : 
+                                        <span class="px-2 py-1 text-xs rounded-full {{ $viewingApplication->studentAcceptance === 'Accepted' ? 'bg-blue-100 text-blue-800' :
                                            ($viewingApplication->studentAcceptance === 'Changed' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800') }}">
                                             {{ $viewingApplication->studentAcceptance }}
                                         </span>

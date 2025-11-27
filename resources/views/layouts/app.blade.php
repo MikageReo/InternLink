@@ -36,6 +36,12 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- Placement Chatbot (Student Only) -->
+        @if(auth()->check() && auth()->user()->isStudent())
+            @livewire('placement-chatbot')
+        @endif
+
         @livewireScripts
     </body>
 </html>

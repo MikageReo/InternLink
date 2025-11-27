@@ -69,32 +69,127 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Total Credit Information -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <div class="flex items-center justify-between">
+            <!-- Course Verification Guide -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
                             <i class="fa fa-info-circle text-blue-500 text-xl"></i>
                         </div>
                         <div class="ml-3">
-                            <h3 class="text-lg font-medium text-blue-900">Credit Requirements</h3>
-                            <p class="text-blue-700">
-                                <strong>Total Credits Required:</strong> {{ $totalCreditRequired }} credits
-                            </p>
+                            <h3 class="text-lg font-medium text-blue-900">Course Verification Guide</h3>
                             <p class="text-sm text-blue-600 mt-1">
-                                Submit your current credit count and course documentation for verification.
+                                Follow these steps to complete your course verification submission.
                             </p>
                         </div>
                     </div>
-                    <div class="flex-shrink-0 ml-4">
-                        <a href="{{ asset('documents/course-verification-guide.pdf') }}"
-                           target="_blank"
-                           download
-                           class="inline-flex items-center px-4 py-2 border border-blue-400 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                            <i class="fa fa-download mr-2"></i>
-                            Download Guide
-                        </a>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Step 1 -->
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 font-semibold text-sm">1</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900 mb-2">
+                                    Fill in the course verification form and get approval from your Academic Advisor.
+                                </p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <a href="{{ asset('documents/Course-Verification-Form-Eng.docx') }}"
+                                       target="_blank"
+                                       download
+                                       class="inline-flex items-center px-3 py-1.5 border border-blue-400 rounded-md text-xs font-medium text-blue-700 bg-white hover:bg-blue-50">
+                                        <i class="fa fa-download mr-1.5"></i>
+                                        English Version
+                                    </a>
+                                    <a href="{{ asset('documents/Course-Verification-Form-Malay.docx') }}"
+                                       target="_blank"
+                                       download
+                                       class="inline-flex items-center px-3 py-1.5 border border-blue-400 rounded-md text-xs font-medium text-blue-700 bg-white hover:bg-blue-50">
+                                        <i class="fa fa-download mr-1.5"></i>
+                                        Malay Version
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 font-semibold text-sm">2</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">
+                                    Please ask your academic advisor for the <strong>List of Taken / Untaken Courses</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 font-semibold text-sm">3</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900 mb-2">
+                                    Screenshot the <strong>Registered Courses</strong> in E-COMMUNITY (My Course Results → Course Structure).
+                                </p>
+                                <div class="mt-2">
+                                    <a href="{{ asset('documents/Registered-Course-Guide.pdf') }}"
+                                       target="_blank"
+                                       download
+                                       class="inline-flex items-center px-3 py-1.5 border border-blue-400 rounded-md text-xs font-medium text-blue-700 bg-white hover:bg-blue-50">
+                                        <i class="fa fa-download mr-1.5"></i>
+                                        Screenshot Guide
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 font-semibold text-sm">4</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900 mb-2">
+                                    Once approved, please merge the <strong>List of Taken / Untaken Courses</strong> and <strong>Registered Courses</strong> together with verification form and save the file as PDF.
+                                </p>
+                                <p class="text-sm text-gray-700 mt-2">
+                                    <strong>File naming convention:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-xs">{{ Auth::user()->student->studentID ?? 'matricID' }}_CClist.pdf</code>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 font-semibold text-sm">5</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">
+                                    Submit the verification form at the course verification form below.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Credit Requirements Info -->
+                <div class="mt-4 pt-4 border-t border-blue-200">
+                    <p class="text-sm text-blue-700">
+                        <strong>Total Credits Required:</strong> {{ $totalCreditRequired }} credits
+                    </p>
                 </div>
             </div>
 

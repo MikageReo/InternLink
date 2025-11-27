@@ -34,7 +34,14 @@ class StudentChangeRequestHistory extends Component
 
     public function mount()
     {
-        // Initialize component
+        // Clear error messages about accepted placement applications (not relevant for change requests)
+        if (session()->has('error')) {
+            $errorMessage = session('error');
+            if (str_contains($errorMessage, 'already have an accepted placement application') || 
+                str_contains($errorMessage, 'cannot submit additional applications')) {
+                session()->forget('error');
+            }
+        }
     }
 
     public function updatingSearch()

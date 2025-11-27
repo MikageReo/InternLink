@@ -39,6 +39,59 @@
                 </div>
             @endif
 
+            <!-- Analytics Dashboard -->
+            @if ($analytics)
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100">
+                                <span class="text-blue-600 text-xl">📊</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Total Requests</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['total_requests'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100">
+                                <span class="text-yellow-600 text-xl">⏳</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Pending Review</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['pending_requests'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100">
+                                <span class="text-green-600 text-xl">✅</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Approved</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['approved_requests'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-red-100">
+                                <span class="text-red-600 text-xl">❌</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Rejected</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ $analytics['rejected_requests'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Main Content Card -->
             <div class="bg-white shadow rounded-lg">
                 <!-- Header with Request Button -->

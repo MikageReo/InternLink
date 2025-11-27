@@ -56,6 +56,17 @@ class CourseVerificationTable extends Component
 
     public function mount()
     {
+        // Clear error messages about accepted placement applications (not relevant for course verification)
+        if (session()->has('error')) {
+            $errorMessage = session('error');
+            if (
+                str_contains($errorMessage, 'already have an accepted placement application') ||
+                str_contains($errorMessage, 'cannot submit additional applications')
+            ) {
+                session()->forget('error');
+            }
+        }
+
         // You can set the total credit required from a config or database
         $this->totalCreditRequired = 130;
     }

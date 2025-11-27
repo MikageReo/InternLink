@@ -69,6 +69,15 @@ class StudentRequestDeferTable extends Component
 
     public function mount()
     {
+        // Clear error messages about accepted placement applications (not relevant for defer requests)
+        if (session()->has('error')) {
+            $errorMessage = session('error');
+            if (str_contains($errorMessage, 'already have an accepted placement application') || 
+                str_contains($errorMessage, 'cannot submit additional applications')) {
+                session()->forget('error');
+            }
+        }
+        
         // Check if student can make defer requests (must have approved course verification)
         if (!$this->canStudentMakeRequest()) {
             session()->flash('warning', 'You must have an approved course verification before making defer requests.');
@@ -318,14 +327,51 @@ class StudentRequestDeferTable extends Component
         return $query;
     }
 
+    public function getAnalyticsData()
+    {
+        $student = Auth::user()->student;
+        
+        if (!$student) {
+            return null;
+        }
+
+        $studentID = $student->studentID;
+
+        $analytics = [
+            'total_requests' => RequestDefer::where('studentID', $studentID)->count(),
+            'pending_requests' => RequestDefer::where('studentID', $studentID)
+                ->where(function ($q) {
+                    $q->where('committeeStatus', 'Pending')
+                        ->orWhere('coordinatorStatus', 'Pending');
+                })->count(),
+            'approved_requests' => RequestDefer::where('studentID', $studentID)
+                ->where('committeeStatus', 'Approved')
+                ->where('coordinatorStatus', 'Approved')
+                ->count(),
+            'rejected_requests' => RequestDefer::where('studentID', $studentID)
+                ->where(function ($q) {
+                    $q->where('committeeStatus', 'Rejected')
+                        ->orWhere('coordinatorStatus', 'Rejected');
+                })->count(),
+            'requests_this_month' => RequestDefer::where('studentID', $studentID)
+                ->whereMonth('applicationDate', now()->month)
+                ->whereYear('applicationDate', now()->year)
+                ->count(),
+        ];
+
+        return $analytics;
+    }
+
     public function render()
     {
         $requests = $this->getFilteredRequests()->paginate($this->perPage);
         $canMakeRequest = $this->canStudentMakeRequest();
+        $analytics = $this->getAnalyticsData();
 
         return view('livewire.student-request-defer-table', [
             'requests' => $requests,
             'canMakeRequest' => $canMakeRequest,
+            'analytics' => $analytics,
         ]);
     }
 }
