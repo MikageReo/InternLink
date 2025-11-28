@@ -33,13 +33,42 @@
                 <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-messages">
                     @foreach($messages as $index => $message)
                         <div class="flex {{ $message['type'] === 'user' ? 'justify-end' : 'justify-start' }}">
-                            <div class="max-w-[80%] rounded-lg p-3 {{ $message['type'] === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' }}">
+                            <div class="max-w-[85%] rounded-lg p-3 {{ $message['type'] === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' }}">
                                 <div class="text-sm whitespace-pre-wrap">{{ $message['content'] }}</div>
                                 <div class="text-xs mt-1 opacity-70">
                                     {{ $message['timestamp']->format('H:i') }}
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Show buttons for bot messages -->
+                        @if($message['type'] === 'bot' && isset($messageButtons[$index]) && count($messageButtons[$index]) > 0)
+                            <div class="flex justify-start">
+                                <div class="max-w-[85%] flex flex-wrap gap-2">
+                                    @foreach($messageButtons[$index] as $button)
+                                        @php
+                                            $action = $button['action'];
+                                            $data = isset($button['data']) ? $button['data'] : null;
+                                            $dataParam = $data !== null ? $data : 'null';
+                                        @endphp
+                                        <button
+                                            wire:click="buttonAction('{{ $action }}', {{ $dataParam }})"
+                                            wire:loading.attr="disabled"
+                                            class="px-3 py-2 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-purple-200 dark:border-purple-800">
+                                            <span wire:loading.remove wire:target="buttonAction('{{ $action }}', {{ $dataParam }})">
+                                                {{ $button['label'] }}
+                                            </span>
+                                            <span wire:loading wire:target="buttonAction('{{ $action }}', {{ $dataParam }})">
+                                                <svg class="animate-spin h-3 w-3 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     @endforeach
 
                     @if($isTyping)
@@ -55,41 +84,42 @@
                     @endif
                 </div>
 
-                <!-- Quick Actions -->
-                @if(count($quickActions) > 0)
-                    <div class="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">Quick Actions:</div>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($quickActions as $action)
-                                <button
-                                    wire:click="quickAction('{{ $action }}')"
-                                    class="px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors">
-                                    {{ $action }}
-                                </button>
-                            @endforeach
-                        </div>
+                <!-- Input Area (for games and tips) -->
+                @if($currentGame || $showingTipForm)
+                    <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                        @if($currentGame)
+                            <input
+                                type="text"
+                                wire:model="gameAnswer"
+                                wire:keydown.enter="buttonAction('submit_game_answer', null)"
+                                placeholder="@if($currentGame === 'word') Enter the unscrambled word @else Enter your answer (A, B, C, or D) @endif"
+                                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-200"
+                                autocomplete="off">
+                        @elseif($showingTipForm)
+                            <div class="space-y-2">
+                                <input
+                                    type="text"
+                                    wire:model="tipNickname"
+                                    placeholder="Enter your nickname (can be anonymous)"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-200"
+                                    autocomplete="off">
+                                <textarea
+                                    wire:model="tipContent"
+                                    placeholder="Share your tip or advice here..."
+                                    rows="3"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-200 resize-none"
+                                    autocomplete="off"></textarea>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <!-- Info Message (Input disabled) -->
+                    <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                            💡 Please use the buttons above to interact with me
+                        </p>
                     </div>
                 @endif
-
-                <!-- Input Area -->
-                <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-                    <form wire:submit.prevent="sendMessage" class="flex space-x-2">
-                        <input
-                            type="text"
-                            wire:model="currentMessage"
-                            placeholder="Type your message..."
-                            class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-200"
-                            autocomplete="off">
-                        <button
-                            type="submit"
-                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
-                            <!-- Send icon -->
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                            </svg>
-                        </button>
-                    </form>
-                </div>
             </div>
         @endif
     @endif

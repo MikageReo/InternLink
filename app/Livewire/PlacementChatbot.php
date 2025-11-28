@@ -7,6 +7,7 @@ use App\Models\PlacementApplication;
 use App\Models\Student;
 use App\Models\SupervisorAssignment;
 use App\Models\CourseVerification;
+use App\Models\PeerTip;
 use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,18 @@ class PlacementChatbot extends Component
     public $viewingDetails = false; // Tracks if currently viewing details
     public $faqMenuShown = false; // Tracks if FAQ menu is currently displayed
     public $storedFAQs = []; // Stores FAQ list for number-based selection
+    public $messageButtons = []; // Stores buttons for each message
+
+    // Input fields for peer tips
+    public $tipNickname = '';
+    public $tipContent = '';
+    public $showingTipForm = false;
+
+    // Game state
+    public $currentGame = null; // 'trivia', 'quiz', 'word'
+    public $currentGameData = null; // Stores current game question/word
+    public $gameAnswer = ''; // User's answer input
+    public $showingGameAnswer = false; // Whether to show the real answer
 
     protected function getGeocodingService(): GeocodingService
     {
@@ -31,22 +44,31 @@ class PlacementChatbot extends Component
     public function mount()
     {
         // Initialize with welcome message
-        $this->messages[] = [
-            'type' => 'bot',
-            'content' => "Hello! I'm Lia , your InternLink Assistant. I can help you with:\n\n" .
-                "📊 Evaluate placements before applying\n" .
-                "📋 Check your application status\n" .
-                "❓ Answer FAQs (simply select a number)\n\n" .
-                "What would you like to know?",
-            'timestamp' => now()
-        ];
+    $messageIndex = count($this->messages);
+    $this->messages[] = [
+        'type' => 'bot',
+        'content' => "Hello! I'm Lia, your InternLink Assistant. I can help you with:\n\n" .
+            "📊 Evaluate placements before applying\n" .
+            "📋 Check your application status\n" .
+            "❓ Answer FAQs\n" .
+            "🎤 Interview preparation\n" .
+            "💡 Daily tips & motivation\n" .
+            "👥 Peer support\n" .
+            "🎮 Mini games\n\n" .
+            "Please click a button below to get started:",
+        'timestamp' => now()
+    ];
 
-        // Set up quick actions
-        $this->quickActions = [
-            'Evaluate Placement',
-            'Check Status',
-            'FAQs'
-        ];
+    // Set up buttons for welcome message
+    $this->messageButtons[$messageIndex] = [
+        ['label' => '📊 Evaluate Placement', 'action' => 'evaluate_placement'],
+        ['label' => '📋 Check Status', 'action' => 'check_status'],
+        ['label' => '❓ FAQs', 'action' => 'faqs'],
+        ['label' => '🎤 Interview Prep', 'action' => 'interview_prep'],
+        ['label' => '💡 Daily Tip', 'action' => 'daily_tip'],
+        ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+        ['label' => '🎮 Mini Games', 'action' => 'mini_games']
+    ];
     }
 
     public function toggleChat()
@@ -56,42 +78,175 @@ class PlacementChatbot extends Component
 
     public function sendMessage()
     {
-        if (empty(trim($this->currentMessage))) {
-            return;
+        // This method is now disabled - users can only use buttons
+        return;
+    }
+
+    public function quickAction($action)
+    {
+        // Legacy method - redirect to buttonAction
+        $this->buttonAction($action);
+    }
+
+    public function buttonAction($action, $data = null)
+    {
+        // Convert data to proper type if it's a string
+        if ($data === 'null' || $data === null || $data === '') {
+            $data = null;
+        } else {
+            $data = is_numeric($data) ? (int)$data : $data;
         }
 
-        $userMessage = trim($this->currentMessage);
-
-        // Add user message
+        // Add user message showing what button was clicked
+        $buttonLabel = $this->getButtonLabel($action, $data);
         $this->messages[] = [
             'type' => 'user',
-            'content' => $userMessage,
+            'content' => $buttonLabel,
             'timestamp' => now()
         ];
 
-        $this->currentMessage = '';
         $this->isTyping = true;
 
-        // Process message and get response
-        $response = $this->processMessage($userMessage);
+        // Process button action and get response
+        $response = $this->processButtonAction($action, $data);
 
         $this->isTyping = false;
 
-        // Add bot response
+        // Add bot response with buttons
+        $messageIndex = count($this->messages);
         $this->messages[] = [
             'type' => 'bot',
-            'content' => $response,
+            'content' => $response['content'],
             'timestamp' => now()
         ];
+
+        // Store buttons for this message
+        if (!empty($response['buttons'])) {
+            $this->messageButtons[$messageIndex] = $response['buttons'];
+        }
 
         // Scroll to bottom after response
         $this->dispatch('scroll-to-bottom');
     }
 
-    public function quickAction($action)
+    private function getButtonLabel($action, $data = null): string
     {
-        $this->currentMessage = $action;
-        $this->sendMessage();
+        $labels = [
+            'evaluate_placement' => '📊 Evaluate Placement',
+            'check_status' => '📋 Check Status',
+            'faqs' => '❓ FAQs',
+            'back_to_menu' => '🏠 Back to Menu',
+            'view_application' => 'View Application',
+            'view_faq' => 'View FAQ',
+            'back_to_faq_menu' => 'Back to FAQ Menu',
+            'back_to_summary' => 'Back to Summary',
+            'view_another' => 'View Another Application',
+            // Interview prep sub-actions
+            'interview_tips' => '💡 Interview Tips',
+            'common_questions' => '❓ Common Questions',
+            'practice_questions' => '📝 Practice Questions',
+            'interview_do_dont' => '✅ Do\'s & Don\'ts',
+            // Mini games
+            'game_trivia' => '🎲 Trivia Game',
+            'game_quiz' => '🧠 Quick Quiz',
+            'game_word' => '🔤 Word Game',
+            // Peer support
+            'view_tips' => '💬 View Tips',
+            'share_tip' => '✍️ Share a Tip',
+            'submit_tip' => '✅ Submit Tip',
+            'submit_game_answer' => '✅ Submit Answer'
+        ];
+
+        if ($data && isset($labels[$action])) {
+            return $labels[$action] . ($data ? " #{$data}" : '');
+        }
+
+        return $labels[$action] ?? $action;
+    }
+
+    private function processButtonAction($action, $data = null): array
+    {
+        $student = Auth::user()->student;
+
+        if (!$student) {
+            return [
+                'content' => "I couldn't find your student profile. Please contact the administrator.",
+                'buttons' => [['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']]
+            ];
+        }
+
+        switch ($action) {
+            case 'evaluate_placement':
+                return $this->handleEvaluatePlacement($student);
+
+            case 'check_status':
+                return [
+                    'content' => $this->checkStatus($student),
+                    'buttons' => [['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']]
+                ];
+
+            case 'faqs':
+                return $this->handleFAQs();
+
+            case 'interview_prep':
+                return $this->handleInterviewPrep();
+
+            case 'daily_tip':
+                return $this->handleDailyTip();
+
+            case 'peer_support':
+                return $this->handlePeerSupport();
+
+            case 'mini_games':
+                return $this->handleMiniGames();
+
+            // Interview prep sub-actions
+            case 'interview_tips':
+                return $this->handleInterviewTips();
+
+            case 'common_questions':
+                return $this->handleCommonQuestions();
+
+            case 'practice_questions':
+                return $this->handlePracticeQuestions();
+
+            case 'interview_do_dont':
+                return $this->handleInterviewDoDont();
+
+            // Mini games sub-actions
+            case 'game_trivia':
+                return $this->handleTriviaGame();
+
+            case 'game_quiz':
+                return $this->handleQuickQuiz();
+
+            case 'game_word':
+                return $this->handleWordGame();
+
+            case 'submit_game_answer':
+                return $this->handleSubmitGameAnswer();
+
+            // Peer support sub-actions
+            case 'view_tips':
+                return $this->handleViewPeerTips();
+
+            case 'share_tip':
+                return $this->handleShareTip();
+
+            case 'submit_tip':
+                return $this->handleSubmitTip();
+
+            // ... existing cases ...
+
+            case 'back_to_menu':
+                return $this->handleBackToMenu();
+
+            default:
+                return [
+                    'content' => "I'm not sure what you want to do. Please select an option.",
+                    'buttons' => $this->getMainMenuButtons()
+                ];
+        }
     }
 
     private function processMessage($message): string
@@ -183,6 +338,314 @@ class PlacementChatbot extends Component
             "• Evaluate a placement\n" .
             "• Check your application status\n" .
             "• Answer FAQs";
+    }
+
+    private function handleEvaluatePlacement($student): array
+    {
+        // Get ALL student's applications
+        $applications = $student->placementApplications()
+            ->orderBy('applicationDate', 'desc')
+            ->get();
+
+        if ($applications->isEmpty()) {
+            return [
+                'content' => "I couldn't find any placements to evaluate. Please apply for a placement first.",
+                'buttons' => [['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']]
+            ];
+        }
+
+        // If only one application, show full details
+        if ($applications->count() === 1) {
+            $this->viewingDetails = true;
+            $evaluation = $this->performEvaluation($student, $applications->first());
+            return [
+                'content' => $evaluation,
+                'buttons' => [
+                    ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+                ]
+            ];
+        }
+
+        // Multiple applications - show summary list with buttons
+        return $this->showSummaryListWithButtons($student);
+    }
+
+    private function handleViewApplication($student, $number): array
+    {
+        if (empty($this->storedSummaries)) {
+            return [
+                'content' => "I don't have your application list. Please click 'Evaluate Placement' first.",
+                'buttons' => [['label' => '📊 Evaluate Placement', 'action' => 'evaluate_placement']]
+            ];
+        }
+
+        $index = $number - 1;
+        if (!isset($this->storedSummaries[$index])) {
+            $maxNumber = count($this->storedSummaries);
+            return [
+                'content' => "Invalid selection. Please choose a number between #1 and #{$maxNumber}.",
+                'buttons' => $this->getApplicationListButtons()
+            ];
+        }
+
+        $summary = $this->storedSummaries[$index];
+        $application = $summary['application'];
+        $this->viewingDetails = true;
+
+        $evaluation = $this->performEvaluation($student, $application);
+        return [
+            'content' => $evaluation,
+            'buttons' => [
+                ['label' => '📋 Back to Summary', 'action' => 'back_to_summary'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    private function handleFAQs(): array
+    {
+        $faqs = [
+            [
+                'key' => 'requirement',
+                'title' => 'Placement Requirements',
+                'answer' => "**Placement Requirements:**\n\n" .
+                    "1. ✅ Approved course verification\n" .
+                    "2. ✅ Complete placement application form\n" .
+                    "3. ✅ Submit required documents\n" .
+                    "4. ✅ Wait for committee and coordinator approval"
+            ],
+            [
+                'key' => 'document',
+                'title' => 'Required Documents',
+                'answer' => "**Required Documents:**\n\n" .
+                    "📄 **For Placement Application:**\n" .
+                    "• Offer letter from company\n" .
+                    "• Acceptance form\n" .
+                    "• Any other documents specified by the company\n\n" .
+                    "📄 **For Course Verification:**\n" .
+                    "• Course registration document\n" .
+                    "• Transcript or academic record\n" .
+                    "• Any other supporting documents"
+            ],
+            [
+                'key' => 'apply',
+                'title' => 'How to Apply',
+                'answer' => "**How to Apply for Placement:**\n\n" .
+                    "1. 📋 Go to 'Internship Placement' page in the navigation menu\n" .
+                    "2. ➕ Click 'New Application' button\n" .
+                    "3. ✍️ Fill in all company details (name, address, contact, etc.)\n" .
+                    "4. 📎 Upload required documents (offer letter, acceptance form)\n" .
+                    "5. ✅ Submit your application\n\n" .
+                    "**Note:** Your application will be reviewed by the committee and coordinator."
+            ],
+            [
+                'key' => 'supervisor',
+                'title' => 'Supervisor Assignment',
+                'answer' => "**Supervisor Assignment:**\n\n" .
+                    "👨‍🏫 **When are supervisors assigned?**\n" .
+                    "Supervisors are automatically assigned after you accept a placement offer.\n\n" .
+                    "⚙️ **How are supervisors selected?**\n" .
+                    "The system automatically considers:\n" .
+                    "• Distance between supervisor and company location\n" .
+                    "• Supervisor's current workload (quota)\n" .
+                    "• Supervisor's preferences and availability\n\n" .
+                    "📧 **Notification:**\n" .
+                    "You will be notified via email once a supervisor is assigned to you."
+            ],
+            [
+                'key' => 'time',
+                'title' => 'Processing Time',
+                'answer' => "**Processing Time:**\n\n" .
+                    "📋 **Course Verification:**\n" .
+                    "• Usually takes 1-2 weeks\n" .
+                    "• Depends on lecturer availability\n\n" .
+                    "💼 **Placement Application:**\n" .
+                    "• Committee review: Usually 1-2 weeks\n" .
+                    "• Coordinator review: Usually 1-2 weeks\n" .
+                    "• Total: Usually 2-4 weeks\n\n" .
+                    "👨‍🏫 **Supervisor Assignment:**\n" .
+                    "• Usually assigned within 1 week after accepting placement\n" .
+                    "• May vary depending on supervisor availability"
+            ],
+        ];
+
+        $this->storedFAQs = $faqs;
+        $this->faqMenuShown = true;
+
+        $menu = "**Frequently Asked Questions:**\n\n";
+        $menu .= "Please click a button below to view the answer:\n\n";
+
+        $icons = ['📋', '📄', '💼', '👨‍🏫', '⏱️'];
+        foreach ($faqs as $index => $faq) {
+            $menu .= "**" . ($index + 1) . ". {$icons[$index]} {$faq['title']}**\n";
+        }
+
+        $buttons = [];
+        foreach ($faqs as $index => $faq) {
+            $buttons[] = [
+                'label' => ($index + 1) . '. ' . $faq['title'],
+                'action' => 'view_faq',
+                'data' => $index + 1
+            ];
+        }
+        $buttons[] = ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu'];
+
+        return [
+            'content' => $menu,
+            'buttons' => $buttons
+        ];
+    }
+
+    private function handleViewFAQ($number): array
+    {
+        if (empty($this->storedFAQs)) {
+            return [
+                'content' => "I don't have the FAQ list. Please click 'FAQs' first.",
+                'buttons' => [['label' => '❓ FAQs', 'action' => 'faqs']]
+            ];
+        }
+
+        $index = $number - 1;
+        if (!isset($this->storedFAQs[$index])) {
+            $maxNumber = count($this->storedFAQs);
+            return [
+                'content' => "Invalid selection. Please choose a number between 1 and {$maxNumber}.",
+                'buttons' => $this->getFAQMenuButtons()
+            ];
+        }
+
+        $faq = $this->getFAQByIndex($index);
+        return [
+            'content' => $faq['answer'],
+            'buttons' => [
+                ['label' => '📋 Back to FAQ Menu', 'action' => 'back_to_faq_menu'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    private function handleBackToMenu(): array
+    {
+        $this->viewingDetails = false;
+        $this->storedSummaries = [];
+        $this->faqMenuShown = false;
+        $this->storedFAQs = [];
+
+        // Reset game and tip form states
+        $this->currentGame = null;
+        $this->currentGameData = null;
+        $this->gameAnswer = '';
+        $this->showingGameAnswer = false;
+        $this->showingTipForm = false;
+        $this->tipNickname = '';
+        $this->tipContent = '';
+
+        return [
+            'content' => "Welcome back! What would you like to do?",
+            'buttons' => [
+                ['label' => '📊 Evaluate Placement', 'action' => 'evaluate_placement'],
+                ['label' => '📋 Check Status', 'action' => 'check_status'],
+                ['label' => '❓ FAQs', 'action' => 'faqs'],
+                ['label' => '🎤 Interview Prep', 'action' => 'interview_prep'],
+                ['label' => '💡 Daily Tip', 'action' => 'daily_tip'],
+                ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+                ['label' => '🎮 Mini Games', 'action' => 'mini_games']
+            ]
+        ];
+    }
+
+    private function showSummaryListWithButtons($student): array
+    {
+        $applications = $student->placementApplications()
+            ->orderBy('applicationDate', 'desc')
+            ->get();
+
+        $response = "📊 **Your Placement Applications Summary** ({$applications->count()} applications)\n\n";
+
+        $summaries = [];
+        foreach ($applications as $index => $application) {
+            $summary = $this->performQuickEvaluation($student, $application);
+            $summaries[] = [
+                'index' => $index + 1,
+                'company' => $application->companyName,
+                'date' => $application->applicationDate->format('M d, Y'),
+                'score' => $summary['score'],
+                'rating' => $summary['rating'],
+                'recommendation' => $summary['recommendation'],
+                'application' => $application
+            ];
+        }
+
+        // Sort by score (highest first)
+        usort($summaries, function ($a, $b) {
+            return $b['score'] <=> $a['score'];
+        });
+
+        $this->storedSummaries = $summaries;
+        $this->viewingDetails = false;
+
+        $response .= "**Ranked by Score:**\n\n";
+        foreach ($summaries as $rank => $summary) {
+            $response .= "**#" . ($rank + 1) . " - {$summary['company']}**\n";
+            $response .= "📅 Applied: {$summary['date']}\n";
+            $response .= "⭐ Score: {$summary['score']}/100 ({$summary['rating']})\n";
+            $response .= "💡 {$summary['recommendation']}\n\n";
+        }
+
+        $response .= "Click a button below to view detailed evaluation:";
+
+        $buttons = [];
+        foreach ($summaries as $rank => $summary) {
+            $buttons[] = [
+                'label' => "#" . ($rank + 1) . " - {$summary['company']}",
+                'action' => 'view_application',
+                'data' => $rank + 1
+            ];
+        }
+        $buttons[] = ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu'];
+
+        return [
+            'content' => $response,
+            'buttons' => $buttons
+        ];
+    }
+
+    private function getApplicationListButtons(): array
+    {
+        $buttons = [];
+        foreach ($this->storedSummaries as $rank => $summary) {
+            $buttons[] = [
+                'label' => "#" . ($rank + 1) . " - {$summary['company']}",
+                'action' => 'view_application',
+                'data' => $rank + 1
+            ];
+        }
+        $buttons[] = ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu'];
+        return $buttons;
+    }
+
+    private function getFAQMenuButtons(): array
+    {
+        $buttons = [];
+        foreach ($this->storedFAQs as $index => $faq) {
+            $icons = ['📋', '📄', '💼', '👨‍🏫', '⏱️'];
+            $buttons[] = [
+                'label' => ($index + 1) . '. ' . $faq['title'],
+                'action' => 'view_faq',
+                'data' => $index + 1
+            ];
+        }
+        $buttons[] = ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu'];
+        return $buttons;
+    }
+
+    private function getFAQByIndex($index): array
+    {
+        if (empty($this->storedFAQs) || !isset($this->storedFAQs[$index])) {
+            return ['title' => 'Unknown', 'answer' => 'FAQ not found.'];
+        }
+
+        return $this->storedFAQs[$index];
     }
 
     private function evaluatePlacement($student, $message): string
@@ -1375,6 +1838,688 @@ class PlacementChatbot extends Component
 
         return $companies;
     }
+
+    // ==================== INTERVIEW PREPARATION ====================
+
+    private function handleInterviewPrep(): array
+    {
+        $content = "🎤 **Interview Preparation Hub**\n\n";
+        $content .= "Get ready for your placement interviews! Choose what you'd like to learn:\n\n";
+        $content .= "• 💡 Interview Tips - Essential tips for success\n";
+        $content .= "• ❓ Common Questions - Most asked interview questions\n";
+        $content .= "• 📝 Practice Questions - Test your knowledge\n";
+        $content .= "• ✅ Do's & Don'ts - What to do and avoid";
+
+        return [
+            'content' => $content,
+            'buttons' => [
+                ['label' => '💡 Interview Tips', 'action' => 'interview_tips'],
+                ['label' => '❓ Common Questions', 'action' => 'common_questions'],
+                ['label' => '📝 Practice Questions', 'action' => 'practice_questions'],
+                ['label' => '✅ Do\'s & Don\'ts', 'action' => 'interview_do_dont'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    private function handleInterviewTips(): array
+    {
+        $tips = [
+            "**1. Research the Company** 📚\n" .
+            "Learn about the company's mission, values, recent news, and the role you're applying for.",
+
+            "**2. Prepare Your STAR Stories** ⭐\n" .
+            "Prepare Situation-Task-Action-Result stories that showcase your skills and experiences.",
+
+            "**3. Dress Professionally** 👔\n" .
+            "First impressions matter. Dress appropriately for the company culture.",
+
+            "**4. Practice Your Answers** 🗣️\n" .
+            "Practice common questions out loud. Record yourself to improve delivery.",
+
+            "**5. Prepare Questions to Ask** ❓\n" .
+            "Have 2-3 thoughtful questions ready. It shows genuine interest.",
+
+            "**6. Arrive Early** ⏰\n" .
+            "Arrive 10-15 minutes early for in-person interviews. Test tech for virtual ones.",
+
+            "**7. Show Enthusiasm** 😊\n" .
+            "Be positive and show genuine interest in the role and company.",
+
+            "**8. Follow Up** 📧\n" .
+            "Send a thank-you email within 24 hours after the interview."
+        ];
+
+        $randomTip = $tips[array_rand($tips)];
+
+        return [
+            'content' => "💡 **Interview Tips**\n\n" . $randomTip . "\n\n" .
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                "Would you like another tip?",
+            'buttons' => [
+                ['label' => '💡 Another Tip', 'action' => 'interview_tips'],
+                ['label' => '🎤 Interview Hub', 'action' => 'interview_prep'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+        private function handleCommonQuestions(): array
+    {
+        $questions = [
+            [
+                'q' => "Tell me about yourself.",
+                'a' => "Keep it concise (2-3 minutes). Start with your current situation, highlight relevant experience, and connect it to why you're interested in this role."
+            ],
+            [
+                'q' => "Why do you want this internship?",
+                'a' => "Show genuine interest. Mention specific aspects of the company/role, how it aligns with your career goals, and what you hope to learn."
+            ],
+            [
+                'q' => "What are your strengths?",
+                'a' => "Pick 2-3 relevant strengths. Provide specific examples. For example: 'I'm detail-oriented, which helped me catch errors in my group project.'"
+            ],
+            [
+                'q' => "What are your weaknesses?",
+                'a' => "Be honest but show growth. Mention a real weakness and explain how you're working to improve it. Example: 'I used to struggle with time management, but I now use a planner.'"
+            ],
+            [
+                'q' => "Where do you see yourself in 5 years?",
+                'a' => "Show ambition but stay realistic. Mention how this internship fits into your career path and what skills you want to develop."
+            ],
+            [
+                'q' => "Why should we hire you?",
+                'a' => "Highlight unique qualities. Combine your skills, enthusiasm, and what you can contribute. Be specific and confident."
+            ],
+            [
+                'q' => "Do you have any questions for us?",
+                'a' => "Always say yes! Ask about: company culture, team dynamics, learning opportunities, or what success looks like in this role."
+            ]
+        ];
+
+        $selected = $questions[array_rand($questions)];
+
+        return [
+            'content' => "❓ **Common Interview Question**\n\n" .
+                "**Q: {$selected['q']}**\n\n" .
+                "**A: {$selected['a']}**\n\n" .
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                "Want to see another question?",
+            'buttons' => [
+                ['label' => '❓ Another Question', 'action' => 'common_questions'],
+                ['label' => '🎤 Interview Hub', 'action' => 'interview_prep'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+        private function handlePracticeQuestions(): array
+    {
+        $scenarios = [
+            [
+                'scenario' => "You're asked: 'Describe a time you worked in a team.'",
+                'tip' => "Use STAR method:\n" .
+                    "• Situation: Set the context\n" .
+                    "• Task: What was your responsibility?\n" .
+                    "• Action: What did you do?\n" .
+                    "• Result: What was the outcome?"
+            ],
+            [
+                'scenario' => "You're asked: 'How do you handle stress?'",
+                'tip' => "Show resilience:\n" .
+                    "• Mention specific stress management techniques\n" .
+                    "• Give an example of handling a stressful situation\n" .
+                    "• Show you can perform under pressure"
+            ],
+            [
+                'scenario' => "You're asked: 'What's your biggest failure?'",
+                'tip' => "Show growth mindset:\n" .
+                    "• Choose a real but not catastrophic failure\n" .
+                    "• Focus on what you learned\n" .
+                    "• Explain how it made you better"
+            ]
+        ];
+
+        $selected = $scenarios[array_rand($scenarios)];
+
+        return [
+            'content' => "📝 **Practice Scenario**\n\n" .
+                "**Scenario:**\n{$selected['scenario']}\n\n" .
+                "**💡 How to Answer:**\n{$selected['tip']}\n\n" .
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                "Try practicing your answer out loud!",
+            'buttons' => [
+                ['label' => '📝 Another Scenario', 'action' => 'practice_questions'],
+                ['label' => '🎤 Interview Hub', 'action' => 'interview_prep'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+        private function handleInterviewDoDont(): array
+    {
+        $content = "✅ **Interview Do's & Don'ts**\n\n";
+
+        $content .= "**✅ DO:**\n";
+        $content .= "• Research the company thoroughly\n";
+        $content .= "• Prepare questions to ask the interviewer\n";
+        $content .= "• Arrive 10-15 minutes early\n";
+        $content .= "• Make eye contact and smile\n";
+        $content .= "• Listen carefully before answering\n";
+        $content .= "• Show enthusiasm and interest\n";
+        $content .= "• Follow up with a thank-you email\n\n";
+
+        $content .= "**❌ DON'T:**\n";
+        $content .= "• Arrive late or unprepared\n";
+        $content .= "• Speak negatively about previous experiences\n";
+        $content .= "• Interrupt the interviewer\n";
+        $content .= "• Use your phone during the interview\n";
+        $content .= "• Give one-word answers\n";
+        $content .= "• Forget to ask questions\n";
+        $content .= "• Dress inappropriately";
+
+        return [
+            'content' => $content,
+            'buttons' => [
+                ['label' => '🎤 Interview Hub', 'action' => 'interview_prep'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    // ==================== DAILY TIP & MOTIVATION ====================
+    private function handleDailyTip(): array
+    {
+        $tips = [
+            [
+                'type' => '💡 Tip',
+                'content' => "**Start Your Day Right!**\n\n" .
+                    "Check your application status every morning. Staying updated helps you respond quickly to any changes or requests.",
+                'motivation' => "✨ Remember: Every expert was once a beginner. Your internship journey is just beginning!"
+            ],
+            [
+                'type' => '💡 Tip',
+                'content' => "**Network Smartly**\n\n" .
+                    "Connect with professionals on LinkedIn before applying. A warm introduction can make a huge difference!",
+                'motivation' => "🌟 Success is not final, failure is not fatal: it is the courage to continue that counts."
+            ],
+            [
+                'type' => '💡 Tip',
+                'content' => "**Customize Your Applications**\n\n" .
+                    "Tailor each application to the specific company. Generic applications rarely stand out.",
+                'motivation' => "💪 The only way to do great work is to love what you do. Keep pushing forward!"
+            ],
+            [
+                'type' => '💡 Tip',
+                'content' => "**Follow Up Strategically**\n\n" .
+                    "Send a follow-up email 1-2 weeks after submitting if you haven't heard back. Be polite and brief.",
+                'motivation' => "🚀 Your future is created by what you do today, not tomorrow. Take action now!"
+            ],
+            [
+                'type' => '💡 Tip',
+                'content' => "**Prepare for Rejections**\n\n" .
+                    "Rejections are part of the process. Learn from each one and keep applying. Persistence pays off!",
+                'motivation' => "🌈 After every storm comes a rainbow. Keep going, your opportunity is coming!"
+            ],
+            [
+                'type' => '💡 Tip',
+                'content' => "**Document Everything**\n\n" .
+                    "Keep a spreadsheet of all applications: company, date applied, status, and follow-up dates.",
+                'motivation' => "⭐ You are capable of amazing things. Believe in yourself and your abilities!"
+            ],
+            [
+                'type' => '💡 Tip',
+                'content' => "**Practice Your Elevator Pitch**\n\n" .
+                    "Be ready to introduce yourself in 30 seconds. Practice until it feels natural and confident.",
+                'motivation' => "🎯 Focus on progress, not perfection. Every step forward is a victory!"
+            ],
+            [
+                'type' => '💡 Tip',
+                'content' => "**Stay Organized**\n\n" .
+                    "Use a calendar to track deadlines, interviews, and follow-ups. Organization reduces stress!",
+                'motivation' => "💎 You are stronger than you think. Keep pushing through challenges!"
+            ]
+        ];
+
+        // Always show random tip (removed dayOfYear logic)
+        $selected = $tips[array_rand($tips)];
+
+        return [
+            'content' => "{$selected['type']} **Daily Tip**\n\n" .
+                "{$selected['content']}\n\n" .
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                "{$selected['motivation']}",
+            'buttons' => [
+                ['label' => '💡 Another Tip', 'action' => 'daily_tip'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    // ==================== MINI GAMES ====================
+
+    private function handleMiniGames(): array
+    {
+        $content = "🎮 **Mini Games Hub**\n\n";
+        $content .= "Take a break and have some fun while learning!\n\n";
+        $content .= "• 🎲 Trivia Game - Test your knowledge about internships\n";
+        $content .= "• 🧠 Quick Quiz - Answer quick questions\n";
+        $content .= "• 🔤 Word Game - Guess the internship-related word";
+
+        return [
+            'content' => $content,
+            'buttons' => [
+                ['label' => '🎲 Trivia Game', 'action' => 'game_trivia'],
+                ['label' => '🧠 Quick Quiz', 'action' => 'game_quiz'],
+                ['label' => '🔤 Word Game', 'action' => 'game_word'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    private function handleTriviaGame(): array
+    {
+        $trivia = [
+            [
+                'q' => "What is the STAR method used for?",
+                'a' => "Answering behavioral interview questions (Situation, Task, Action, Result)",
+                'correct' => 'B',
+                'options' => ['A) Writing resumes', 'B) Answering interview questions', 'C) Networking', 'D) Writing cover letters']
+            ],
+            [
+                'q' => "How long should you wait before following up on an application?",
+                'a' => "1-2 weeks is the standard waiting period",
+                'correct' => 'B',
+                'options' => ['A) 1 day', 'B) 1-2 weeks', 'C) 1 month', 'D) Never follow up']
+            ],
+            [
+                'q' => "What should you do before an interview?",
+                'a' => "Research the company, practice answers, and prepare questions",
+                'correct' => 'B',
+                'options' => ['A) Nothing', 'B) Research and prepare', 'C) Just show up', 'D) Only practice answers']
+            ],
+            [
+                'q' => "What is the best way to stand out in applications?",
+                'a' => "Customize each application to the specific company and role",
+                'correct' => 'B',
+                'options' => ['A) Use the same application', 'B) Customize each one', 'C) Apply to many quickly', 'D) Only apply to big companies']
+            ],
+            [
+                'q' => "When should you start applying for internships?",
+                'a' => "2-3 months before you want to start",
+                'correct' => 'B',
+                'options' => ['A) 1 week before', 'B) 2-3 months before', 'C) 1 year before', 'D) After graduation']
+            ]
+        ];
+
+        $selected = $trivia[array_rand($trivia)];
+
+        // Store game data for answer submission
+        $this->currentGame = 'trivia';
+        $this->currentGameData = $selected;
+        $this->gameAnswer = '';
+        $this->showingGameAnswer = false;
+
+        return [
+            'content' => "🎲 **Trivia Question**\n\n" .
+                "**{$selected['q']}**\n\n" .
+                implode("\n", $selected['options']) . "\n\n" .
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                "💬 **Type your answer (A, B, C, or D) in the input field below, then click 'Submit Answer' to see if you're correct!**",
+            'buttons' => [
+                ['label' => '✅ Submit Answer', 'action' => 'submit_game_answer'],
+                ['label' => '🎮 Games Hub', 'action' => 'mini_games'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ],
+            'inputPlaceholder' => 'Enter your answer (A, B, C, or D)'
+        ];
+    }
+
+    private function handleQuickQuiz(): array
+    {
+        $quizzes = [
+            [
+                'topic' => "Interview Preparation",
+                'question' => "What should you bring to an in-person interview?",
+                'correct' => 'D',
+                'options' => [
+                    'A) Just your ID',
+                    'B) Your phone and charger',
+                    'C) Nothing, they have everything',
+                    'D) Multiple copies of resume, portfolio, questions list, and positive attitude'
+                ],
+                'answer' => "Multiple copies of your resume, portfolio (if applicable), questions list, and a positive attitude!"
+            ],
+            [
+                'topic' => "Application Process",
+                'question' => "How many companies should you apply to?",
+                'correct' => 'B',
+                'options' => [
+                    'A) As many as possible, quantity matters',
+                    'B) 10-20 quality applications',
+                    'C) Only 1-2 companies',
+                    'D) Wait for companies to contact you'
+                ],
+                'answer' => "There's no magic number, but applying to 10-20 quality applications is better than 50 generic ones."
+            ],
+            [
+                'topic' => "Networking",
+                'question' => "What's the best way to network online?",
+                'correct' => 'C',
+                'options' => [
+                    'A) Only ask for favors',
+                    'B) Send generic messages to everyone',
+                    'C) Be genuine, provide value, engage with content',
+                    'D) Only connect with famous people'
+                ],
+                'answer' => "Be genuine, provide value, engage with content, and don't just ask for favors. Build relationships!"
+            ],
+            [
+                'topic' => "Rejections",
+                'question' => "What should you do after a rejection?",
+                'correct' => 'D',
+                'options' => [
+                    'A) Give up and stop applying',
+                    'B) Complain about the company',
+                    'C) Ignore it and move on',
+                    'D) Thank them, ask for feedback, learn from it, and keep applying'
+                ],
+                'answer' => "Thank them for the opportunity, ask for feedback if possible, learn from it, and keep applying!"
+            ]
+        ];
+
+        $selected = $quizzes[array_rand($quizzes)];
+
+        // Store game data for answer submission
+        $this->currentGame = 'quiz';
+        $this->currentGameData = $selected;
+        $this->gameAnswer = '';
+        $this->showingGameAnswer = false;
+
+        return [
+            'content' => "🧠 **Quick Quiz**\n\n" .
+                "**Topic: {$selected['topic']}**\n\n" .
+                "**Q: {$selected['question']}**\n\n" .
+                implode("\n", $selected['options']) . "\n\n" .
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                "💬 **Type your answer (A, B, C, or D) in the input field below, then click 'Submit Answer' to see if you're correct!**",
+            'buttons' => [
+                ['label' => '✅ Submit Answer', 'action' => 'submit_game_answer'],
+                ['label' => '🎮 Games Hub', 'action' => 'mini_games'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ],
+            'inputPlaceholder' => 'Enter your answer (A, B, C, or D)'
+        ];
+    }
+
+    private function handleWordGame(): array
+    {
+        $words = [
+            [
+                'hint' => "A formal meeting to assess a candidate",
+                'word' => "INTERVIEW",
+                'scrambled' => "IETRNWIVE"
+            ],
+            [
+                'hint' => "A document summarizing your qualifications",
+                'word' => "RESUME",
+                'scrambled' => "REESMU"
+            ],
+            [
+                'hint' => "A person who guides and evaluates your work",
+                'word' => "SUPERVISOR",
+                'scrambled' => "SPERVISUOR"
+            ],
+            [
+                'hint' => "A period of work experience",
+                'word' => "INTERNSHIP",
+                'scrambled' => "INTENRSHIP"
+            ],
+            [
+                'hint' => "A company where you work",
+                'word' => "EMPLOYER",
+                'scrambled' => "EMPOYLER"
+            ]
+        ];
+
+        $selected = $words[array_rand($words)];
+
+        // Store game data for answer submission
+        $this->currentGame = 'word';
+        $this->currentGameData = $selected;
+        $this->gameAnswer = '';
+        $this->showingGameAnswer = false;
+
+        return [
+            'content' => "🔤 **Word Game**\n\n" .
+                "**Unscramble the word!**\n\n" .
+                "**Hint:** {$selected['hint']}\n\n" .
+                "**Scrambled:** {$selected['scrambled']}\n\n" .
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
+                "💬 **Type your answer in the input field below, then click 'Submit Answer' to see if you're correct!**",
+            'buttons' => [
+                ['label' => '✅ Submit Answer', 'action' => 'submit_game_answer'],
+                ['label' => '🎮 Games Hub', 'action' => 'mini_games'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    private function handleSubmitGameAnswer(): array
+    {
+        if (empty($this->gameAnswer) || empty($this->currentGameData)) {
+            return [
+                'content' => "Please enter your answer first!",
+                'buttons' => [
+                    ['label' => '🎮 Games Hub', 'action' => 'mini_games'],
+                    ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+                ]
+            ];
+        }
+
+        $userAnswer = strtoupper(trim($this->gameAnswer));
+        $isCorrect = false;
+        $feedback = '';
+        $gameType = $this->currentGame; // Store before resetting
+
+        if ($gameType === 'trivia' || $gameType === 'quiz') {
+            $correctAnswer = $this->currentGameData['correct'];
+            $isCorrect = ($userAnswer === $correctAnswer);
+
+            if ($isCorrect) {
+                $feedback = "🎉 **Correct!** Well done!";
+            } else {
+                $feedback = "❌ **Not quite right.** The correct answer is **{$correctAnswer}**.";
+            }
+        } elseif ($gameType === 'word') {
+            $correctWord = strtoupper($this->currentGameData['word']);
+            $isCorrect = ($userAnswer === $correctWord);
+
+            if ($isCorrect) {
+                $feedback = "🎉 **Correct!** Great job!";
+            } else {
+                $feedback = "❌ **Not quite right.** The correct word is **{$correctWord}**.";
+            }
+        }
+
+        $content = "**Your Answer:** {$this->gameAnswer}\n\n";
+        $content .= "{$feedback}\n\n";
+        $content .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+
+        if ($gameType === 'trivia' || $gameType === 'quiz') {
+            $content .= "**Correct Answer:** {$this->currentGameData['a']}\n\n";
+        } else {
+            $content .= "**Correct Word:** {$this->currentGameData['word']}\n\n";
+        }
+
+        // Determine next action button
+        $nextAction = 'game_trivia';
+        if ($gameType === 'quiz') {
+            $nextAction = 'game_quiz';
+        } elseif ($gameType === 'word') {
+            $nextAction = 'game_word';
+        }
+
+        // Reset game state
+        $this->gameAnswer = '';
+        $this->currentGame = null;
+        $this->currentGameData = null;
+
+        return [
+            'content' => $content,
+            'buttons' => [
+                ['label' => '🎲 Another Question', 'action' => $nextAction],
+                ['label' => '🎮 Games Hub', 'action' => 'mini_games'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    // ==================== PEER SUPPORT ====================
+
+    private function handlePeerSupport(): array
+    {
+        $content = "👥 **Peer Support Hub**\n\n";
+        $content .= "Connect with fellow students and learn from their experiences!\n\n";
+        $content .= "• 💬 View Tips - Read tips shared by other students\n";
+        $content .= "• ✍️ Share a Tip - Help others by sharing your experience";
+
+        return [
+            'content' => $content,
+            'buttons' => [
+                ['label' => '💬 View Tips', 'action' => 'view_tips'],
+                ['label' => '✍️ Share a Tip', 'action' => 'share_tip'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    private function handleViewPeerTips(): array
+    {
+        // Fetch tips from database
+        $tips = PeerTip::orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        if ($tips->isEmpty()) {
+            return [
+                'content' => "💬 **Peer Tips**\n\n" .
+                    "No tips have been shared yet. Be the first to share a helpful tip! 🌟",
+                'buttons' => [
+                    ['label' => '✍️ Share a Tip', 'action' => 'share_tip'],
+                    ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+                    ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+                ]
+            ];
+        }
+
+        // Get a random tip
+        $selectedTip = $tips->random();
+
+        $content = "💬 **Peer Tip**\n\n";
+        $content .= "**From: {$selectedTip->nickname}**\n\n";
+        $content .= "{$selectedTip->tip_content}\n\n";
+        $content .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+        $content .= "📅 Shared " . $selectedTip->created_at->diffForHumans();
+
+        return [
+            'content' => $content,
+            'buttons' => [
+                ['label' => '💬 Another Tip', 'action' => 'view_tips'],
+                ['label' => '✍️ Share a Tip', 'action' => 'share_tip'],
+                ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    private function handleShareTip(): array
+    {
+        $this->showingTipForm = true;
+        $this->tipNickname = '';
+        $this->tipContent = '';
+
+        return [
+            'content' => "✍️ **Share Your Tip**\n\n" .
+                "Help your fellow students by sharing a helpful tip!\n\n" .
+                "**Instructions:**\n" .
+                "• Enter a nickname (can be anonymous)\n" .
+                "• Share your tip or advice\n" .
+                "• Your tip will be visible to other students\n\n" .
+                "💡 **Fill in the form below and click 'Submit Tip'**",
+            'buttons' => [
+                ['label' => '✅ Submit Tip', 'action' => 'submit_tip'],
+                ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    private function handleSubmitTip(): array
+    {
+        // Validate input
+        if (empty(trim($this->tipNickname))) {
+            return [
+                'content' => "❌ **Error**\n\nPlease enter a nickname!",
+                'buttons' => [
+                    ['label' => '✍️ Share a Tip', 'action' => 'share_tip'],
+                    ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+                    ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+                ],
+            ];
+        }
+
+        if (empty(trim($this->tipContent))) {
+            return [
+                'content' => "❌ **Error**\n\nPlease enter your tip!",
+                'buttons' => [
+                    ['label' => '✍️ Share a Tip', 'action' => 'share_tip'],
+                    ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+                    ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+                ],
+            ];
+        }
+
+        // Save to database
+        $student = Auth::user()->student;
+
+        PeerTip::create([
+            'nickname' => trim($this->tipNickname),
+            'tip_content' => trim($this->tipContent),
+            'studentID' => $student ? $student->studentID : null, // Optional for anonymity
+        ]);
+
+        // Reset form
+        $this->showingTipForm = false;
+        $this->tipNickname = '';
+        $this->tipContent = '';
+
+        return [
+            'content' => "✅ **Thank You!**\n\n" .
+                "Your tip has been shared successfully! 🌟\n\n" .
+                "Other students can now benefit from your advice. Keep sharing and helping each other!",
+            'buttons' => [
+                ['label' => '💬 View Tips', 'action' => 'view_tips'],
+                ['label' => '✍️ Share Another Tip', 'action' => 'share_tip'],
+                ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+                ['label' => '🏠 Back to Menu', 'action' => 'back_to_menu']
+            ]
+        ];
+    }
+
+    // Helper method for main menu buttons
+    private function getMainMenuButtons(): array
+    {
+        return [
+            ['label' => '📊 Evaluate Placement', 'action' => 'evaluate_placement'],
+            ['label' => '📋 Check Status', 'action' => 'check_status'],
+            ['label' => '❓ FAQs', 'action' => 'faqs'],
+            ['label' => '🎤 Interview Prep', 'action' => 'interview_prep'],
+            ['label' => '💡 Daily Tip', 'action' => 'daily_tip'],
+            ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+            ['label' => '🎮 Mini Games', 'action' => 'mini_games']
+        ];
+    }
+
 
     public function render()
     {
