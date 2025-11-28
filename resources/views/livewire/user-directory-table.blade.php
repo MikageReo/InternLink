@@ -239,6 +239,7 @@
             <select wire:model.live="semester"
                 class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
                             dark:text-gray-700">
+                <option value="">All Semesters</option>
                 <option value="1">Semester 1</option>
                 <option value="2">Semester 2</option>
             </select>
@@ -250,6 +251,23 @@
             <input type="number" wire:model.live="year" min="2020" max="2050"
                 class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:text-gray-700">
         </div>
+
+        <!-- Program Filter (Show for students and lecturers) -->
+        @if ($role === 'student' || $role === 'lecturer')
+            <div class="w-full md:w-48">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Program</label>
+                <select wire:model.live="program"
+                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
+                                dark:text-gray-700">
+                    <option value="">All Programs</option>
+                    <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
+                    <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
+                    <option value="BCM">Bachelor of Computer Science (Multimedia Software) with Honours</option>
+                    <option value="BCY">Bachelor of Computer Science (Cyber Security) with Honours</option>
+                    <option value="DRC">Diploma in Computer Science</option>
+                </select>
+            </div>
+        @endif
 
         <!-- Per Page -->
         <div class="w-full md:w-24">
@@ -345,30 +363,10 @@
                                         @endif
                                     </div>
                                 </th>
-                                <!-- Program -->
-                                <th wire:click="sortBy('program')"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                                    <div class="flex items-center space-x-1">
-                                        <span>Program</span>
-                                        @if ($sortField === 'program')
-                                            @if ($sortDirection === 'asc')
-                                                <i class="fas fa-sort-up text-indigo-500 sort-icon"></i>
-                                            @else
-                                                <i class="fas fa-sort-down text-indigo-500 sort-icon"></i>
-                                            @endif
-                                        @else
-                                            <i class="fas fa-sort text-gray-400 opacity-50 sort-icon"></i>
-                                        @endif
-                                    </div>
-                                </th>
                                 <!-- Academic Advisor -->
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Academic Advisor</th>
-                                <!-- Industry Supervisor -->
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Industry Supervisor</th>
                                 <!-- Phone -->
                                 <th wire:click="sortBy('phone')"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
@@ -424,13 +422,11 @@
                                         {{ $user->name }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $user->student->program ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $user->student->academicAdvisorID ?? 'Not Assigned' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $user->student->acceptedPlacementApplication->industrySupervisorName ?? 'Not Assigned' }}
+                                        @if($user->student->academicAdvisorID)
+                                            {{ $user->student->academicAdvisor->user->name ?? $user->student->academicAdvisorID }}
+                                        @else
+                                            Not Assigned
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $user->student->phone ?? 'N/A' }}
@@ -507,40 +503,16 @@
                                     </div>
                                 </th>
                                 <!-- Staff Grade -->
-                                <th wire:click="sortBy('staffGrade')"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                                    <div class="flex items-center space-x-1">
-                                        <span>Staff Grade</span>
-                                        @if ($sortField === 'staffGrade')
-                                            @if ($sortDirection === 'asc')
-                                                <i class="fas fa-sort-up text-indigo-500 sort-icon"></i>
-                                            @else
-                                                <i class="fas fa-sort-down text-indigo-500 sort-icon"></i>
-                                            @endif
-                                        @else
-                                            <i class="fas fa-sort text-gray-400 opacity-50 sort-icon"></i>
-                                        @endif
-                                    </div>
-                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Staff Grade</th>
                                 <!-- Role -->
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Role</th>
-                                <th wire:click="sortBy('position')"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                                    <div class="flex items-center space-x-1">
-                                        <span>Position</span>
-                                        @if ($sortField === 'position')
-                                            @if ($sortDirection === 'asc')
-                                                <i class="fas fa-sort-up text-indigo-500 sort-icon"></i>
-                                            @else
-                                                <i class="fas fa-sort-down text-indigo-500 sort-icon"></i>
-                                            @endif
-                                        @else
-                                            <i class="fas fa-sort text-gray-400 opacity-50 sort-icon"></i>
-                                        @endif
-                                    </div>
-                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Position</th>
                                 <!-- State -->
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -550,11 +522,15 @@
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Research Group</th>
                                 <!-- Department -->
-                                <th wire:click="sortBy('department')"
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Department</th>
+                                <!-- Supervisor Quota -->
+                                <th wire:click="sortBy('supervisor_quota')"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                     <div class="flex items-center space-x-1">
-                                        <span>Department</span>
-                                        @if ($sortField === 'department')
+                                        <span>Supervisor Quota</span>
+                                        @if ($sortField === 'supervisor_quota')
                                             @if ($sortDirection === 'asc')
                                                 <i class="fas fa-sort-up text-indigo-500 sort-icon"></i>
                                             @else
@@ -565,10 +541,6 @@
                                         @endif
                                     </div>
                                 </th>
-                                <!-- Supervisor Quota -->
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Supervisor Quota</th>
                                 <!-- Special Roles -->
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -713,11 +685,21 @@
                             <p class="font-medium mb-1">📋 Template Guidelines:</p>
                             <ul class="list-disc list-inside space-y-1 ml-2">
                                 <li>Keep the header row (first row) as shown in the template</li>
-                                <li>Required fields: <strong>studentID/lecturerID</strong>, <strong>name</strong>,
-                                    <strong>email</strong></li>
-                                <li>All other fields are optional</li>
                                 <li>Save your file as CSV format before uploading</li>
-                                <li>Leave the longitude and latitude empty</li>
+                                <li>Leave the longitude and latitude empty (will be auto-generated)</li>
+                                <li><strong>Program:</strong> In the <code>program</code> column, you can use:
+                                    <ul class="list-disc list-inside ml-4 mt-1">
+                                        <li>Short code of the program (e.g., BCS)</li>
+                                        <li>Full name of the program (e.g., Bachelor of Computer Science (Software Engineering) with Honours) - <strong>Recommended</strong></li>
+                                    </ul>
+                                </li>
+                                <li><strong>Academic Advisor:</strong> In the <code>academicAdvisorID</code> column, you can use:
+                                    <ul class="list-disc list-inside ml-4 mt-1">
+                                        <li>Lecturer ID (e.g., <code>LEC001</code>)</li>
+                                        <li>Email address (e.g., <code>ahmad.abdullah@example.com</code>) - <strong>Recommended</strong></li>
+                                    </ul>
+                                </li>
+                            </ul>
                         </div>
                     </div>
 
@@ -821,7 +803,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Phone Number
+                                    Phone Number *
                                 </label>
                                 <input type="text" wire:model="studentPhone"
                                     class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -838,7 +820,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Street Address
+                                        Street Address *
                                     </label>
                                     <input type="text" wire:model="studentAddress"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -848,7 +830,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        City
+                                        City *
                                     </label>
                                     <input type="text" wire:model="studentCity"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -858,7 +840,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Postcode
+                                        Postcode *
                                     </label>
                                     <input type="text" wire:model="studentPostcode"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -868,7 +850,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        State
+                                        State *
                                     </label>
                                     <select wire:model="studentState"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -896,7 +878,7 @@
                                 </div>
                                 <div x-data="{ search: '', open: false }">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Country
+                                        Country *
                                     </label>
                                     <div class="relative">
                                         <select wire:model="studentCountry" @focus="open = true"
@@ -993,7 +975,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Nationality
+                                        Nationality *
                                     </label>
                                     <input type="text" wire:model="studentNationality"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1003,20 +985,16 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Program
+                                        Program *
                                     </label>
                                     <select wire:model="studentProgram"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
                                         <option value="">Select Program</option>
-                                        <option value="BCS">BCS - Bachelor of Computer Science (Software
-                                            Engineering)</option>
-                                        <option value="BCN">BCN - Bachelor of Computer Science (Computer Systems &
-                                            Networking)</option>
-                                        <option value="BCG">BCG - Bachelor of Computer Science (Graphics &
-                                            Multimedia)</option>
-                                        <option value="BCY">BCY - Bachelor of Computer Science (Cybersecurity)
-                                        </option>
-                                        <option value="CS">CS - Diploma of Computer Science</option>
+                                        <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
+                                        <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
+                                        <option value="BCM">Bachelor of Computer Science (Multimedia Software) with Honours</option>
+                                        <option value="BCY">Bachelor of Computer Science (Cyber Security) with Honours</option>
+                                        <option value="DRC">Diploma in Computer Science</option>
                                     </select>
                                     @error('studentProgram')
                                         <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -1043,6 +1021,30 @@
                                     <input type="number" wire:model="studentYear" min="2020" max="2040"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
                                     @error('studentYear')
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Academic Advisor *
+                                    </label>
+                                    <select wire:model="studentAcademicAdvisorID"
+                                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
+                                        <option value="">Select Academic Advisor</option>
+                                        @php
+                                            $academicAdvisors = \App\Models\Lecturer::where('isAcademicAdvisor', true)
+                                                ->where('status', 'active')
+                                                ->with('user')
+                                                ->get();
+                                        @endphp
+                                        @foreach($academicAdvisors as $advisor)
+                                            <option value="{{ $advisor->lecturerID }}">
+                                                {{ $advisor->user->name ?? $advisor->lecturerID }}
+                                                ({{ $advisor->lecturerID }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('studentAcademicAdvisorID')
                                         <span class="text-red-500 text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -1110,7 +1112,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Staff Grade
+                                    Staff Grade *
                                 </label>
                                 <select wire:model="lecturerStaffGrade"
                                     class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1130,7 +1132,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Role
+                                    Role *
                                 </label>
                                 <select wire:model="lecturerRole"
                                     class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1144,7 +1146,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Position
+                                    Position *
                                 </label>
                                 <select wire:model="lecturerPosition"
                                     class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1155,6 +1157,7 @@
                                     <option value="Coordinator (s)">Coordinator (s)</option>
                                     <option value="Head of Programs">Head of Programs</option>
                                     <option value="Committee">Committee</option>
+                                    <option value="No Position">No Position</option>
                                 </select>
                                 @error('lecturerPosition')
                                     <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -1169,7 +1172,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Street Address
+                                        Street Address *
                                     </label>
                                     <input type="text" wire:model="lecturerAddress"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1179,7 +1182,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        City
+                                        City *
                                     </label>
                                     <input type="text" wire:model="lecturerCity"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1189,7 +1192,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Postcode
+                                        Postcode *
                                     </label>
                                     <input type="text" wire:model="lecturerPostcode"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1199,7 +1202,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        State
+                                        State *
                                     </label>
                                     <select wire:model="lecturerState"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1227,7 +1230,7 @@
                                 </div>
                                 <div x-data="{ search: '', open: false }">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Country
+                                        Country *
                                     </label>
                                     <div class="relative">
                                         <select wire:model="lecturerCountry" @focus="open = true"
@@ -1324,7 +1327,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Research Group
+                                        Research Group *
                                     </label>
                                     <select wire:model="lecturerResearchGroup"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1349,7 +1352,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Department
+                                        Department *
                                     </label>
                                     <select wire:model="lecturerDepartment"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">
@@ -1365,7 +1368,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Program
+                                        Program *
                                     </label>
                                     <select wire:model="lecturerProgram"
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-700">

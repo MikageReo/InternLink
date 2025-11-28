@@ -24,10 +24,192 @@ class UserDirectoryTable extends Component
 
     private GeocodingService $geocodingService;
 
+    /**
+     * Convert program code to full name for database storage
+     * Handles both codes (BCS, BCN, etc.) and full names
+     */
+    private function convertProgramToFullName($program): ?string
+    {
+        if (empty($program)) {
+            return null;
+        }
+
+        $programs = [
+            'BCS' => 'Bachelor of Computer Science (Software Engineering) with Honours',
+            'BCN' => 'Bachelor of Computer Science (Computer Systems & Networking) with Honours',
+            'BCM' => 'Bachelor of Computer Science (Multimedia Software) with Honours',
+            'BCY' => 'Bachelor of Computer Science (Cyber Security) with Honours',
+            'DRC' => 'Diploma in Computer Science',
+        ];
+
+        // If already a full name, return as is
+        if (in_array($program, $programs)) {
+            return $program;
+        }
+
+        // Convert code to full name
+        return $programs[$program] ?? $program; // Return original if not a known code (might be a full name from CSV)
+    }
+
+    /**
+     * Get program mapping from code to full name for filtering
+     */
+    private function getProgramFullName($code): ?string
+    {
+        $programs = [
+            'BCS' => 'Bachelor of Computer Science (Software Engineering) with Honours',
+            'BCN' => 'Bachelor of Computer Science (Computer Systems & Networking) with Honours',
+            'BCM' => 'Bachelor of Computer Science (Multimedia Software) with Honours',
+            'BCY' => 'Bachelor of Computer Science (Cyber Security) with Honours',
+            'DRC' => 'Diploma in Computer Science',
+        ];
+
+        return $programs[$code] ?? null;
+    }
+
+    /**
+     * Generate filter information text for exports
+     */
+    private function getFilterInfo(): array
+    {
+        $filters = [];
+
+        if ($this->role) {
+            $filters['Role'] = ucfirst($this->role);
+        }
+
+        if ($this->semester) {
+            $filters['Semester'] = 'Semester ' . $this->semester;
+        }
+
+        if ($this->year) {
+            $filters['Year'] = $this->year;
+        }
+
+        if ($this->program) {
+            $programFullName = $this->getProgramFullName($this->program);
+            $filters['Program'] = $programFullName ?: $this->program;
+        }
+
+        if ($this->search) {
+            $filters['Search'] = $this->search;
+        }
+
+        return $filters;
+    }
+
+    /**
+     * Find academic advisor by ID, email, or name with ambiguity detection
+     * Returns array with 'success', 'advisorID' or 'error'
+     */
+    private function findAcademicAdvisor($value, $rowNumber = null): array
+    {
+        if (empty($value)) {
+            return ['success' => true, 'advisorID' => null];
+        }
+
+        $advisorValue = trim($value);
+        $rowPrefix = $rowNumber ? "Row {$rowNumber}: " : '';
+
+        // Priority 1: Check if it's a lecturer ID (short alphanumeric code like LEC001)
+        if (preg_match('/^[A-Z0-9]{3,10}$/i', $advisorValue)) {
+            $advisor = Lecturer::with('user')
+                ->where('lecturerID', $advisorValue)
+                ->where('isAcademicAdvisor', true)
+                ->where('status', 'active')
+                ->first();
+
+            if ($advisor) {
+                return ['success' => true, 'advisorID' => $advisor->lecturerID];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => "{$rowPrefix}Academic advisor ID '{$advisorValue}' not found or not an active academic advisor."
+                ];
+            }
+        }
+
+        // Priority 2: Check if it's an email address
+        if (filter_var($advisorValue, FILTER_VALIDATE_EMAIL)) {
+            $advisor = Lecturer::with('user')
+                ->whereHas('user', function ($query) use ($advisorValue) {
+                    $query->where('email', $advisorValue);
+                })
+                ->where('isAcademicAdvisor', true)
+                ->where('status', 'active')
+                ->first();
+
+            if ($advisor) {
+                return ['success' => true, 'advisorID' => $advisor->lecturerID];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => "{$rowPrefix}Academic advisor email '{$advisorValue}' not found or not an active academic advisor."
+                ];
+            }
+        }
+
+        // Priority 3: Try to match by name
+        // First try exact match
+        $exactMatches = Lecturer::with('user')
+            ->whereHas('user', function ($query) use ($advisorValue) {
+                $query->where('name', $advisorValue);
+            })
+            ->where('isAcademicAdvisor', true)
+            ->where('status', 'active')
+            ->get();
+
+        if ($exactMatches->count() === 1) {
+            // Perfect! Only one exact match
+            return ['success' => true, 'advisorID' => $exactMatches->first()->lecturerID];
+        } elseif ($exactMatches->count() > 1) {
+            // Multiple exact matches - ambiguous
+            $suggestions = $exactMatches->take(3)->map(function ($advisor) {
+                return $advisor->user->name . ' (' . $advisor->lecturerID . ')';
+            })->join(', ');
+
+            return [
+                'success' => false,
+                'error' => "{$rowPrefix}Multiple academic advisors found with name '{$advisorValue}'. Please use email or ID. Found: {$suggestions}"
+            ];
+        }
+
+        // No exact match, try partial match
+        $partialMatches = Lecturer::with('user')
+            ->whereHas('user', function ($query) use ($advisorValue) {
+                $query->where('name', 'like', '%' . $advisorValue . '%');
+            })
+            ->where('isAcademicAdvisor', true)
+            ->where('status', 'active')
+            ->get();
+
+        if ($partialMatches->count() === 1) {
+            // Only one partial match - good enough
+            return ['success' => true, 'advisorID' => $partialMatches->first()->lecturerID];
+        } elseif ($partialMatches->count() > 1) {
+            // Multiple partial matches - ambiguous
+            $suggestions = $partialMatches->take(5)->map(function ($advisor) {
+                return $advisor->user->name . ' (' . $advisor->user->email . ' / ' . $advisor->lecturerID . ')';
+            })->join(', ');
+
+            return [
+                'success' => false,
+                'error' => "{$rowPrefix}Multiple academic advisors found matching '{$advisorValue}'. Please use full name, email, or ID. Found: {$suggestions}"
+            ];
+        }
+
+        // No match at all
+        return [
+            'success' => false,
+            'error' => "{$rowPrefix}Academic advisor '{$advisorValue}' not found. Please use lecturer ID (e.g., LEC001), email, or full name."
+        ];
+    }
+
     // Filter properties
     public $role = '';
     public $semester = '';
     public $year = '';
+    public $program = '';
 
     // Search and sort properties
     public $search = '';
@@ -63,6 +245,7 @@ class UserDirectoryTable extends Component
     public $studentProgram = '';
     public $studentSemester = '';
     public $studentYear = '';
+    public $studentAcademicAdvisorID = '';
 
     // Individual Lecturer Registration properties
     public $lecturerName = '';
@@ -97,6 +280,7 @@ class UserDirectoryTable extends Component
         'role' => ['except' => ''],
         'semester' => ['except' => ''],
         'year' => ['except' => ''],
+        'program' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -123,6 +307,11 @@ class UserDirectoryTable extends Component
         $this->resetPage();
     }
 
+    public function updatingProgram()
+    {
+        $this->resetPage();
+    }
+
     public function updatingPerPage()
     {
         $this->resetPage();
@@ -141,7 +330,7 @@ class UserDirectoryTable extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'role', 'semester', 'year', 'sortField', 'sortDirection']);
+        $this->reset(['search', 'role', 'semester', 'year', 'program', 'sortField', 'sortDirection']);
         $this->year = date('Y');
         $this->resetPage();
     }
@@ -258,6 +447,16 @@ class UserDirectoryTable extends Component
     {
         $output = '';
 
+        // Add filter information at the top
+        $filters = $this->getFilterInfo();
+        if (!empty($filters)) {
+            $output .= '"Applied Filters:"' . "\n";
+            foreach ($filters as $key => $value) {
+                $output .= '"' . $key . ': ' . $value . '"' . "\n";
+            }
+            $output .= "\n"; // Empty line before data
+        }
+
         if ($this->role === 'student') {
             // Student headers
             $headers = [
@@ -266,7 +465,6 @@ class UserDirectoryTable extends Component
                 'Name',
                 'Program',
                 'Academic Advisor',
-                'Industry Supervisor',
                 'Phone',
                 'Status',
                 'Address',
@@ -278,13 +476,17 @@ class UserDirectoryTable extends Component
             $output .= '"' . implode('","', $headers) . '"' . "\n";
 
             foreach ($users as $user) {
+                $academicAdvisorName = 'Not Assigned';
+                if ($user->student->academicAdvisorID) {
+                    $academicAdvisorName = $user->student->academicAdvisor->user->name ?? $user->student->academicAdvisorID;
+                }
+
                 $row = [
                     $user->student->studentID ?? 'N/A',
                     $user->email,
                     $user->name,
                     $user->student->program ?? 'N/A',
-                    $user->student->academicAdvisorID ?? 'Not Assigned',
-                    $user->student->acceptedPlacementApplication->industrySupervisorName ?? 'Not Assigned',
+                    $academicAdvisorName,
                     $user->student->phone ?? 'N/A',
                     $user->student->status ?? 'N/A',
                     $user->student->address ?? 'N/A',
@@ -362,12 +564,12 @@ class UserDirectoryTable extends Component
 
         // Apply role filter
         if ($this->role) {
-            $query->where('role', $this->role);
+            $query->where('users.role', $this->role);
 
             if ($this->role === 'student') {
-                $query->with(['student.acceptedPlacementApplication']);
+                $query->with(['student.academicAdvisor.user']);
 
-                if ($this->semester || $this->year) {
+                if ($this->semester || $this->year || $this->program) {
                     $query->whereHas('student', function ($q) {
                         if ($this->semester) {
                             $q->where('semester', $this->semester);
@@ -375,18 +577,32 @@ class UserDirectoryTable extends Component
                         if ($this->year) {
                             $q->where('year', $this->year);
                         }
+                        if ($this->program) {
+                            // Convert program code to full name for filtering
+                            $programFullName = $this->getProgramFullName($this->program);
+                            if ($programFullName) {
+                                $q->where('program', $programFullName);
+                            }
+                        }
                     });
                 }
             } else {
                 $query->with(['lecturer']);
 
-                if ($this->semester || $this->year) {
+                if ($this->semester || $this->year || $this->program) {
                     $query->whereHas('lecturer', function ($q) {
                         if ($this->semester) {
                             $q->where('semester', $this->semester);
                         }
                         if ($this->year) {
                             $q->where('year', $this->year);
+                        }
+                        if ($this->program) {
+                            // Convert program code to full name for filtering
+                            $programFullName = $this->getProgramFullName($this->program);
+                            if ($programFullName) {
+                                $q->where('program', $programFullName);
+                            }
                         }
                     });
                 }
@@ -413,7 +629,8 @@ class UserDirectoryTable extends Component
                             ->orWhere('staffGrade', 'like', '%' . $this->search . '%')
                             ->orWhere('position', 'like', '%' . $this->search . '%')
                             ->orWhere('department', 'like', '%' . $this->search . '%')
-                            ->orWhere('researchGroup', 'like', '%' . $this->search . '%');
+                            ->orWhere('researchGroup', 'like', '%' . $this->search . '%')
+                            ->orWhere('program', 'like', '%' . $this->search . '%');
                     });
                 }
             });
@@ -427,7 +644,7 @@ class UserDirectoryTable extends Component
                 $query->join('students', 'users.id', '=', 'students.user_id')
                     ->orderBy('students.' . $this->sortField, $this->sortDirection)
                     ->select('users.*');
-            } elseif ($this->role === 'lecturer' && in_array($this->sortField, ['lecturerID', 'staffGrade', 'position', 'department'])) {
+            } elseif ($this->role === 'lecturer' && in_array($this->sortField, ['lecturerID', 'supervisor_quota'])) {
                 $query->join('lecturers', 'users.id', '=', 'lecturers.user_id')
                     ->orderBy('lecturers.' . $this->sortField, $this->sortDirection)
                     ->select('users.*');
@@ -475,8 +692,22 @@ class UserDirectoryTable extends Component
 <body>
     <h1>User Directory - ' . ucfirst($this->role ?: 'All') . ' Users</h1>
     <p><strong>Export Date:</strong> ' . now()->format('F d, Y H:i:s') . '</p>
-    <p><strong>Total Records:</strong> ' . $users->count() . '</p>
+    <p><strong>Total Records:</strong> ' . $users->count() . '</p>';
 
+        // Add filter information
+        $filters = $this->getFilterInfo();
+        if (!empty($filters)) {
+            $html .= '<div style="margin: 20px 0; padding: 15px; background-color: #f0f0f0; border-left: 4px solid #4CAF50;">
+                <h2 style="margin-top: 0; color: #333;">Applied Filters:</h2>
+                <ul style="margin: 10px 0; padding-left: 20px;">';
+            foreach ($filters as $key => $value) {
+                $html .= '<li><strong>' . $key . ':</strong> ' . htmlspecialchars($value) . '</li>';
+            }
+            $html .= '</ul>
+            </div>';
+        }
+
+        $html .= '
     <table>';
 
         if ($this->role === 'student') {
@@ -487,7 +718,6 @@ class UserDirectoryTable extends Component
                     <th>Name</th>
                     <th>Program</th>
                     <th>Academic Advisor</th>
-                    <th>Industry Supervisor</th>
                     <th>Phone</th>
                     <th>Status</th>
                     <th>Address</th>
@@ -499,13 +729,17 @@ class UserDirectoryTable extends Component
             <tbody>';
 
             foreach ($users as $user) {
+                $academicAdvisorName = 'Not Assigned';
+                if ($user->student->academicAdvisorID && isset($user->student->academicAdvisor)) {
+                    $academicAdvisorName = $user->student->academicAdvisor->user->name ?? $user->student->academicAdvisorID;
+                }
+
                 $html .= '<tr>
                     <td>' . ($user->student->studentID ?? 'N/A') . '</td>
                     <td>' . $user->email . '</td>
                     <td>' . $user->name . '</td>
                     <td>' . ($user->student->program ?? 'N/A') . '</td>
-                    <td>' . ($user->student->academicAdvisorID ?? 'Not Assigned') . '</td>
-                    <td>' . ($user->student->acceptedPlacementApplication->industrySupervisorName ?? 'Not Assigned') . '</td>
+                    <td>' . $academicAdvisorName . '</td>
                     <td>' . ($user->student->phone ?? 'N/A') . '</td>
                     <td>' . ($user->student->status ?? 'N/A') . '</td>
                     <td>' . ($user->student->address ?? 'N/A') . '</td>
@@ -599,8 +833,22 @@ xmlns="http://www.w3.org/TR/REC-html40">
 <body>
     <h1>User Directory - ' . ucfirst($this->role ?: 'All') . ' Users</h1>
     <p><strong>Export Date:</strong> ' . now()->format('F d, Y H:i:s') . '</p>
-    <p><strong>Total Records:</strong> ' . $users->count() . '</p>
+    <p><strong>Total Records:</strong> ' . $users->count() . '</p>';
 
+        // Add filter information
+        $filters = $this->getFilterInfo();
+        if (!empty($filters)) {
+            $html .= '<div style="margin: 20pt 0; padding: 12pt; background-color: #f0f0f0; border-left: 4pt solid #4CAF50;">
+                <h2 style="margin-top: 0; color: #333; font-size: 14pt;">Applied Filters:</h2>
+                <ul style="margin: 6pt 0; padding-left: 20pt;">';
+            foreach ($filters as $key => $value) {
+                $html .= '<li style="margin: 3pt 0;"><strong>' . $key . ':</strong> ' . htmlspecialchars($value) . '</li>';
+            }
+            $html .= '</ul>
+            </div>';
+        }
+
+        $html .= '
     <table>';
 
         if ($this->role === 'student') {
@@ -611,7 +859,6 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     <th>Name</th>
                     <th>Program</th>
                     <th>Academic Advisor</th>
-                    <th>Industry Supervisor</th>
                     <th>Phone</th>
                     <th>Status</th>
                     <th>Address</th>
@@ -628,8 +875,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     <td>' . $user->email . '</td>
                     <td>' . $user->name . '</td>
                     <td>' . ($user->student->program ?? 'N/A') . '</td>
-                    <td>' . ($user->student->academicAdvisorID ?? 'Not Assigned') . '</td>
-                    <td>' . ($user->student->acceptedPlacementApplication->industrySupervisorName ?? 'Not Assigned') . '</td>
+                    <td>' . (($user->student->academicAdvisorID && isset($user->student->academicAdvisor)) ? ($user->student->academicAdvisor->user->name ?? $user->student->academicAdvisorID) : 'Not Assigned') . '</td>
                     <td>' . ($user->student->phone ?? 'N/A') . '</td>
                     <td>' . ($user->student->status ?? 'N/A') . '</td>
                     <td>' . ($user->student->address ?? 'N/A') . '</td>
@@ -728,6 +974,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->studentProgram = '';
         $this->studentSemester = '';
         $this->studentYear = date('Y');
+        $this->studentAcademicAdvisorID = '';
     }
 
     public function resetLecturerForm()
@@ -882,6 +1129,20 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 }
             }
 
+            // Get academic advisor ID from CSV data or bulk assignment
+            $academicAdvisorID = null;
+            if (!empty($data['academicAdvisorID'])) {
+                $result = $this->findAcademicAdvisor($data['academicAdvisorID'], $rowNumber);
+                if (!$result['success']) {
+                    DB::rollback();
+                    return [
+                        'success' => false,
+                        'error' => $result['error']
+                    ];
+                }
+                $academicAdvisorID = $result['advisorID'];
+            }
+
             Student::create([
                 'studentID' => $data['studentID'] ?? '',
                 'user_id' => $user->id,
@@ -894,9 +1155,10 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'nationality' => $data['nationality'] ?? null,
-                'program' => $data['program'] ?? null,
+                'program' => $this->convertProgramToFullName($data['program'] ?? null),
                 'semester' => $this->bulkSemester,
                 'year' => $this->bulkYear,
+                'academicAdvisorID' => $academicAdvisorID,
                 'status' => 'active',
             ]);
 
@@ -964,7 +1226,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'longitude' => $longitude,
                 'researchGroup' => $data['researchGroup'] ?? null,
                 'department' => $data['department'] ?? null,
-                'program' => isset($data['program']) && in_array($data['program'], ['BCS', 'BCN', 'BCM', 'BCY', 'DRC']) ? $data['program'] : null,
+                'program' => $this->convertProgramToFullName($data['program'] ?? null),
                 'travel_preference' => isset($data['travel_preference']) && in_array(strtolower($data['travel_preference']), ['local', 'nationwide'])
                     ? strtolower($data['travel_preference'])
                     : 'local',
@@ -1010,9 +1272,10 @@ xmlns="http://www.w3.org/TR/REC-html40">
             'studentState' => 'nullable|string',
             'studentCountry' => 'nullable|string',
             'studentNationality' => 'nullable|string',
-            'studentProgram' => 'nullable|string',
+            'studentProgram' => 'nullable|in:BCS,BCN,BCM,BCY,DRC',
             'studentSemester' => 'required|in:1,2',
             'studentYear' => 'required|integer|min:2020|max:2040',
+            'studentAcademicAdvisorID' => 'nullable|string|exists:lecturers,lecturerID',
         ]);
 
         try {
@@ -1057,9 +1320,10 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'nationality' => $this->studentNationality,
-                'program' => $this->studentProgram,
+                'program' => $this->convertProgramToFullName($this->studentProgram),
                 'semester' => $this->studentSemester,
                 'year' => $this->studentYear,
+                'academicAdvisorID' => $this->studentAcademicAdvisorID ?: null,
                 'status' => 'active',
             ]);
 
@@ -1151,7 +1415,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'longitude' => $longitude,
                 'researchGroup' => $this->lecturerResearchGroup,
                 'department' => $this->lecturerDepartment,
-                'program' => $this->lecturerProgram,
+                'program' => $this->getProgramFullName($this->lecturerProgram),
                 'semester' => $this->lecturerSemester,
                 'year' => $this->lecturerYear,
                 'supervisor_quota' => $this->lecturerSupervisorQuota ?? 0,
