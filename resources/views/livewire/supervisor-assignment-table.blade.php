@@ -101,7 +101,7 @@
 
                 <!-- Advanced Filters -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
                         <!-- Search -->
                         <div class="md:col-span-2">
                             <input type="text" wire:model.live.debounce.300ms="search"
@@ -116,6 +116,19 @@
                                 <option value="unassigned">Unassigned Only</option>
                                 <option value="assigned">Assigned Only</option>
                                 <option value="all">All Students</option>
+                            </select>
+                        </div>
+
+                        <!-- Program Filter -->
+                        <div>
+                            <select wire:model.live="program"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                <option value="">All Programs</option>
+                                <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
+                                <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
+                                <option value="BCM">Bachelor of Computer Science (Multimedia Software) with Honours</option>
+                                <option value="BCY">Bachelor of Computer Science (Cyber Security) with Honours</option>
+                                <option value="DRC">Diploma in Computer Science</option>
                             </select>
                         </div>
 
@@ -349,34 +362,101 @@
                         </div>
 
                         @if(!empty($recommendedSupervisors))
-                            <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
-                                @foreach($recommendedSupervisors as $supervisor)
-                                    <label class="flex items-start p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
-                                        <input type="radio" name="supervisor" value="{{ $supervisor->lecturerID }}"
+                            <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-lg space-y-2 p-2">
+                                @foreach($recommendedSupervisors as $index => $supervisor)
+                                    @php
+                                        $lecturer = $supervisor['lecturer'] ?? $supervisor;
+                                        $score = $supervisor['score'] ?? 0;
+                                        $breakdown = $supervisor['breakdown'] ?? [];
+                                        $distance = $supervisor['distance_km'] ?? $supervisor['distance'] ?? null;
+                                        $availableQuota = $supervisor['available_quota'] ?? 0;
+                                        
+                                        // Score color based on value
+                                        $scorePercent = $score * 100;
+                                        if ($scorePercent >= 80) $scoreColor = 'text-green-600';
+                                        elseif ($scorePercent >= 60) $scoreColor = 'text-blue-600';
+                                        elseif ($scorePercent >= 40) $scoreColor = 'text-yellow-600';
+                                        else $scoreColor = 'text-gray-600';
+                                    @endphp
+                                    
+                                    <label class="flex items-start p-4 hover:bg-gray-50 cursor-pointer border border-gray-200 rounded-lg transition-colors {{ $selectedSupervisorID == $lecturer->lecturerID ? 'bg-indigo-50 border-indigo-300' : '' }}">
+                                        <input type="radio" name="supervisor" value="{{ $lecturer->lecturerID }}"
                                             wire:model="selectedSupervisorID"
                                             class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        
                                         <div class="ml-3 flex-1">
-                                            <div class="flex justify-between">
-                                                <div>
-                                                    <p class="text-sm font-medium text-gray-900">{{ $supervisor->user->name }}</p>
+                                            <!-- Header with name and total score -->
+                                            <div class="flex justify-between items-start mb-3">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <p class="text-sm font-semibold text-gray-900">{{ $lecturer->user->name }}</p>
+                                                        @if($index === 0)
+                                                            <span class="px-2 py-0.5 text-xs font-medium bg-yellow-500 text-white rounded">Best Match</span>
+                                                        @endif
+                                                    </div>
                                                     <p class="text-xs text-gray-500">
-                                                        {{ $supervisor->lecturerID }} |
-                                                        {{ $supervisor->department ?? 'N/A' }} |
-                                                        {{ $supervisor->researchGroup ?? 'N/A' }}
+                                                        {{ $lecturer->lecturerID }} | {{ $lecturer->department ?? 'N/A' }} | {{ $lecturer->researchGroup ?? 'N/A' }}
                                                     </p>
                                                 </div>
-                                                <div class="text-right">
-                                                    @if(isset($supervisor->distance))
-                                                        <p class="text-sm font-medium text-gray-900">{{ number_format($supervisor->distance, 2) }} km</p>
+                                                <div class="text-right ml-4">
+                                                    <div class="text-2xl font-bold {{ $scoreColor }}">{{ number_format($score * 100, 1) }}%</div>
+                                                    <div class="text-xs text-gray-500">Total Score</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Score Breakdown -->
+                                            @if(!empty($breakdown))
+                                                <div class="grid grid-cols-4 gap-2 mb-3">
+                                                    <div class="bg-blue-50 rounded p-2 border border-blue-100">
+                                                        <div class="text-xs text-gray-600 mb-0.5">Course Match</div>
+                                                        <div class="text-sm font-bold text-blue-600">{{ number_format(($breakdown['course_match']['raw'] ?? 0) * 100) }}%</div>
+                                                        <div class="text-xs text-gray-500">({{ $breakdown['course_match']['weight'] ?? '0%' }})</div>
+                                                    </div>
+                                                    <div class="bg-green-50 rounded p-2 border border-green-100">
+                                                        <div class="text-xs text-gray-600 mb-0.5">Preference</div>
+                                                        <div class="text-sm font-bold text-green-600">{{ number_format(($breakdown['preference_match']['raw'] ?? 0) * 100) }}%</div>
+                                                        <div class="text-xs text-gray-500">({{ $breakdown['preference_match']['weight'] ?? '0%' }})</div>
+                                                    </div>
+                                                    <div class="bg-purple-50 rounded p-2 border border-purple-100">
+                                                        <div class="text-xs text-gray-600 mb-0.5">Distance</div>
+                                                        <div class="text-sm font-bold text-purple-600">{{ number_format(($breakdown['distance_score']['raw'] ?? 0) * 100, 1) }}%</div>
+                                                        <div class="text-xs text-gray-500">({{ $breakdown['distance_score']['weight'] ?? '0%' }})</div>
+                                                    </div>
+                                                    <div class="bg-orange-50 rounded p-2 border border-orange-100">
+                                                        <div class="text-xs text-gray-600 mb-0.5">Workload</div>
+                                                        <div class="text-sm font-bold text-orange-600">{{ number_format(($breakdown['workload_score']['raw'] ?? 0) * 100) }}%</div>
+                                                        <div class="text-xs text-gray-500">({{ $breakdown['workload_score']['weight'] ?? '0%' }})</div>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            <!-- Additional Info -->
+                                            <div class="flex flex-wrap gap-3 text-xs text-gray-600">
+                                                @if($distance !== null)
+                                                    <div class="flex items-center">
+                                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        </svg>
+                                                        <strong>Distance:</strong> {{ number_format($distance, 2) }} km
+                                                    </div>
+                                                @endif
+                                                <div class="flex items-center">
+                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                                    </svg>
+                                                    <strong>Quota:</strong> {{ $lecturer->current_assignments }}/{{ $lecturer->supervisor_quota }}
+                                                    @if($availableQuota > 0)
+                                                        <span class="text-green-600 ml-1">({{ $availableQuota }} available)</span>
+                                                    @else
+                                                        <span class="text-red-600 ml-1">(Full)</span>
                                                     @endif
-                                                    <p class="text-xs text-gray-500">
-                                                        Quota: {{ $supervisor->current_assignments }}/{{ $supervisor->supervisor_quota }}
-                                                        @if(isset($supervisor->available_quota) && $supervisor->available_quota > 0)
-                                                            <span class="text-green-600">({{ $supervisor->available_quota }} available)</span>
-                                                        @else
-                                                            <span class="text-red-600">(Full)</span>
-                                                        @endif
-                                                    </p>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <strong>Travel:</strong> {{ ucfirst($lecturer->travel_preference ?? 'N/A') }}
                                                 </div>
                                             </div>
                                         </div>

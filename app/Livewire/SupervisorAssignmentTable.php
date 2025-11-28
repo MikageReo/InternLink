@@ -10,6 +10,7 @@ use App\Models\SupervisorAssignment;
 use App\Models\PlacementApplication;
 use App\Services\SupervisorAssignmentService;
 use App\Services\GeocodingService;
+use App\Services\SupervisorRecommendationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +30,7 @@ class SupervisorAssignmentTable extends Component
     public $assignmentTypeFilter = ''; // 'assigned', 'unassigned', 'all'
     public $semesterFilter = '';
     public $yearFilter = '';
+    public $program = '';
 
     // Modal properties
     public $showAssignModal = false;
@@ -60,6 +62,7 @@ class SupervisorAssignmentTable extends Component
 
     protected $supervisorAssignmentService;
     protected $geocodingService;
+    protected $supervisorRecommendationService;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -69,12 +72,17 @@ class SupervisorAssignmentTable extends Component
         'assignmentTypeFilter' => ['except' => 'unassigned'],
         'semesterFilter' => ['except' => ''],
         'yearFilter' => ['except' => ''],
+        'program' => ['except' => ''],
     ];
 
-    public function boot(SupervisorAssignmentService $supervisorAssignmentService, GeocodingService $geocodingService)
-    {
+    public function boot(
+        SupervisorAssignmentService $supervisorAssignmentService,
+        GeocodingService $geocodingService,
+        SupervisorRecommendationService $supervisorRecommendationService
+    ) {
         $this->supervisorAssignmentService = $supervisorAssignmentService;
         $this->geocodingService = $geocodingService;
+        $this->supervisorRecommendationService = $supervisorRecommendationService;
     }
 
     public function mount()
@@ -111,6 +119,11 @@ class SupervisorAssignmentTable extends Component
         $this->resetPage();
     }
 
+    public function updatingProgram()
+    {
+        $this->resetPage();
+    }
+
     public function updatingPerPage()
     {
         $this->resetPage();
@@ -132,12 +145,17 @@ class SupervisorAssignmentTable extends Component
         $this->selectedStudent = Student::with(['user', 'acceptedPlacementApplication'])
             ->findOrFail($studentID);
 
-        // Get recommended supervisors
-        $this->recommendedSupervisors = $this->supervisorAssignmentService->getRecommendedSupervisors(
-            $studentID,
+        // Get recommended supervisors with scores using SupervisorRecommendationService
+        $this->recommendedSupervisors = $this->supervisorRecommendationService->getRecommendedSupervisors(
+            $this->selectedStudent,
             10,
             $this->quotaOverride
-        );
+        )->map(function($rec) {
+            // Add lecturer property for backward compatibility with view
+            $rec['lecturer'] = $rec['lecturer'];
+            $rec['distance'] = $rec['distance_km'];
+            return $rec;
+        })->values()->toArray();
 
         $this->selectedSupervisorID = null;
         $this->assignmentNotes = '';
@@ -164,11 +182,16 @@ class SupervisorAssignmentTable extends Component
 
         // Reload recommendations if student is selected
         if ($this->selectedStudent) {
-            $this->recommendedSupervisors = $this->supervisorAssignmentService->getRecommendedSupervisors(
-                $this->selectedStudent->studentID,
+            $this->recommendedSupervisors = $this->supervisorRecommendationService->getRecommendedSupervisors(
+                $this->selectedStudent,
                 10,
                 $this->quotaOverride
-            );
+            )->map(function($rec) {
+                // Add lecturer property for backward compatibility with view
+                $rec['lecturer'] = $rec['lecturer'];
+                $rec['distance'] = $rec['distance_km'];
+                return $rec;
+            })->values()->toArray();
         }
     }
 
@@ -284,6 +307,13 @@ class SupervisorAssignmentTable extends Component
 
         if ($this->yearFilter) {
             $query->where('year', $this->yearFilter);
+        }
+
+        if ($this->program) {
+            $programFullName = $this->getProgramFullName($this->program);
+            if ($programFullName) {
+                $query->where('program', $programFullName);
+            }
         }
 
         if ($this->search) {
@@ -669,6 +699,22 @@ class SupervisorAssignmentTable extends Component
         }
     }
 
+    /**
+     * Get program mapping from code to full name for filtering
+     */
+    private function getProgramFullName($code): ?string
+    {
+        $programs = [
+            'BCS' => 'Bachelor of Computer Science (Software Engineering) with Honours',
+            'BCN' => 'Bachelor of Computer Science (Computer Systems & Networking) with Honours',
+            'BCM' => 'Bachelor of Computer Science (Multimedia Software) with Honours',
+            'BCY' => 'Bachelor of Computer Science (Cyber Security) with Honours',
+            'DRC' => 'Diploma in Computer Science',
+        ];
+
+        return $programs[$code] ?? null;
+    }
+
     public function render()
     {
         $query = Student::query()
@@ -696,6 +742,14 @@ class SupervisorAssignmentTable extends Component
         // Filter by year
         if ($this->yearFilter) {
             $query->where('year', $this->yearFilter);
+        }
+
+        // Program filter
+        if ($this->program) {
+            $programFullName = $this->getProgramFullName($this->program);
+            if ($programFullName) {
+                $query->where('program', $programFullName);
+            }
         }
 
         // Search filter

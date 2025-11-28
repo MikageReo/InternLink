@@ -135,26 +135,20 @@
                 </div>
             @endif
 
-            <!-- Controls Section -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <!-- Advanced Filters -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
                     <!-- Search -->
-                    <div class="flex-1 lg:max-w-md">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa fa-search text-gray-400"></i>
-                            </div>
-                            <input type="text" wire:model.live.debounce.300ms="search"
-                                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                placeholder="Search by ID, student name, email...">
-                        </div>
+                    <div class="lg:col-span-2">
+                        <input type="text" wire:model.live.debounce.300ms="search"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            placeholder="Search by ID, student name, email...">
                     </div>
 
-                    <!-- Filters -->
-                    <div class="flex items-center gap-4">
-                        <!-- Program Filter -->
+                    <!-- Program Filter -->
+                    <div>
                         <select wire:model.live="program"
-                            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium">
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                             <option value="">All Programs</option>
                             <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
                             <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
@@ -162,19 +156,44 @@
                             <option value="BCY">Bachelor of Computer Science (Cyber Security) with Honours</option>
                             <option value="DRC">Diploma in Computer Science</option>
                         </select>
+                    </div>
 
-                        <!-- Status Filter -->
+                    <!-- Semester Filter -->
+                    <div>
+                        <select wire:model.live="semester"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                            <option value="">All Semesters</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                        </select>
+                    </div>
+
+                    <!-- Year Filter -->
+                    <div>
+                        <select wire:model.live="year"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                            <option value="">All Years</option>
+                            @for($y = date('Y'); $y >= 2020; $y--)
+                                <option value="{{ $y }}">{{ $y }}</option>
+                            @endfor
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div>
                         <select wire:model.live="statusFilter"
-                            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium">
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                             <option value="">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>
                             <option value="rejected">Rejected</option>
                         </select>
+                    </div>
 
-                        <!-- Clear Filters -->
+                    <!-- Clear Filters -->
+                    <div>
                         <button wire:click="clearFilters"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Clear Filters
                         </button>
                     </div>
@@ -222,6 +241,7 @@
                     </div>
                 </div>
             @endif
+            <br>
 
             <!-- Table Section -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
@@ -290,21 +310,7 @@
                                 </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('currentCredit')"
-                                        class="flex items-center hover:text-gray-700">
-                                        Current Credit
-                                        <span class="ml-1 sort-icon">
-                                            @if ($sortField === 'currentCredit')
-                                                @if ($sortDirection === 'asc')
-                                                    <i class="fa fa-sort-up"></i>
-                                                @else
-                                                    <i class="fa fa-sort-down"></i>
-                                                @endif
-                                            @else
-                                                <i class="fa fa-sort"></i>
-                                            @endif
-                                        </span>
-                                    </button>
+                                    Current Credit
                                 </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

@@ -25,6 +25,8 @@ class LecturerCourseVerificationTable extends Component
     public $perPage = 10;
     public $statusFilter = '';
     public $program = '';
+    public $semester = '';
+    public $year = '';
 
     // Modal properties
     public $showDetailModal = false;
@@ -41,6 +43,8 @@ class LecturerCourseVerificationTable extends Component
         'sortDirection' => ['except' => 'asc'],
         'statusFilter' => ['except' => ''],
         'program' => ['except' => ''],
+        'semester' => ['except' => ''],
+        'year' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -55,6 +59,16 @@ class LecturerCourseVerificationTable extends Component
     }
 
     public function updatingProgram()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSemester()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingYear()
     {
         $this->resetPage();
     }
@@ -191,7 +205,7 @@ class LecturerCourseVerificationTable extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'statusFilter', 'program', 'sortField', 'sortDirection']);
+        $this->reset(['search', 'statusFilter', 'program', 'semester', 'year', 'sortField', 'sortDirection']);
         $this->sortField = 'applicationDate';
         $this->sortDirection = 'asc';
         $this->resetPage();
@@ -249,6 +263,20 @@ class LecturerCourseVerificationTable extends Component
             }
         }
 
+        // Semester filter
+        if ($this->semester) {
+            $query->whereHas('student', function ($q) {
+                $q->where('semester', $this->semester);
+            });
+        }
+
+        // Year filter
+        if ($this->year) {
+            $query->whereHas('student', function ($q) {
+                $q->where('year', $this->year);
+            });
+        }
+
         // Apply custom sorting - prioritize pending status and oldest applications
         if ($this->sortField === 'applicationDate') {
             $query->orderByRaw(
@@ -263,7 +291,7 @@ class LecturerCourseVerificationTable extends Component
             );
         } else {
             // Apply regular sorting
-            if (in_array($this->sortField, ['currentCredit', 'status', 'created_at', 'courseVerificationID'])) {
+            if (in_array($this->sortField, ['status', 'created_at', 'courseVerificationID'])) {
                 $query->orderBy($this->sortField, $this->sortDirection);
             } elseif ($this->sortField === 'studentName') {
                 $query->join('students', 'course_verifications.studentID', '=', 'students.studentID')

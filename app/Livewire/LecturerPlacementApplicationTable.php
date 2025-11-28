@@ -29,6 +29,9 @@ class LecturerPlacementApplicationTable extends Component
     public $dateFrom = '';
     public $dateTo = '';
     public $roleFilter = ''; // coordinator or committee
+    public $program = '';
+    public $semester = '';
+    public $year = '';
 
     // Modal properties
     public $showDetailModal = false;
@@ -50,6 +53,9 @@ class LecturerPlacementApplicationTable extends Component
         'statusFilter' => ['except' => ''],
         'studentFilter' => ['except' => ''],
         'companyFilter' => ['except' => ''],
+        'program' => ['except' => ''],
+        'semester' => ['except' => ''],
+        'year' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -76,6 +82,21 @@ class LecturerPlacementApplicationTable extends Component
     }
 
     public function updatingStudentFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingProgram()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSemester()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingYear()
     {
         $this->resetPage();
     }
@@ -253,7 +274,7 @@ class LecturerPlacementApplicationTable extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'statusFilter', 'studentFilter', 'companyFilter', 'dateFrom', 'dateTo', 'roleFilter']);
+        $this->reset(['search', 'statusFilter', 'studentFilter', 'companyFilter', 'dateFrom', 'dateTo', 'roleFilter', 'program', 'semester', 'year']);
         $this->resetPage();
     }
 
@@ -548,9 +569,33 @@ class LecturerPlacementApplicationTable extends Component
                 ->where('committeeStatus', 'Approved');
         }
 
+        // Program filter
+        if ($this->program) {
+            $programFullName = $this->getProgramFullName($this->program);
+            if ($programFullName) {
+                $query->whereHas('student', function ($q) use ($programFullName) {
+                    $q->where('program', $programFullName);
+                });
+            }
+        }
+
+        // Semester filter
+        if ($this->semester) {
+            $query->whereHas('student', function ($q) {
+                $q->where('semester', $this->semester);
+            });
+        }
+
+        // Year filter
+        if ($this->year) {
+            $query->whereHas('student', function ($q) {
+                $q->where('year', $this->year);
+            });
+        }
+
         // Apply sorting
         if ($this->sortField) {
-            if (in_array($this->sortField, ['applicationID', 'companyName', 'position', 'applicationDate', 'committeeStatus', 'coordinatorStatus'])) {
+            if (in_array($this->sortField, ['applicationID', 'companyName', 'applicationDate', 'committeeStatus', 'coordinatorStatus'])) {
                 $query->orderBy($this->sortField, $this->sortDirection);
             } elseif ($this->sortField === 'studentID') {
                 $query->join('students', 'placement_applications.studentID', '=', 'students.studentID')
@@ -588,6 +633,22 @@ class LecturerPlacementApplicationTable extends Component
         }
 
         return $query;
+    }
+
+    /**
+     * Get program mapping from code to full name for filtering
+     */
+    private function getProgramFullName($code): ?string
+    {
+        $programs = [
+            'BCS' => 'Bachelor of Computer Science (Software Engineering) with Honours',
+            'BCN' => 'Bachelor of Computer Science (Computer Systems & Networking) with Honours',
+            'BCM' => 'Bachelor of Computer Science (Multimedia Software) with Honours',
+            'BCY' => 'Bachelor of Computer Science (Cyber Security) with Honours',
+            'DRC' => 'Diploma in Computer Science',
+        ];
+
+        return $programs[$code] ?? null;
     }
 
     public function getAnalyticsData()

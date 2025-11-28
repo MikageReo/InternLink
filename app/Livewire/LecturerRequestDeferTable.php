@@ -28,6 +28,9 @@ class LecturerRequestDeferTable extends Component
     public $dateFrom = '';
     public $dateTo = '';
     public $roleFilter = ''; // coordinator or committee
+    public $program = '';
+    public $semester = '';
+    public $year = '';
 
     // Modal properties
     public $showDetailModal = false;
@@ -48,6 +51,9 @@ class LecturerRequestDeferTable extends Component
         'sortDirection' => ['except' => 'desc'],
         'statusFilter' => ['except' => ''],
         'studentFilter' => ['except' => ''],
+        'program' => ['except' => ''],
+        'semester' => ['except' => ''],
+        'year' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -74,6 +80,21 @@ class LecturerRequestDeferTable extends Component
     }
 
     public function updatingStudentFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingProgram()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSemester()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingYear()
     {
         $this->resetPage();
     }
@@ -499,7 +520,7 @@ class LecturerRequestDeferTable extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'statusFilter', 'studentFilter', 'dateFrom', 'dateTo', 'roleFilter']);
+        $this->reset(['search', 'statusFilter', 'studentFilter', 'dateFrom', 'dateTo', 'roleFilter', 'program', 'semester', 'year']);
         $this->resetPage();
     }
 
@@ -568,6 +589,30 @@ class LecturerRequestDeferTable extends Component
                 ->where('committeeStatus', 'Approved');
         }
 
+        // Program filter
+        if ($this->program) {
+            $programFullName = $this->getProgramFullName($this->program);
+            if ($programFullName) {
+                $query->whereHas('student', function ($q) use ($programFullName) {
+                    $q->where('program', $programFullName);
+                });
+            }
+        }
+
+        // Semester filter
+        if ($this->semester) {
+            $query->whereHas('student', function ($q) {
+                $q->where('semester', $this->semester);
+            });
+        }
+
+        // Year filter
+        if ($this->year) {
+            $query->whereHas('student', function ($q) {
+                $q->where('year', $this->year);
+            });
+        }
+
         // Apply sorting
         if ($this->sortField) {
             if (in_array($this->sortField, ['deferID', 'applicationDate', 'startDate', 'endDate', 'committeeStatus', 'coordinatorStatus'])) {
@@ -581,6 +626,22 @@ class LecturerRequestDeferTable extends Component
         }
 
         return $query;
+    }
+
+    /**
+     * Get program mapping from code to full name for filtering
+     */
+    private function getProgramFullName($code): ?string
+    {
+        $programs = [
+            'BCS' => 'Bachelor of Computer Science (Software Engineering) with Honours',
+            'BCN' => 'Bachelor of Computer Science (Computer Systems & Networking) with Honours',
+            'BCM' => 'Bachelor of Computer Science (Multimedia Software) with Honours',
+            'BCY' => 'Bachelor of Computer Science (Cyber Security) with Honours',
+            'DRC' => 'Diploma in Computer Science',
+        ];
+
+        return $programs[$code] ?? null;
     }
 
     public function getAnalyticsData()

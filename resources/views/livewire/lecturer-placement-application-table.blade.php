@@ -150,12 +150,46 @@
 
                 <!-- Advanced Filters -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-8 gap-4">
                         <!-- Search -->
                         <div class="lg:col-span-2">
                             <input type="text" wire:model.live.debounce.300ms="search"
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                                 placeholder="Search applications, students, companies...">
+                        </div>
+
+                        <!-- Program Filter -->
+                        <div>
+                            <select wire:model.live="program"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                                <option value="">All Programs</option>
+                                <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
+                                <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
+                                <option value="BCM">Bachelor of Computer Science (Multimedia Software) with Honours</option>
+                                <option value="BCY">Bachelor of Computer Science (Cyber Security) with Honours</option>
+                                <option value="DRC">Diploma in Computer Science</option>
+                            </select>
+                        </div>
+
+                        <!-- Semester Filter -->
+                        <div>
+                            <select wire:model.live="semester"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                                <option value="">All Semesters</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                        </div>
+
+                        <!-- Year Filter -->
+                        <div>
+                            <select wire:model.live="year"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                                <option value="">All Years</option>
+                                @for($y = date('Y'); $y >= 2020; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
+                            </select>
                         </div>
 
                         <!-- Status Filter -->
@@ -235,11 +269,7 @@
                                 </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('position')"
-                                        class="flex items-center space-x-1 hover:text-gray-700">
-                                        <span>POSITION</span>
-                                        <span>{{ $sortField === 'position' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
-                                    </button>
+                                    POSITION
                                 </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -255,14 +285,6 @@
                                         class="flex items-center space-x-1 hover:text-gray-700">
                                         <span>APPROVAL STATUS</span>
                                         <span>{{ $sortField === 'committeeStatus' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
-                                    </button>
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('placementStatus')"
-                                        class="flex items-center space-x-1 hover:text-gray-700">
-                                        <span>PLACEMENT STATUS</span>
-                                        <span>{{ $sortField === 'placementStatus' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
                                     </button>
                                 </th>
                                 <th
@@ -365,28 +387,6 @@
                                                 </div>
                                             @endif
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        @php
-                                            $placementStatus = $application->placement_status;
-                                        @endphp
-                                        @if($placementStatus === 'Active')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                ✓ Active
-                                            </span>
-                                        @elseif($placementStatus === 'Defer')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                ⏸ Defer
-                                            </span>
-                                        @elseif($placementStatus === 'Inactive')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                ⊘ Inactive
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                                                -
-                                            </span>
-                                        @endif
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
                                         @if ($application->remarks)

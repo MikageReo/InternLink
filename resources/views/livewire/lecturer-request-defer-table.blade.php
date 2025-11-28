@@ -153,12 +153,46 @@
 
                 <!-- Advanced Filters -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-8 gap-4">
                         <!-- Search -->
                         <div class="lg:col-span-2">
                             <input type="text" wire:model.live.debounce.300ms="search"
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                                 placeholder="Search requests, students...">
+                        </div>
+
+                        <!-- Program Filter -->
+                        <div>
+                            <select wire:model.live="program"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                                <option value="">All Programs</option>
+                                <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
+                                <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
+                                <option value="BCM">Bachelor of Computer Science (Multimedia Software) with Honours</option>
+                                <option value="BCY">Bachelor of Computer Science (Cyber Security) with Honours</option>
+                                <option value="DRC">Diploma in Computer Science</option>
+                            </select>
+                        </div>
+
+                        <!-- Semester Filter -->
+                        <div>
+                            <select wire:model.live="semester"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                                <option value="">All Semesters</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                        </div>
+
+                        <!-- Year Filter -->
+                        <div>
+                            <select wire:model.live="year"
+                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                                <option value="">All Years</option>
+                                @for($y = date('Y'); $y >= 2020; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
+                            </select>
                         </div>
 
                         <!-- Status Filter -->
