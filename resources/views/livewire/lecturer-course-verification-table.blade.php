@@ -150,8 +150,20 @@
                         </div>
                     </div>
 
-                    <!-- Status Filter -->
+                    <!-- Filters -->
                     <div class="flex items-center gap-4">
+                        <!-- Program Filter -->
+                        <select wire:model.live="program"
+                            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium">
+                            <option value="">All Programs</option>
+                            <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
+                            <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
+                            <option value="BCM">Bachelor of Computer Science (Multimedia Software) with Honours</option>
+                            <option value="BCY">Bachelor of Computer Science (Cyber Security) with Honours</option>
+                            <option value="DRC">Diploma in Computer Science</option>
+                        </select>
+
+                        <!-- Status Filter -->
                         <select wire:model.live="statusFilter"
                             class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium">
                             <option value="">All Status</option>

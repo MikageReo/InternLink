@@ -24,6 +24,7 @@ class LecturerCourseVerificationTable extends Component
     public $sortDirection = 'asc';
     public $perPage = 10;
     public $statusFilter = '';
+    public $program = '';
 
     // Modal properties
     public $showDetailModal = false;
@@ -39,6 +40,7 @@ class LecturerCourseVerificationTable extends Component
         'sortField' => ['except' => 'applicationDate'],
         'sortDirection' => ['except' => 'asc'],
         'statusFilter' => ['except' => ''],
+        'program' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -48,6 +50,11 @@ class LecturerCourseVerificationTable extends Component
     }
 
     public function updatingStatusFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingProgram()
     {
         $this->resetPage();
     }
@@ -184,10 +191,26 @@ class LecturerCourseVerificationTable extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'statusFilter', 'sortField', 'sortDirection']);
+        $this->reset(['search', 'statusFilter', 'program', 'sortField', 'sortDirection']);
         $this->sortField = 'applicationDate';
         $this->sortDirection = 'asc';
         $this->resetPage();
+    }
+
+    /**
+     * Get program mapping from code to full name for filtering
+     */
+    private function getProgramFullName($code): ?string
+    {
+        $programs = [
+            'BCS' => 'Bachelor of Computer Science (Software Engineering) with Honours',
+            'BCN' => 'Bachelor of Computer Science (Computer Systems & Networking) with Honours',
+            'BCM' => 'Bachelor of Computer Science (Multimedia Software) with Honours',
+            'BCY' => 'Bachelor of Computer Science (Cyber Security) with Honours',
+            'DRC' => 'Diploma in Computer Science',
+        ];
+
+        return $programs[$code] ?? null;
     }
 
     private function getFilteredApplications()
@@ -214,6 +237,16 @@ class LecturerCourseVerificationTable extends Component
         // Apply status filter
         if ($this->statusFilter) {
             $query->where('status', $this->statusFilter);
+        }
+
+        // Apply program filter
+        if ($this->program) {
+            $programFullName = $this->getProgramFullName($this->program);
+            if ($programFullName) {
+                $query->whereHas('student', function ($q) use ($programFullName) {
+                    $q->where('program', $programFullName);
+                });
+            }
         }
 
         // Apply custom sorting - prioritize pending status and oldest applications
