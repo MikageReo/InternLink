@@ -91,7 +91,7 @@ class LecturerCourseVerificationTable extends Component
 
     public function viewApplication($id)
     {
-        $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'files'])
+        $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'academicAdvisor', 'files'])
             ->findOrFail($id);
 
         // Load existing remarks if any
@@ -118,40 +118,94 @@ class LecturerCourseVerificationTable extends Component
                 return;
             }
 
-            // Update the application
-            $updated = $application->update([
-                'status' => 'approved',
-                'lecturerID' => $lecturer->lecturerID,
-                'remarks' => $this->remarks,
-            ]);
-
-            if ($updated) {
-                // Refresh the selected application to show updated status
-                $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'files'])
-                    ->findOrFail($id);
-
-                // Send email notification to student
-                try {
-                    $this->selectedApplication->student->user->notify(
-                        new CourseVerificationStatusNotification($this->selectedApplication)
-                    );
-                } catch (\Exception $e) {
-                    // Log email error but don't fail the approval process
-                    Log::error('Failed to send approval notification: ' . $e->getMessage());
-                }
-
-                session()->flash('message', 'Application approved successfully! Email notification sent to student.');
-
-                // Reset pagination to refresh the table
-                $this->resetPage();
-
-                // Dispatch event to refresh student views if they're open
-                $this->dispatch('application-status-updated');
+            // Check if user is academic advisor or coordinator
+            if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                // Academic Advisor approval - check eligibility
+                $this->approveAsAcademicAdvisor($id, $lecturer);
+            } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
+                // Coordinator/Committee approval - final approval
+                $this->approveAsCoordinator($id, $lecturer);
             } else {
-                session()->flash('error', 'Failed to update application status.');
+                session()->flash('error', 'You do not have permission to approve applications.');
+                return;
             }
         } catch (\Exception $e) {
             session()->flash('error', 'An error occurred while approving the application: ' . $e->getMessage());
+        }
+    }
+
+    private function approveAsAcademicAdvisor($id, $lecturer)
+    {
+        $application = CourseVerification::findOrFail($id);
+
+        // Verify this is the student's academic advisor
+        if ($application->student->academicAdvisorID !== $lecturer->lecturerID) {
+            session()->flash('error', 'You can only review applications from your advisees.');
+            return;
+        }
+
+        // Check if already reviewed by academic advisor
+        if ($application->academicAdvisorStatus !== null) {
+            session()->flash('error', 'This application has already been reviewed by an academic advisor.');
+            return;
+        }
+
+        // Update academic advisor approval
+        $updated = $application->update([
+            'academicAdvisorStatus' => 'approved',
+            'academicAdvisorID' => $lecturer->lecturerID,
+            'remarks' => $this->remarks ?: 'Eligible for coordinator review.',
+        ]);
+
+        if ($updated) {
+            $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'academicAdvisor', 'files'])
+                ->findOrFail($id);
+
+            session()->flash('message', 'Application marked as eligible! It will now appear for coordinator review.');
+
+            $this->resetPage();
+            $this->dispatch('application-status-updated');
+        } else {
+            session()->flash('error', 'Failed to update application status.');
+        }
+    }
+
+    private function approveAsCoordinator($id, $lecturer)
+    {
+        $application = CourseVerification::findOrFail($id);
+
+        // Check if academic advisor has approved
+        if ($application->academicAdvisorStatus !== 'approved') {
+            session()->flash('error', 'This application must be approved by the academic advisor first.');
+            return;
+        }
+
+        // Update final approval
+        $updated = $application->update([
+            'status' => 'approved',
+            'lecturerID' => $lecturer->lecturerID,
+            'remarks' => $this->remarks,
+        ]);
+
+        if ($updated) {
+            $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'academicAdvisor', 'files'])
+                ->findOrFail($id);
+
+            // Send email notification to student
+            try {
+                $this->selectedApplication->student->user->notify(
+                    new CourseVerificationStatusNotification($this->selectedApplication)
+                );
+            } catch (\Exception $e) {
+                Log::error('Failed to send approval notification: ' . $e->getMessage());
+            }
+
+            session()->flash('message', 'Application approved successfully! Email notification sent to student.');
+
+            $this->resetPage();
+            $this->dispatch('application-status-updated');
+        } else {
+            session()->flash('error', 'Failed to update application status.');
         }
     }
 
@@ -166,40 +220,115 @@ class LecturerCourseVerificationTable extends Component
                 return;
             }
 
-            // Update the application
-            $updated = $application->update([
-                'status' => 'rejected',
-                'lecturerID' => $lecturer->lecturerID,
-                'remarks' => $this->remarks,
-            ]);
-
-            if ($updated) {
-                // Refresh the selected application to show updated status
-                $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'files'])
-                    ->findOrFail($id);
-
-                // Send email notification to student
-                try {
-                    $this->selectedApplication->student->user->notify(
-                        new CourseVerificationStatusNotification($this->selectedApplication)
-                    );
-                } catch (\Exception $e) {
-                    // Log email error but don't fail the rejection process
-                    Log::error('Failed to send rejection notification: ' . $e->getMessage());
-                }
-
-                session()->flash('message', 'Application rejected successfully! Email notification sent to student.');
-
-                // Reset pagination to refresh the table
-                $this->resetPage();
-
-                // Dispatch event to refresh student views if they're open
-                $this->dispatch('application-status-updated');
+            // Check if user is academic advisor or coordinator
+            if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                // Academic Advisor rejection
+                $this->rejectAsAcademicAdvisor($id, $lecturer);
+            } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
+                // Coordinator/Committee rejection
+                $this->rejectAsCoordinator($id, $lecturer);
             } else {
-                session()->flash('error', 'Failed to update application status.');
+                session()->flash('error', 'You do not have permission to reject applications.');
+                return;
             }
         } catch (\Exception $e) {
             session()->flash('error', 'An error occurred while rejecting the application: ' . $e->getMessage());
+        }
+    }
+
+    private function rejectAsAcademicAdvisor($id, $lecturer)
+    {
+        $application = CourseVerification::findOrFail($id);
+
+        // Verify this is the student's academic advisor
+        if ($application->student->academicAdvisorID !== $lecturer->lecturerID) {
+            session()->flash('error', 'You can only review applications from your advisees.');
+            return;
+        }
+
+        // Check if already reviewed
+        if ($application->academicAdvisorStatus !== null) {
+            session()->flash('error', 'This application has already been reviewed by an academic advisor.');
+            return;
+        }
+
+        if (empty($this->remarks)) {
+            session()->flash('error', 'Please provide remarks for rejection.');
+            return;
+        }
+
+        // Update academic advisor rejection
+        $updated = $application->update([
+            'academicAdvisorStatus' => 'rejected',
+            'academicAdvisorID' => $lecturer->lecturerID,
+            'status' => 'rejected', // Also set final status to rejected
+            'lecturerID' => $lecturer->lecturerID,
+            'remarks' => $this->remarks,
+        ]);
+
+        if ($updated) {
+            $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'academicAdvisor', 'files'])
+                ->findOrFail($id);
+
+            // Send email notification to student
+            try {
+                $this->selectedApplication->student->user->notify(
+                    new CourseVerificationStatusNotification($this->selectedApplication)
+                );
+            } catch (\Exception $e) {
+                Log::error('Failed to send rejection notification: ' . $e->getMessage());
+            }
+
+            session()->flash('message', 'Application rejected successfully! Email notification sent to student.');
+
+            $this->resetPage();
+            $this->dispatch('application-status-updated');
+        } else {
+            session()->flash('error', 'Failed to update application status.');
+        }
+    }
+
+    private function rejectAsCoordinator($id, $lecturer)
+    {
+        $application = CourseVerification::findOrFail($id);
+
+        // Check if academic advisor has approved
+        if ($application->academicAdvisorStatus !== 'approved') {
+            session()->flash('error', 'This application must be approved by the academic advisor first.');
+            return;
+        }
+
+        if (empty($this->remarks)) {
+            session()->flash('error', 'Please provide remarks for rejection.');
+            return;
+        }
+
+        // Update final rejection
+        $updated = $application->update([
+            'status' => 'rejected',
+            'lecturerID' => $lecturer->lecturerID,
+            'remarks' => $this->remarks,
+        ]);
+
+        if ($updated) {
+            $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'academicAdvisor', 'files'])
+                ->findOrFail($id);
+
+            // Send email notification to student
+            try {
+                $this->selectedApplication->student->user->notify(
+                    new CourseVerificationStatusNotification($this->selectedApplication)
+                );
+            } catch (\Exception $e) {
+                Log::error('Failed to send rejection notification: ' . $e->getMessage());
+            }
+
+            session()->flash('message', 'Application rejected successfully! Email notification sent to student.');
+
+            $this->resetPage();
+            $this->dispatch('application-status-updated');
+        } else {
+            session()->flash('error', 'Failed to update application status.');
         }
     }
 
@@ -229,13 +358,29 @@ class LecturerCourseVerificationTable extends Component
 
     private function getFilteredApplications()
     {
-        $query = CourseVerification::with(['student.user', 'lecturer', 'files']);
+        $lecturer = Auth::user()->lecturer;
+
+        $query = CourseVerification::with(['student.user', 'lecturer', 'academicAdvisor', 'files']);
+
+        // Filter based on lecturer role
+        if ($lecturer) {
+            if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                // Academic Advisor: Show all their advisees' applications (pending and reviewed history)
+                $query->whereHas('student', function ($q) use ($lecturer) {
+                    $q->where('academicAdvisorID', $lecturer->lecturerID);
+                });
+            } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
+                // Coordinator/Committee: Show all applications approved by academic advisor (pending and reviewed history)
+                $query->where('academicAdvisorStatus', 'approved');
+            }
+        }
 
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('currentCredit', 'like', '%' . $this->search . '%')
                     ->orWhere('status', 'like', '%' . $this->search . '%')
+                    ->orWhere('academicAdvisorStatus', 'like', '%' . $this->search . '%')
                     ->orWhere('applicationDate', 'like', '%' . $this->search . '%')
                     ->orWhere('courseVerificationID', 'like', '%' . $this->search . '%')
                     ->orWhereHas('student', function ($subQ) {
@@ -250,7 +395,17 @@ class LecturerCourseVerificationTable extends Component
 
         // Apply status filter
         if ($this->statusFilter) {
-            $query->where('status', $this->statusFilter);
+            if ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                // For academic advisors, filter by academicAdvisorStatus
+                if ($this->statusFilter === 'pending') {
+                    $query->whereNull('academicAdvisorStatus');
+                } else {
+                    $query->where('academicAdvisorStatus', $this->statusFilter);
+                }
+            } else {
+                // For coordinators, filter by final status
+                $query->where('status', $this->statusFilter);
+            }
         }
 
         // Apply program filter
@@ -279,16 +434,31 @@ class LecturerCourseVerificationTable extends Component
 
         // Apply custom sorting - prioritize pending status and oldest applications
         if ($this->sortField === 'applicationDate') {
-            $query->orderByRaw(
-                "
-                CASE
-                    WHEN status = 'pending' THEN 1
-                    WHEN status = 'approved' THEN 2
-                    WHEN status = 'rejected' THEN 3
-                    ELSE 4
-                END ASC,
-                applicationDate " . $this->sortDirection
-            );
+            if ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                // For academic advisors, prioritize by academicAdvisorStatus
+                $query->orderByRaw(
+                    "
+                    CASE
+                        WHEN academicAdvisorStatus IS NULL THEN 1
+                        WHEN academicAdvisorStatus = 'approved' THEN 2
+                        WHEN academicAdvisorStatus = 'rejected' THEN 3
+                        ELSE 4
+                    END ASC,
+                    applicationDate " . $this->sortDirection
+                );
+            } else {
+                // For coordinators, prioritize by final status
+                $query->orderByRaw(
+                    "
+                    CASE
+                        WHEN status = 'pending' THEN 1
+                        WHEN status = 'approved' THEN 2
+                        WHEN status = 'rejected' THEN 3
+                        ELSE 4
+                    END ASC,
+                    applicationDate " . $this->sortDirection
+                );
+            }
         } else {
             // Apply regular sorting
             if (in_array($this->sortField, ['status', 'created_at', 'courseVerificationID'])) {
@@ -322,11 +492,21 @@ class LecturerCourseVerificationTable extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            // Select all PENDING applications on current page only
-            $this->selectedApplications = $this->getFilteredApplications()
-                ->where('status', 'pending')
-                ->pluck('courseVerificationID')
-                ->toArray();
+            $lecturer = Auth::user()->lecturer;
+            $query = $this->getFilteredApplications();
+
+            // Select all eligible applications on current page
+            if ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                // Academic advisor: select only applications not yet reviewed (can't bulk select already reviewed ones)
+                $this->selectedApplications = $query->whereNull('academicAdvisorStatus')
+                    ->pluck('courseVerificationID')
+                    ->toArray();
+            } else {
+                // Coordinator: select applications approved by academic advisor but pending coordinator approval
+                $this->selectedApplications = $query->where('status', 'pending')
+                    ->pluck('courseVerificationID')
+                    ->toArray();
+            }
         } else {
             $this->selectedApplications = [];
         }
@@ -349,25 +529,42 @@ class LecturerCourseVerificationTable extends Component
 
             $count = 0;
             foreach ($this->selectedApplications as $id) {
-                $application = CourseVerification::find($id);
-                if ($application && $application->status === 'pending') {
-                    $application->update([
-                        'status' => 'approved',
-                        'lecturerID' => $lecturer->lecturerID,
-                        'remarks' => $this->remarks ?: 'Approved',
-                    ]);
+                $application = CourseVerification::with('student')->find($id);
 
-                    // Send notification
-                    try {
-                        $application->load('student.user');
-                        $application->student->user->notify(
-                            new CourseVerificationStatusNotification($application)
-                        );
-                    } catch (\Exception $e) {
-                        Log::error('Failed to send approval notification: ' . $e->getMessage());
+                if (!$application) continue;
+
+                if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                    // Academic advisor bulk approval
+                    if ($application->academicAdvisorStatus === null &&
+                        $application->student->academicAdvisorID === $lecturer->lecturerID) {
+                        $application->update([
+                            'academicAdvisorStatus' => 'approved',
+                            'academicAdvisorID' => $lecturer->lecturerID,
+                            'remarks' => $this->remarks ?: 'Eligible for coordinator review.',
+                        ]);
+                        $count++;
                     }
+                } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
+                    // Coordinator bulk approval
+                    if ($application->academicAdvisorStatus === 'approved' && $application->status === 'pending') {
+                        $application->update([
+                            'status' => 'approved',
+                            'lecturerID' => $lecturer->lecturerID,
+                            'remarks' => $this->remarks ?: 'Approved',
+                        ]);
 
-                    $count++;
+                        // Send notification
+                        try {
+                            $application->load('student.user');
+                            $application->student->user->notify(
+                                new CourseVerificationStatusNotification($application)
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send approval notification: ' . $e->getMessage());
+                        }
+
+                        $count++;
+                    }
                 }
             }
 
@@ -403,25 +600,55 @@ class LecturerCourseVerificationTable extends Component
 
             $count = 0;
             foreach ($this->selectedApplications as $id) {
-                $application = CourseVerification::find($id);
-                if ($application && $application->status === 'pending') {
-                    $application->update([
-                        'status' => 'rejected',
-                        'lecturerID' => $lecturer->lecturerID,
-                        'remarks' => $this->remarks,
-                    ]);
+                $application = CourseVerification::with('student')->find($id);
 
-                    // Send notification
-                    try {
-                        $application->load('student.user');
-                        $application->student->user->notify(
-                            new CourseVerificationStatusNotification($application)
-                        );
-                    } catch (\Exception $e) {
-                        Log::error('Failed to send rejection notification: ' . $e->getMessage());
+                if (!$application) continue;
+
+                if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                    // Academic advisor bulk rejection
+                    if ($application->academicAdvisorStatus === null &&
+                        $application->student->academicAdvisorID === $lecturer->lecturerID) {
+                        $application->update([
+                            'academicAdvisorStatus' => 'rejected',
+                            'academicAdvisorID' => $lecturer->lecturerID,
+                            'status' => 'rejected',
+                            'lecturerID' => $lecturer->lecturerID,
+                            'remarks' => $this->remarks,
+                        ]);
+
+                        // Send notification
+                        try {
+                            $application->load('student.user');
+                            $application->student->user->notify(
+                                new CourseVerificationStatusNotification($application)
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send rejection notification: ' . $e->getMessage());
+                        }
+
+                        $count++;
                     }
+                } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
+                    // Coordinator bulk rejection
+                    if ($application->academicAdvisorStatus === 'approved' && $application->status === 'pending') {
+                        $application->update([
+                            'status' => 'rejected',
+                            'lecturerID' => $lecturer->lecturerID,
+                            'remarks' => $this->remarks,
+                        ]);
 
-                    $count++;
+                        // Send notification
+                        try {
+                            $application->load('student.user');
+                            $application->student->user->notify(
+                                new CourseVerificationStatusNotification($application)
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send rejection notification: ' . $e->getMessage());
+                        }
+
+                        $count++;
+                    }
                 }
             }
 
@@ -489,12 +716,39 @@ class LecturerCourseVerificationTable extends Component
     public function render()
     {
         $applications = $this->getFilteredApplications()->paginate($this->perPage);
+        $lecturer = Auth::user()->lecturer;
 
-        // Get statistics
-        $totalApplications = CourseVerification::count();
-        $pendingApplications = CourseVerification::where('status', 'pending')->count();
-        $approvedApplications = CourseVerification::where('status', 'approved')->count();
-        $rejectedApplications = CourseVerification::where('status', 'rejected')->count();
+        // Get statistics based on role - each role only sees their own analytics
+        if ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+            // Academic advisor statistics - all their advisees' applications (including history)
+            $totalApplications = CourseVerification::whereHas('student', function ($q) use ($lecturer) {
+                $q->where('academicAdvisorID', $lecturer->lecturerID);
+            })->count();
+            $pendingApplications = CourseVerification::whereHas('student', function ($q) use ($lecturer) {
+                $q->where('academicAdvisorID', $lecturer->lecturerID);
+            })->whereNull('academicAdvisorStatus')->count();
+            $approvedApplications = CourseVerification::whereHas('student', function ($q) use ($lecturer) {
+                $q->where('academicAdvisorID', $lecturer->lecturerID);
+            })->where('academicAdvisorStatus', 'approved')->count();
+            $rejectedApplications = CourseVerification::whereHas('student', function ($q) use ($lecturer) {
+                $q->where('academicAdvisorID', $lecturer->lecturerID);
+            })->where('academicAdvisorStatus', 'rejected')->count();
+        } elseif ($lecturer && ($lecturer->isCoordinator || $lecturer->isCommittee)) {
+            // Coordinator/Committee statistics - all applications approved by academic advisor (including history)
+            $totalApplications = CourseVerification::where('academicAdvisorStatus', 'approved')->count();
+            $pendingApplications = CourseVerification::where('academicAdvisorStatus', 'approved')
+                ->where('status', 'pending')->count();
+            $approvedApplications = CourseVerification::where('academicAdvisorStatus', 'approved')
+                ->where('status', 'approved')->count();
+            $rejectedApplications = CourseVerification::where('academicAdvisorStatus', 'approved')
+                ->where('status', 'rejected')->count();
+        } else {
+            // Default statistics (should not happen, but fallback)
+            $totalApplications = 0;
+            $pendingApplications = 0;
+            $approvedApplications = 0;
+            $rejectedApplications = 0;
+        }
 
         return view('livewire.lecturer-course-verification-table', [
             'applications' => $applications,
@@ -502,6 +756,8 @@ class LecturerCourseVerificationTable extends Component
             'pendingApplications' => $pendingApplications,
             'approvedApplications' => $approvedApplications,
             'rejectedApplications' => $rejectedApplications,
+            'isAcademicAdvisor' => $lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee,
+            'isCoordinator' => $lecturer && ($lecturer->isCoordinator || $lecturer->isCommittee),
         ]);
     }
 }

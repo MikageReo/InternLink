@@ -74,7 +74,7 @@ new class extends Component {
                             </a>
                         @endif
 
-                        @if ($lecturer && ($lecturer->isCommittee || $lecturer->isCoordinator))
+                        @if ($lecturer && ($lecturer->isAcademicAdvisor || $lecturer->isCommittee || $lecturer->isCoordinator))
                             <a href="{{ route('lecturer.courseVerificationManagement') }}"
                                 class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('lecturer.courseVerificationManagement') ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300' }}">
                                 Course Verification
@@ -206,7 +206,7 @@ new class extends Component {
                     </x-responsive-nav-link>
                 @endif
 
-                @if ($lecturer && ($lecturer->isCommittee || $lecturer->isCoordinator))
+                @if ($lecturer && ($lecturer->isAcademicAdvisor || $lecturer->isCommittee || $lecturer->isCoordinator))
                     <x-responsive-nav-link :href="route('lecturer.courseVerificationManagement')" :active="request()->routeIs('lecturer.courseVerificationManagement')" wire:navigate>
                         Course Verification
                     </x-responsive-nav-link>

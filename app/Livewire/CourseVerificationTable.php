@@ -284,7 +284,7 @@ class CourseVerificationTable extends Component
 
         if ($student) {
             $currentApplication = CourseVerification::where('studentID', $student->studentID)
-                ->with(['lecturer', 'files'])
+                ->with(['lecturer', 'academicAdvisor', 'files'])
                 ->latest('applicationDate')
                 ->latest('courseVerificationID')
                 ->first();

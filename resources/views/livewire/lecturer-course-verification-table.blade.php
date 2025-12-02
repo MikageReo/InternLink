@@ -79,8 +79,14 @@
                             <i class="fa fa-file text-blue-600 text-xl"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Total Applications</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $totalApplications }}</p>
+                            <p class="text-sm font-medium text-gray-600">
+                                @if($isAcademicAdvisor)
+                                    Pending Review
+                                @else
+                                    Pending Review
+                                @endif
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900">{{ $pendingApplications }}</p>
                         </div>
                     </div>
                 </div>
@@ -91,8 +97,8 @@
                             <i class="fa fa-clock text-yellow-600 text-xl"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Pending Review</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $pendingApplications }}</p>
+                            <p class="text-sm font-medium text-gray-600">Total Applications</p>
+                            <p class="text-2xl font-bold text-gray-900">{{ $totalApplications }}</p>
                         </div>
                     </div>
                 </div>
@@ -103,7 +109,13 @@
                             <i class="fa fa-check text-green-600 text-xl"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Approved</p>
+                            <p class="text-sm font-medium text-gray-600">
+                                @if($isAcademicAdvisor)
+                                    Eligible
+                                @else
+                                    Approved
+                                @endif
+                            </p>
                             <p class="text-2xl font-bold text-gray-900">{{ $approvedApplications }}</p>
                         </div>
                     </div>
@@ -115,7 +127,13 @@
                             <i class="fa fa-times text-red-600 text-xl"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Rejected</p>
+                            <p class="text-sm font-medium text-gray-600">
+                                @if($isAcademicAdvisor)
+                                    Ineligible
+                                @else
+                                    Rejected
+                                @endif
+                            </p>
                             <p class="text-2xl font-bold text-gray-900">{{ $rejectedApplications }}</p>
                         </div>
                     </div>
@@ -184,9 +202,27 @@
                         <select wire:model.live="statusFilter"
                             class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                             <option value="">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
+                            <option value="pending">
+                                @if($isAcademicAdvisor)
+                                    Pending Review
+                                @else
+                                    Pending Coordinator Review
+                                @endif
+                            </option>
+                            <option value="approved">
+                                @if($isAcademicAdvisor)
+                                    Marked as Eligible
+                                @else
+                                    Approved
+                                @endif
+                            </option>
+                            <option value="rejected">
+                                @if($isAcademicAdvisor)
+                                    Marked as Ineligible
+                                @else
+                                    Rejected
+                                @endif
+                            </option>
                         </select>
                     </div>
 
@@ -315,7 +351,11 @@
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <button wire:click="sortBy('status')" class="flex items-center hover:text-gray-700">
-                                        Status
+                                        @if($isAcademicAdvisor)
+                                            Eligibility Status
+                                        @else
+                                            Status
+                                        @endif
                                         <span class="ml-1 sort-icon">
                                             @if ($sortField === 'status')
                                                 @if ($sortDirection === 'asc')
@@ -356,17 +396,30 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($applications as $application)
                                 <tr
-                                    class="hover:bg-gray-50 {{ $application->status === 'pending' ? 'bg-yellow-50' : '' }}">
+                                    class="hover:bg-gray-50 {{ ($isAcademicAdvisor && $application->academicAdvisorStatus === null) || ($isCoordinator && $application->status === 'pending' && $application->academicAdvisorStatus === 'approved') ? 'bg-yellow-50' : '' }}">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if ($application->status === 'pending')
-                                            <input type="checkbox"
-                                                wire:model.live="selectedApplications"
-                                                value="{{ $application->courseVerificationID }}"
-                                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                        @if($isAcademicAdvisor)
+                                            @if ($application->academicAdvisorStatus === null)
+                                                <input type="checkbox"
+                                                    wire:model.live="selectedApplications"
+                                                    value="{{ $application->courseVerificationID }}"
+                                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                            @else
+                                                <span class="text-gray-400" title="Already {{ $application->academicAdvisorStatus }}">
+                                                    <i class="fa {{ $application->academicAdvisorStatus === 'approved' ? 'fa-check' : 'fa-times' }}"></i>
+                                                </span>
+                                            @endif
                                         @else
-                                            <span class="text-gray-400" title="Already {{ $application->status }}">
-                                                <i class="fa {{ $application->status === 'approved' ? 'fa-check' : 'fa-times' }}"></i>
-                                            </span>
+                                            @if ($application->status === 'pending' && $application->academicAdvisorStatus === 'approved')
+                                                <input type="checkbox"
+                                                    wire:model.live="selectedApplications"
+                                                    value="{{ $application->courseVerificationID }}"
+                                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                            @else
+                                                <span class="text-gray-400" title="Already {{ $application->status }}">
+                                                    <i class="fa {{ $application->status === 'approved' ? 'fa-check' : 'fa-times' }}"></i>
+                                                </span>
+                                            @endif
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -382,17 +435,42 @@
                                         {{ $application->currentCredit }} / 130
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @php
-                                            $statusClasses = [
-                                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                                'approved' => 'bg-green-100 text-green-800',
-                                                'rejected' => 'bg-red-100 text-red-800',
-                                            ];
-                                        @endphp
-                                        <span
-                                            class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$application->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                            {{ ucfirst($application->status) }}
-                                        </span>
+                                        @if($isAcademicAdvisor)
+                                            @php
+                                                $statusClasses = [
+                                                    'pending' => 'bg-yellow-100 text-yellow-800',
+                                                    'approved' => 'bg-green-100 text-green-800',
+                                                    'rejected' => 'bg-red-100 text-red-800',
+                                                ];
+                                                $displayStatus = $application->academicAdvisorStatus ?? 'pending';
+                                                $statusLabels = [
+                                                    'pending' => 'Pending Review',
+                                                    'approved' => 'Marked as Eligible',
+                                                    'rejected' => 'Marked as Ineligible',
+                                                ];
+                                            @endphp
+                                            <span
+                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$displayStatus] ?? 'bg-gray-100 text-gray-800' }}">
+                                                {{ $statusLabels[$displayStatus] ?? 'Unknown' }}
+                                            </span>
+                                        @else
+                                            @php
+                                                $statusClasses = [
+                                                    'pending' => 'bg-yellow-100 text-yellow-800',
+                                                    'approved' => 'bg-green-100 text-green-800',
+                                                    'rejected' => 'bg-red-100 text-red-800',
+                                                ];
+                                            @endphp
+                                            <span
+                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$application->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                                {{ ucfirst($application->status) }}
+                                            </span>
+                                            @if($application->academicAdvisorStatus === 'approved')
+                                                <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800" title="Approved by Academic Advisor">
+                                                    AA ✓
+                                                </span>
+                                            @endif
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $application->applicationDate->format('M d, Y') }}
@@ -498,16 +576,27 @@
                                     class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$selectedApplication->status] ?? 'bg-gray-100 text-gray-800' }}">
                                     {{ ucfirst($selectedApplication->status) }}
                                 </span>
+                                @if($selectedApplication->academicAdvisorStatus)
+                                    <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$selectedApplication->academicAdvisorStatus] ?? 'bg-gray-100 text-gray-800' }}" title="Academic Advisor Status">
+                                        AA: {{ ucfirst($selectedApplication->academicAdvisorStatus) }}
+                                    </span>
+                                @endif
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Application Date</p>
                                 <p class="text-sm text-gray-900">
                                     {{ $selectedApplication->applicationDate->format('F d, Y') }}</p>
                             </div>
-                            @if ($selectedApplication->lecturerID)
+                            @if ($selectedApplication->academicAdvisorID && $selectedApplication->academicAdvisor)
                                 <div>
-                                    <p class="text-sm font-medium text-gray-600">Reviewed By</p>
-                                    <p class="text-sm text-gray-900">{{ $selectedApplication->lecturerID }}</p>
+                                    <p class="text-sm font-medium text-gray-600">Academic Advisor</p>
+                                    <p class="text-sm text-gray-900">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</p>
+                                </div>
+                            @endif
+                            @if ($selectedApplication->lecturerID && $selectedApplication->lecturer)
+                                <div>
+                                    <p class="text-sm font-medium text-gray-600">Reviewed By Coordinator</p>
+                                    <p class="text-sm text-gray-900">{{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}</p>
                                 </div>
                             @endif
                         </div>
@@ -534,37 +623,154 @@
                         </div>
                     @endif
 
+                    <!-- Academic Advisor Review Section -->
+                    @if($isAcademicAdvisor)
+                        @if($selectedApplication->academicAdvisorStatus === null)
+                            <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                                <h4 class="text-md font-semibold text-gray-900 mb-2">Academic Advisor Review</h4>
+                                <p class="text-sm text-gray-700 mb-3">Please review this application and determine if it is eligible for coordinator approval.</p>
+                            </div>
+                        @else
+                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <h4 class="text-md font-semibold text-gray-900 mb-2">Your Review History</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-medium text-gray-700">Review Status:</span>
+                                        @if($selectedApplication->academicAdvisorStatus === 'approved')
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                <i class="fa fa-check mr-1"></i>Marked as Eligible
+                                            </span>
+                                        @else
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                <i class="fa fa-times mr-1"></i>Marked as Ineligible
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @if($selectedApplication->academicAdvisor)
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium text-gray-700">Reviewed By:</span>
+                                            <span class="text-sm text-gray-900">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</span>
+                                        </div>
+                                    @endif
+                                    @if($selectedApplication->academicAdvisorStatus === 'approved' && $selectedApplication->status)
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium text-gray-700">Coordinator Status:</span>
+                                            @if($selectedApplication->status === 'approved')
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                    Approved
+                                                </span>
+                                            @elseif($selectedApplication->status === 'rejected')
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                    Rejected
+                                                </span>
+                                            @else
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                    Pending Review
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+
+                    <!-- Coordinator Review Section -->
+                    @if($isCoordinator)
+                        @if($selectedApplication->status === 'pending' && $selectedApplication->academicAdvisorStatus === 'approved')
+                            <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                                <h4 class="text-md font-semibold text-gray-900 mb-2">Coordinator Review</h4>
+                                <p class="text-sm text-gray-700 mb-3">This application has been approved by the academic advisor. Please review and make a final decision.</p>
+                            </div>
+                        @elseif($selectedApplication->status !== 'pending' && $selectedApplication->academicAdvisorStatus === 'approved')
+                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <h4 class="text-md font-semibold text-gray-900 mb-2">Your Review History</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-medium text-gray-700">Review Status:</span>
+                                        @if($selectedApplication->status === 'approved')
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                <i class="fa fa-check mr-1"></i>Approved
+                                            </span>
+                                        @else
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                <i class="fa fa-times mr-1"></i>Rejected
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @if($selectedApplication->lecturer)
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium text-gray-700">Reviewed By:</span>
+                                            <span class="text-sm text-gray-900">{{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}</span>
+                                        </div>
+                                    @endif
+                                    @if($selectedApplication->academicAdvisor)
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium text-gray-700">Academic Advisor:</span>
+                                            <span class="text-sm text-gray-900">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</span>
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 ml-2">
+                                                Approved
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+
                     <!-- Remarks Section -->
-                    @if ($selectedApplication->status === 'pending')
+                    @if (($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus === null) || ($isCoordinator && $selectedApplication->status === 'pending' && $selectedApplication->academicAdvisorStatus === 'approved'))
                         <div class="bg-yellow-50 rounded-lg p-4">
                             <h4 class="text-md font-semibold text-gray-900 mb-3">Review Remarks</h4>
                             <div>
                                 <label for="remarks" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Add remarks for this application (optional):
+                                    @if($isAcademicAdvisor)
+                                        Add remarks for eligibility review {{ $selectedApplication->academicAdvisorStatus === null ? '(required for rejection)' : '(optional)' }}:
+                                    @else
+                                        Add remarks for this application {{ $selectedApplication->status === 'pending' ? '(required for rejection)' : '(optional)' }}:
+                                    @endif
                                 </label>
                                 <textarea wire:model="remarks" id="remarks" rows="4"
                                     class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Enter your comments, feedback, or reasons for your decision..."></textarea>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    These remarks will be visible to the student after you approve or reject their application.
+                                    @if($isAcademicAdvisor)
+                                        These remarks will be visible to the coordinator and student.
+                                    @else
+                                        These remarks will be visible to the student after you approve or reject their application.
+                                    @endif
                                 </p>
                             </div>
                         </div>
                     @elseif ($selectedApplication->remarks)
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="text-md font-semibold text-gray-900 mb-3">Lecturer Remarks</h4>
+                            <h4 class="text-md font-semibold text-gray-900 mb-3">
+                                @if($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus)
+                                    Your Remarks
+                                @elseif($isCoordinator && $selectedApplication->status !== 'pending')
+                                    Your Remarks
+                                @else
+                                    Lecturer Remarks
+                                @endif
+                            </h4>
                             <div class="bg-white border rounded-md p-3">
                                 <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ $selectedApplication->remarks }}</p>
                             </div>
                             <p class="text-xs text-gray-500 mt-1">
-                                Reviewed by: {{ $selectedApplication->lecturerID }}
+                                @if($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus)
+                                    Reviewed by: {{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}
+                                @elseif($isCoordinator && $selectedApplication->status !== 'pending')
+                                    Reviewed by: {{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}
+                                @else
+                                    Reviewed by: {{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}
+                                @endif
                             </p>
                         </div>
                     @endif
                 </div>
 
                 <!-- Action Buttons -->
-                @if ($selectedApplication->status === 'pending')
+                @if (($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus === null) || ($isCoordinator && $selectedApplication->status === 'pending' && $selectedApplication->academicAdvisorStatus === 'approved'))
                     <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
                         <button type="button" wire:click="closeDetailModal"
                             class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -575,14 +781,22 @@
                             wire:confirm="Are you sure you want to reject this application?"
                             class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                             <i class="fa fa-times mr-2"></i>
-                            Reject
+                            @if($isAcademicAdvisor)
+                                Mark as Ineligible
+                            @else
+                                Reject
+                            @endif
                         </button>
                         <button type="button"
                             wire:click="approveApplication({{ $selectedApplication->courseVerificationID }})"
                             wire:confirm="Are you sure you want to approve this application?"
                             class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                             <i class="fa fa-check mr-2"></i>
-                            Approve
+                            @if($isAcademicAdvisor)
+                                Mark as Eligible
+                            @else
+                                Approve
+                            @endif
                         </button>
                     </div>
                 @else

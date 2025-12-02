@@ -17,6 +17,8 @@ class CourseVerification extends Model
         'lecturerID',
         'studentID',
         'remarks',
+        'academicAdvisorStatus',
+        'academicAdvisorID',
     ];
 
     protected $casts = [
@@ -37,6 +39,14 @@ class CourseVerification extends Model
     public function lecturer(): BelongsTo
     {
         return $this->belongsTo(Lecturer::class, 'lecturerID', 'lecturerID');
+    }
+
+    /**
+     * Get the academic advisor who reviewed this course verification.
+     */
+    public function academicAdvisor(): BelongsTo
+    {
+        return $this->belongsTo(Lecturer::class, 'academicAdvisorID', 'lecturerID');
     }
 
     /**

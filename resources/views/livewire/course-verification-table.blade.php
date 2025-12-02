@@ -80,9 +80,9 @@
                             <h3 class="text-lg font-medium text-blue-900">Course Verification Guide</h3>
                             <p class="text-sm text-blue-600 mt-1">
                                 @if (!$showGuide)
-                                    Fill in verification form → Get advisor approval → Prepare Documents → Merge files → Submit
+                                    Fill in verification form → Prepare Documents → Merge files → Submit → Academic Advisor Review → Coordinator Approval
                                 @else
-                                    Follow these steps to complete your course verification submission.
+                                    Follow these steps to complete your course verification submission and understand the approval process.
                                 @endif
                             </p>
                         </div>
@@ -104,7 +104,7 @@
                             </div>
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900 mb-2">
-                                    Fill in the course verification form and get approval from your Academic Advisor.
+                                    Fill in the course verification form with your current credit information.
                                 </p>
                                 <div class="flex flex-wrap gap-2 mt-2">
                                     <a href="{{ asset('documents/Course-Verification-Form-Eng.docx') }}"
@@ -190,8 +190,51 @@
                             </div>
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900">
-                                    Submit the verification form at the course verification form below.
+                                    Submit the merged verification form at the course verification form below.
                                 </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 6 - Approval Process -->
+                    <div class="bg-white rounded-lg p-4 border-2 border-green-200 bg-green-50">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 bg-green-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-green-600 font-semibold text-sm">6</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900 mb-2">
+                                    <strong>Approval Process (Two-Step Review):</strong>
+                                </p>
+                                <div class="space-y-2 mt-2">
+                                    <div class="flex items-start">
+                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold mr-2 mt-0.5">A</span>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900">Academic Advisor Review</p>
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                Your academic advisor will review your application to determine if it is <strong>eligible</strong> for coordinator approval.
+                                                You will be notified once the review is complete.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 text-purple-600 text-xs font-semibold mr-2 mt-0.5">B</span>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900">Coordinator Review</p>
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                If approved by your academic advisor, the application will be forwarded to the coordinator for <strong>final approval</strong>.
+                                                You will receive a final notification once the coordinator makes a decision.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                                    <p class="text-xs text-yellow-800">
+                                        <i class="fa fa-info-circle mr-1"></i>
+                                        <strong>Note:</strong> You can track the status of your application in the table below.
+                                        The status will show both Academic Advisor and Coordinator review stages.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -227,35 +270,96 @@
                             <div class="flex-shrink-0">
                                 <i class="fa {{ $statusIcons[$currentApplication->status] ?? 'fa-file' }} text-xl"></i>
                             </div>
-                            <div class="ml-3">
-                                <h3 class="text-lg font-medium">Current Application Status:
-                                    {{ ucfirst($currentApplication->status) }}</h3>
+                            <div class="ml-3 flex-1">
+                                <h3 class="text-lg font-medium">Current Application Status</h3>
                                 <p class="text-sm mt-1">
                                     Application ID: {{ $currentApplication->courseVerificationID }} |
                                     Submitted: {{ $currentApplication->applicationDate->format('M d, Y') }} |
                                     Credits: {{ $currentApplication->currentCredit }}/{{ $totalCreditRequired }}
                                 </p>
+
+                                <!-- Status Breakdown -->
+                                <div class="mt-3 space-y-2">
+                                    <!-- Academic Advisor Status -->
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-medium text-gray-700">Academic Advisor Review:</span>
+                                        @if($currentApplication->academicAdvisorStatus === 'approved')
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                <i class="fa fa-check mr-1"></i>Approved (Eligible)
+                                            </span>
+                                        @elseif($currentApplication->academicAdvisorStatus === 'rejected')
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                <i class="fa fa-times mr-1"></i>Rejected (Ineligible)
+                                            </span>
+                                        @else
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                <i class="fa fa-clock mr-1"></i>Pending Review
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <!-- Coordinator Status -->
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-medium text-gray-700">Coordinator Review:</span>
+                                        @if($currentApplication->academicAdvisorStatus === 'rejected')
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                Not Applicable
+                                            </span>
+                                        @elseif($currentApplication->academicAdvisorStatus === 'approved')
+                                            @if($currentApplication->status === 'approved')
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                    <i class="fa fa-check mr-1"></i>Approved
+                                                </span>
+                                            @elseif($currentApplication->status === 'rejected')
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                    <i class="fa fa-times mr-1"></i>Rejected
+                                                </span>
+                                            @else
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                    <i class="fa fa-clock mr-1"></i>Pending Review
+                                                </span>
+                                            @endif
+                                        @else
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                Awaiting Academic Advisor Approval
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Status Messages -->
                                 @if ($currentApplication->status === 'pending')
-                                    <p class="text-sm mt-2">
-                                        <strong>Your application is under review.</strong> You cannot submit a new
-                                        application while this one is pending.
-                                    </p>
+                                    @if($currentApplication->academicAdvisorStatus === null)
+                                        <p class="text-sm mt-3 text-yellow-700">
+                                            <strong>Your application is awaiting academic advisor review.</strong> You cannot submit a new application while this one is pending.
+                                        </p>
+                                    @elseif($currentApplication->academicAdvisorStatus === 'approved')
+                                        <p class="text-sm mt-3 text-yellow-700">
+                                            <strong>Your application has been approved by your academic advisor and is now awaiting coordinator review.</strong> You cannot submit a new application while this one is pending.
+                                        </p>
+                                    @endif
                                 @elseif($currentApplication->status === 'approved')
-                                    <p class="text-sm mt-2">
-                                        <strong>Congratulations!</strong> Your course verification has been approved. No
-                                        further action is needed.
+                                    <p class="text-sm mt-3 text-green-700">
+                                        <strong>Congratulations!</strong> Your course verification has been fully approved. No further action is needed.
                                     </p>
                                 @elseif($currentApplication->status === 'rejected')
                                     @if ($hasApprovedApplication)
-                                        <p class="text-sm mt-2">
+                                        <p class="text-sm mt-3 text-red-700">
                                             <strong>This application was rejected.</strong> However, you have a previously approved verification and cannot submit new applications.
                                         </p>
                                     @else
-                                        <p class="text-sm mt-2">
-                                            <strong>Your application was rejected.</strong> You can submit a new application
-                                            with updated information.
+                                        <p class="text-sm mt-3 text-red-700">
+                                            <strong>Your application was rejected.</strong> You can submit a new application with updated information.
                                         </p>
                                     @endif
+                                @endif
+
+                                <!-- Remarks -->
+                                @if($currentApplication->remarks)
+                                    <div class="mt-3 p-3 bg-gray-50 rounded-md">
+                                        <p class="text-xs font-medium text-gray-700 mb-1">Remarks:</p>
+                                        <p class="text-sm text-gray-900">{{ $currentApplication->remarks }}</p>
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -439,10 +543,43 @@
                                                 'rejected' => 'bg-red-100 text-red-800',
                                             ];
                                         @endphp
-                                        <span
-                                            class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$verification->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                            {{ ucfirst($verification->status) }}
-                                        </span>
+                                        <div class="flex flex-col gap-1">
+                                            <!-- Academic Advisor Status -->
+                                            @if($verification->academicAdvisorStatus)
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$verification->academicAdvisorStatus] ?? 'bg-gray-100 text-gray-800' }}"
+                                                    title="Academic Advisor Review">
+                                                    AA: {{ ucfirst($verification->academicAdvisorStatus) }}
+                                                </span>
+                                            @else
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"
+                                                    title="Awaiting Academic Advisor Review">
+                                                    AA: Pending
+                                                </span>
+                                            @endif
+
+                                            <!-- Coordinator Status -->
+                                            @if($verification->academicAdvisorStatus === 'approved')
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$verification->status] ?? 'bg-gray-100 text-gray-800' }}"
+                                                    title="Coordinator Review">
+                                                    Coordinator: {{ ucfirst($verification->status) }}
+                                                </span>
+                                            @elseif($verification->academicAdvisorStatus === 'rejected')
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"
+                                                    title="Rejected by Academic Advisor">
+                                                    Coordinator: Not Applicable
+                                                </span>
+                                            @else
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"
+                                                    title="Awaiting Academic Advisor Approval">
+                                                    Coordinator: Pending
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $verification->applicationDate->format('M d, Y') }}
