@@ -341,12 +341,17 @@
                     <!-- Student Info -->
                     <div class="mb-4 p-4 bg-gray-50 rounded-lg">
                         <h4 class="font-medium text-gray-900 mb-2">Student Information</h4>
-                        <p><strong>Name:</strong> {{ $selectedStudent->user->name }}</p>
-                        <p><strong>ID:</strong> {{ $selectedStudent->studentID }}</p>
-                        @if($selectedStudent->acceptedPlacementApplication)
-                            <p><strong>Company:</strong> {{ $selectedStudent->acceptedPlacementApplication->companyName }}</p>
-                            <p><strong>Location:</strong> {{ $selectedStudent->acceptedPlacementApplication->companyFullAddress }}</p>
-                        @endif
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            <p><strong>Name:</strong> {{ $selectedStudent->user->name }}</p>
+                            <p><strong>ID:</strong> {{ $selectedStudent->studentID }}</p>
+                            @if($selectedStudent->program)
+                                <p><strong>Program:</strong> {{ $selectedStudent->program }}</p>
+                            @endif
+                            @if($selectedStudent->acceptedPlacementApplication)
+                                <p><strong>Company:</strong> {{ $selectedStudent->acceptedPlacementApplication->companyName }}</p>
+                                <p class="md:col-span-2"><strong>Location:</strong> {{ $selectedStudent->acceptedPlacementApplication->companyFullAddress }}</p>
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Recommended Supervisors -->
@@ -370,7 +375,7 @@
                                         $breakdown = $supervisor['breakdown'] ?? [];
                                         $distance = $supervisor['distance_km'] ?? $supervisor['distance'] ?? null;
                                         $availableQuota = $supervisor['available_quota'] ?? 0;
-                                        
+
                                         // Score color based on value
                                         $scorePercent = $score * 100;
                                         if ($scorePercent >= 80) $scoreColor = 'text-green-600';
@@ -378,12 +383,12 @@
                                         elseif ($scorePercent >= 40) $scoreColor = 'text-yellow-600';
                                         else $scoreColor = 'text-gray-600';
                                     @endphp
-                                    
+
                                     <label class="flex items-start p-4 hover:bg-gray-50 cursor-pointer border border-gray-200 rounded-lg transition-colors {{ $selectedSupervisorID == $lecturer->lecturerID ? 'bg-indigo-50 border-indigo-300' : '' }}">
                                         <input type="radio" name="supervisor" value="{{ $lecturer->lecturerID }}"
                                             wire:model="selectedSupervisorID"
                                             class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                        
+
                                         <div class="ml-3 flex-1">
                                             <!-- Header with name and total score -->
                                             <div class="flex justify-between items-start mb-3">
@@ -396,6 +401,21 @@
                                                     </div>
                                                     <p class="text-xs text-gray-500">
                                                         {{ $lecturer->lecturerID }} | {{ $lecturer->department ?? 'N/A' }} | {{ $lecturer->researchGroup ?? 'N/A' }}
+                                                        @if($lecturer->program)
+                                                            @php
+                                                                $programCodes = [
+                                                                    'Bachelor of Computer Science (Software Engineering) with Honours' => 'BCS',
+                                                                    'Bachelor of Computer Science (Computer Systems & Networking) with Honours' => 'BCN',
+                                                                    'Bachelor of Computer Science (Multimedia Software) with Honours' => 'BCM',
+                                                                    'Bachelor of Computer Science (Cyber Security) with Honours' => 'BCY',
+                                                                    'Diploma in Computer Science' => 'DRC',
+                                                                ];
+                                                                $programCode = $programCodes[$lecturer->program] ?? null;
+                                                            @endphp
+                                                            @if($programCode)
+                                                                | {{ $programCode }}
+                                                            @endif
+                                                        @endif
                                                     </p>
                                                 </div>
                                                 <div class="text-right ml-4">
@@ -413,7 +433,7 @@
                                                         <div class="text-xs text-gray-500">({{ $breakdown['course_match']['weight'] ?? '0%' }})</div>
                                                     </div>
                                                     <div class="bg-green-50 rounded p-2 border border-green-100">
-                                                        <div class="text-xs text-gray-600 mb-0.5">Preference</div>
+                                                        <div class="text-xs text-gray-600 mb-0.5">Travel Prefer</div>
                                                         <div class="text-sm font-bold text-green-600">{{ number_format(($breakdown['preference_match']['raw'] ?? 0) * 100) }}%</div>
                                                         <div class="text-xs text-gray-500">({{ $breakdown['preference_match']['weight'] ?? '0%' }})</div>
                                                     </div>
@@ -558,6 +578,21 @@
                                                         {{ $supervisor->lecturerID }} |
                                                         {{ $supervisor->department ?? 'N/A' }} |
                                                         {{ $supervisor->researchGroup ?? 'N/A' }}
+                                                        @if($supervisor->program)
+                                                            @php
+                                                                $programCodes = [
+                                                                    'Bachelor of Computer Science (Software Engineering) with Honours' => 'BCS',
+                                                                    'Bachelor of Computer Science (Computer Systems & Networking) with Honours' => 'BCN',
+                                                                    'Bachelor of Computer Science (Multimedia Software) with Honours' => 'BCM',
+                                                                    'Bachelor of Computer Science (Cyber Security) with Honours' => 'BCY',
+                                                                    'Diploma in Computer Science' => 'DRC',
+                                                                ];
+                                                                $programCode = $programCodes[$supervisor->program] ?? null;
+                                                            @endphp
+                                                            @if($programCode)
+                                                                | {{ $programCode }}
+                                                            @endif
+                                                        @endif
                                                     </p>
                                                 </div>
                                                 <div class="text-right">

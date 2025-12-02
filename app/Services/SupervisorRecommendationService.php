@@ -186,6 +186,15 @@ class SupervisorRecommendationService
 
         // Fallback: match by jobscope keywords if program doesn't match
         if ($lecturer->program && $placement->jobscope) {
+
+            //Convert full program name to code
+            $programCode = $this->getProgramCodeFromFullName($lecturer->program);
+
+            // If we can't get a program code, skip keyword matching
+            if (!$programCode) {
+                return 0.0;
+            }
+
             // Map program codes to keywords
             $programKeywords = [
                 'BCS' => [
@@ -193,78 +202,269 @@ class SupervisorRecommendationService
                     'engineering',
                     'development',
                     'programming',
-                    'requirements',
-                    'testing',
+                    'coding',
+                    'application',
+                    'system',
                     'web',
                     'mobile',
-                    'application',
-                    'devops'
+                    'developer',
+                    'programmer',
+                    'software development',
+                    'app development',
+                    'coding',
+                    'algorithm',
+                    'framework',
+                    'api',
+                    'frontend',
+                    'backend',
+                    'full stack',
+                    'devops',
+                    'debugging',
+                    'testing',
+                    'quality assurance',
+                    'database',
+                    'sql',
+                    'oop',
+                    'git',
+                    'version control',
+                    'mvc',
+                    'cloud',
+                    'integration',
+                    'deployment'
                 ],
 
                 'BCN' => [
-                    'network',
                     'system',
-                    'infrastructure',
+                    'network',
+                    'networking',
                     'server',
                     'routing',
-                    'switching',
-                    'wireless',
+                    'switch',
+                    'firewall',
+                    'protocol',
+                    'tcp',
+                    'ip',
+                    'lan',
+                    'wan',
+                    'system administration',
+                    'network administration',
+                    'server management',
                     'hardware',
-                    'iot'
+                    'operating system',
+                    'os',
+                    'windows server',
+                    'linux',
+                    'troubleshoot',
+                    'configuration',
+                    'vm',
+                    'cloud',
+                    'it support',
+                    'deployment',
+                    'storage',
+                    'backup',
+                    'monitoring',
+                    'vpn',
+                    'switching',
+                    'router',
+                    'udp',
+                    'ip address',
+                    'subnet',
+                    'dhcp',
+                    'dns',
+                    'packet',
+                    'infrastructure',
+                    'wifi',
+                    'network security',
+                    'cisco',
+                    'network configuration',
+                    'topology'
                 ],
 
                 'BCM' => [
                     'multimedia',
-                    'graphics',
                     'design',
+                    'graphic',
                     'animation',
-                    'visual',
-                    'rendering',
+                    'media',
+                    'video',
+                    'creative',
+                    'ui',
+                    'ux',
+                    'user interface',
+                    'user experience',
                     '3d',
                     '2d',
-                    'interactive'
+                    'adobe',
+                    'photoshop',
+                    'illustrator',
+                    'premiere',
+                    'after effects',
+                    'blender',
+                    'maya',
+                    'digital art',
+                    'visual design',
+                    'storyboard',
+                    'video editing',
+                    'motion design',
+                    'interactive media',
+                    'web design',
+                    'graphic design',
+                    'illustration',
+                    'digital content',
+                    'marketing design',
+                    'photo editing'
                 ],
 
                 'BCY' => [
                     'security',
                     'cyber',
+                    'cybersecurity',
+                    'network security',
+                    'information security',
+                    'protection',
+                    'penetration testing',
                     'encryption',
                     'firewall',
-                    'penetration',
+                    'vulnerability',
                     'malware',
-                    'attack',
-                    'defense',
-                    'forensics'
+                    'ransomware',
+                    'phishing',
+                    'threat detection',
+                    'security audit',
+                    'risk assessment',
+                    'compliance',
+                    'forensics',
+                    'authentication',
+                    'authorization',
+                    'incident response',
+                    'data protection',
+                    'privacy',
+                    'ids',
+                    'ips',
+                    'siem',
+                    'zero trust',
+                    'cyber attack',
+                    'risk',
+                    'threat',
+                    'incident',
+                    'security operation',
+                    'soc',
+                    'intrusion detection',
+                    'identity management'
                 ],
 
                 'DRC' => [
                     'computer',
-                    'science',
+                    'information technology',
+                    'it',
                     'basic',
                     'fundamental',
-                    'intro',
-                    'logic',
+                    'application',
+                    'mysql',
+                    'data entry',
+                    'system support',
+                    'technical support',
+                    'helpdesk',
+                    'networking',
+                    'troubleshooting',
+                    'installation',
+                    'maintenance',
+                    'pc maintenance',
+                    'system analysis',
+                    'software',
+                    'hardware',
+                    'coding',
+                    'programming',
+                    'html',
+                    'css',
+                    'javascript',
+                    'python',
+                    'java',
+                    'c++',
+                    'database',
+                    'sql',
+                    'web development',
+                    'it support',
+                    'troubleshoot',
+                    'documentation',
+                    'network basics',
+                    'operating system',
                     'algorithm',
-                    'foundation'
+                    'problem solving',
+                    'frontend',
+                    'backend',
+                    'system support',
+                    'technical support',
+                    'debugging',
+                    'testing',
+                    'application development'
                 ]
             ];
 
-            $keywords = $programKeywords[$lecturer->program] ?? [];
+
+            $keywords = $programKeywords[$programCode] ?? [];
             $jobscope = strtolower($placement->jobscope);
+
+            // Count how many keywords match in the jobscope
+            $matchedKeywords = 0;
+            $totalKeywords = count($keywords);
+
+            if ($totalKeywords === 0) {
+                return 0.0; // No keywords to match
+            }
 
             foreach ($keywords as $keyword) {
                 if (strpos($jobscope, $keyword) !== false) {
-                    return 0.7; // Partial match
+                    $matchedKeywords++;
                 }
             }
+
+            // Calculate match percentage
+            $matchPercentage = ($matchedKeywords / $totalKeywords) * 100;
+
+            // Return score based on percentage of keywords matched (more realistic scoring)
+            // Higher percentage = more relevant match, but still lower than perfect match
+            if ($matchPercentage >= 50) {
+                // High relevance: 50-60% of keywords match
+                return 0.45; // 45% score
+            } elseif ($matchPercentage >= 30) {
+                // Medium relevance: 30-50% of keywords match
+                return 0.30; // 30% score
+            } elseif ($matchPercentage >= 15) {
+                // Low relevance: 15-30% of keywords match
+                return 0.15; // 15% score
+            } elseif ($matchPercentage >= 5) {
+                // Very low relevance: 5-15% of keywords match
+                return 0.05; // 5% score
+            } elseif ($matchedKeywords > 0) {
+                // Minimal match: less than 5% but at least 1 keyword found
+                return 0.02; // 2% score
+            }
+
+            // No keywords matched
+            return 0.0;
         }
 
         return 0.0;
     }
 
+    //Convert full name to short code
+    private function getProgramCodeFromFullName($fullName): ?string
+    {
+        $programMap = [
+            'Bachelor of Computer Science (Software Engineering) with Honours' => 'BCS',
+            'Bachelor of Computer Science (Computer Systems & Networking) with Honours' => 'BCN',
+            'Bachelor of Computer Science (Multimedia Software) with Honours' => 'BCM',
+            'Bachelor of Computer Science (Cyber Security) with Honours' => 'BCY',
+            'Diploma in Computer Science' => 'DRC',
+        ];
+
+        return $programMap[$fullName] ?? null;
+    }
     /**
      * Calculate if student location matches lecturer's travel preference
      * local < 50km, nationwide = any distance
+     * Ensures minimum score of 0.3 to never go to 0
      */
     protected function calculatePreferenceMatch(Lecturer $lecturer, ?float $distance): float
     {
@@ -272,20 +472,36 @@ class SupervisorRecommendationService
             return 0.5; // Unknown distance gets neutral score
         }
 
-        switch ($lecturer->travel_preference) {
+        $travelPreference = strtolower($lecturer->travel_preference ?? '');
+
+        switch ($travelPreference) {
             case 'local':
-                return $distance <= 50 ? 1.0 : 0.0;
+                // Local preference: perfect match within 50km, partial match beyond
+                if ($distance <= 50) {
+                    return 1.0; // Perfect match within preference range
+                } else {
+                    // Beyond preference but still assignable, give partial credit
+                    // Graduated reduction based on distance
+                    if ($distance <= 100) {
+                        return 0.7; // Still relatively close
+                    } elseif ($distance <= 200) {
+                        return 0.5; // Moderate distance
+                    } else {
+                        return 0.3; // Far but still acceptable (minimum)
+                    }
+                }
 
             case 'nationwide':
-                return 1.0; // Accepts any distance
+                return 1.0; // Accepts any distance - always perfect match
 
             default:
+                // Unknown or missing preference - assume flexible but not ideal
                 return 0.5;
         }
     }
 
     /**
-     * Calculate distance score: 1 / (1 + distance_in_km)
+     * Calculate distance score using tiered system
      * Closer = higher score
      */
     protected function calculateDistanceScore(?float $distance): float
@@ -294,7 +510,18 @@ class SupervisorRecommendationService
             return 0.5; // Unknown distance gets neutral score
         }
 
-        return 1 / (1 + $distance);
+        // Tiered scoring based on practical distance ranges
+        if ($distance <= 20) {
+            return 1.0; // Very close (0-20 km) - ideal distance
+        } elseif ($distance <= 50) {
+            return 0.75; // Close (20-50 km) - still very good
+        } elseif ($distance <= 100) {
+            return 0.5; // Moderate (50-100 km) - acceptable
+        } elseif ($distance <= 200) {
+            return 0.3; // Far (100-200 km) - less ideal but workable
+        } else {
+            return 0.15; // Very far (200+ km) - minimum score
+        }
     }
 
     /**

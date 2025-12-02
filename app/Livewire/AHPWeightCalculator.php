@@ -28,8 +28,9 @@ class AHPWeightCalculator extends Component
 
     // UI state
     public $showSaveSuccess = false;
-    public $latestWeights = null;
-    public $mode = 'simple'; // 'simple' or 'advanced'
+    protected $latestWeights = null; // Protected - Eloquent model, not serialized
+    public $latestWeightsData = null; // Public - Serializable array data for display
+    public $mode = 'simple'; // Always simple mode
 
     // Simple mode: Direct weight sliders (0-100, will be normalized)
     public $directWeights = [
@@ -79,7 +80,8 @@ class AHPWeightCalculator extends Component
         $this->loadLatestWeights();
 
         // Initialize with default matrix if no latest weights
-        if (!$this->latestWeights) {
+        $latestWeightsModel = $this->getLatestWeights();
+        if (!$latestWeightsModel) {
             $this->matrix = $this->ahpService->createDefaultMatrix();
             // Initialize direct weights from default (40%, 30%, 20%, 10%)
             $this->directWeights = [
@@ -91,25 +93,53 @@ class AHPWeightCalculator extends Component
             $this->calculateWeights();
         } else {
             // Load matrix from latest weights
-            $this->matrix = $this->latestWeights->criteria_comparisons;
-            $this->calculatedWeights = $this->latestWeights->calculated_weights;
-            $this->consistencyRatio = $this->latestWeights->consistency_ratio;
-            $this->isConsistent = $this->latestWeights->is_consistent;
+            $this->matrix = $latestWeightsModel->criteria_comparisons;
+            $this->calculatedWeights = $latestWeightsModel->calculated_weights;
+            $this->consistencyRatio = $latestWeightsModel->consistency_ratio;
+            $this->isConsistent = $latestWeightsModel->is_consistent;
             // Load direct weights from calculated weights
             foreach ($this->calculatedWeights as $key => $weight) {
                 $this->directWeights[$key] = $weight * 100;
             }
         }
 
-        // Ensure weights are calculated in simple mode
-        if ($this->mode === 'simple' && empty($this->calculatedWeights)) {
+        // Ensure weights are calculated
+        if (empty($this->calculatedWeights)) {
             $this->calculateWeights();
         }
+        
+        // Ensure mode is always simple
+        $this->mode = 'simple';
     }
 
     public function loadLatestWeights()
     {
         $this->latestWeights = AHPWeight::getLatest();
+        
+        // Store only serializable data for Livewire
+        if ($this->latestWeights) {
+            $creator = $this->latestWeights->creator;
+            $this->latestWeightsData = [
+                'creator_name' => $creator->name ?? 'Unknown',
+                'created_at' => $this->latestWeights->created_at->format('M d, Y H:i'),
+                'consistency_ratio' => $this->latestWeights->consistency_ratio,
+                'is_consistent' => $this->latestWeights->is_consistent,
+                'weights' => $this->latestWeights->calculated_weights,
+            ];
+        } else {
+            $this->latestWeightsData = null;
+        }
+    }
+    
+    /**
+     * Get latest weights model (for internal use)
+     */
+    protected function getLatestWeights()
+    {
+        if (!$this->latestWeights) {
+            $this->loadLatestWeights();
+        }
+        return $this->latestWeights;
     }
 
     /**
@@ -162,38 +192,28 @@ class AHPWeightCalculator extends Component
         $this->isConsistent = false;
 
         try {
-            if ($this->mode === 'simple') {
-                // In simple mode, calculate weights directly from normalized direct weights
-                $sum = array_sum($this->directWeights);
-                if ($sum == 0) {
-                    $sum = 100; // Default to equal weights
-                }
+            // Calculate weights directly from normalized direct weights
+            $sum = array_sum($this->directWeights);
+            if ($sum == 0) {
+                $sum = 100; // Default to equal weights
+            }
 
-                $this->calculatedWeights = [];
-                foreach ($this->directWeights as $key => $value) {
-                    $this->calculatedWeights[$key] = $value / $sum;
-                }
+            $this->calculatedWeights = [];
+            foreach ($this->directWeights as $key => $value) {
+                $this->calculatedWeights[$key] = $value / $sum;
+            }
 
-                // Calculate consistency ratio from the generated matrix (without strict validation)
-                try {
-                    $result = $this->ahpService->calculateWeightsWithoutValidation($this->matrix);
-                    $this->consistencyRatio = $result['consistency_ratio'];
-                    $this->isConsistent = $result['is_consistent'];
-                    $this->lambdaMax = $result['lambda_max'] ?? null;
-                } catch (\InvalidArgumentException $e) {
-                    // If matrix validation fails, use default consistency
-                    $this->consistencyRatio = 0.0;
-                    $this->isConsistent = true;
-                    $this->lambdaMax = null;
-                }
-            } else {
-                // Advanced mode: use AHP calculation
-                $result = $this->ahpService->calculateWeights($this->matrix);
-
-                $this->calculatedWeights = $result['weights'];
+            // Calculate consistency ratio from the generated matrix (without strict validation)
+            try {
+                $result = $this->ahpService->calculateWeightsWithoutValidation($this->matrix);
                 $this->consistencyRatio = $result['consistency_ratio'];
                 $this->isConsistent = $result['is_consistent'];
                 $this->lambdaMax = $result['lambda_max'] ?? null;
+            } catch (\InvalidArgumentException $e) {
+                // If matrix validation fails, use default consistency
+                $this->consistencyRatio = 0.0;
+                $this->isConsistent = true;
+                $this->lambdaMax = null;
             }
         } catch (\InvalidArgumentException $e) {
             $this->errorMessage = $e->getMessage();
@@ -219,19 +239,13 @@ class AHPWeightCalculator extends Component
      */
     public function resetToEqual()
     {
-        if ($this->mode === 'simple') {
-            // Reset direct weights to equal
-            foreach ($this->directWeights as $key => $value) {
-                $this->directWeights[$key] = 25.0;
-            }
-            $this->convertDirectWeightsToMatrix();
-            $this->calculateWeights();
-            Session::flash('info', 'Weights reset to equal (25% each).');
-        } else {
-            $this->matrix = $this->ahpService->createIdentityMatrix();
-            $this->calculateWeights();
-            Session::flash('info', 'Matrix reset to equal weights (25% each).');
+        // Reset direct weights to equal
+        foreach ($this->directWeights as $key => $value) {
+            $this->directWeights[$key] = 25.0;
         }
+        $this->convertDirectWeightsToMatrix();
+        $this->calculateWeights();
+        Session::flash('info', 'Weights reset to equal (25% each).');
     }
 
     /**
@@ -245,28 +259,6 @@ class AHPWeightCalculator extends Component
         return '0.00%';
     }
 
-    /**
-     * Switch between simple and advanced modes
-     */
-    public function switchMode($newMode)
-    {
-        if ($newMode === 'simple') {
-            // Convert current weights to direct weights
-            if (!empty($this->calculatedWeights)) {
-                foreach ($this->calculatedWeights as $key => $weight) {
-                    $this->directWeights[$key] = $weight * 100;
-                }
-            }
-            // Ensure weights are calculated
-            $this->calculateWeights();
-        } else {
-            // Convert direct weights to approximate matrix
-            $this->convertDirectWeightsToMatrix();
-            // Recalculate weights from matrix
-            $this->calculateWeights();
-        }
-        $this->mode = $newMode;
-    }
 
     /**
      * Update direct weight and normalize others
@@ -281,7 +273,7 @@ class AHPWeightCalculator extends Component
 
         $this->directWeights[$key] = $value;
 
-        // Normalize to ensure sum is 100
+        // Normalize to ensure sum is 100 (automatic normalization)
         $this->normalizeDirectWeights();
 
         // Convert to matrix and calculate
@@ -361,20 +353,14 @@ class AHPWeightCalculator extends Component
      */
     public function saveWeights()
     {
-        if ($this->mode === 'simple') {
-            // Convert direct weights to matrix first
-            $this->convertDirectWeightsToMatrix();
-        }
+        // Ensure weights are normalized before saving
+        $this->normalizeDirectWeights();
+        
+        // Convert direct weights to matrix first
+        $this->convertDirectWeightsToMatrix();
 
         // Recalculate to ensure consistency
         $this->calculateWeights();
-
-        // In simple mode, we allow saving even with higher consistency ratio
-        // because weights are directly set and normalized
-        if ($this->mode === 'advanced' && !$this->isConsistent) {
-            Session::flash('error', 'Cannot save: Consistency ratio exceeds acceptable threshold (0.1). Please adjust your comparisons.');
-            return;
-        }
 
         if (empty($this->calculatedWeights)) {
             Session::flash('error', 'Cannot save: Invalid weight calculation.');

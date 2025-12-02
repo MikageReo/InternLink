@@ -69,10 +69,10 @@ class StudentPlacementApplicationTable extends Component
     public $changeRequestFiles = [];
     public $viewingChangeRequests = false;
     public $selectedApplicationForChange = null;
-    
+
     // Guide visibility
     public $showGuide = false;
-    
+
     // Company selection
     public $selectedCompanyId = null;
     public $isNewCompany = false;
@@ -337,7 +337,7 @@ class StudentPlacementApplicationTable extends Component
 
         $this->editingId = $id;
         $this->companyName = $application->companyName;
-        
+
         // Try to find if this company name exists in the dropdown
         $existingCompanies = $this->getExistingCompanies();
         $existingCompany = $existingCompanies->firstWhere('name', $application->companyName);
@@ -348,7 +348,7 @@ class StudentPlacementApplicationTable extends Component
             $this->selectedCompanyId = 'new';
             $this->isNewCompany = true;
         }
-        
+
         $this->companyAddressLine = $application->companyAddressLine ?? '';
         $this->companyCity = $application->companyCity ?? '';
         $this->companyPostcode = $application->companyPostcode ?? '';

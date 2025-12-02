@@ -146,15 +146,23 @@ class SupervisorAssignmentTable extends Component
             ->findOrFail($studentID);
 
         // Get recommended supervisors with scores using SupervisorRecommendationService
-        $this->recommendedSupervisors = $this->supervisorRecommendationService->getRecommendedSupervisors(
+        $recommendations = $this->supervisorRecommendationService->getRecommendedSupervisors(
             $this->selectedStudent,
             10,
             $this->quotaOverride
-        )->map(function($rec) {
-            // Add lecturer property for backward compatibility with view
-            $rec['lecturer'] = $rec['lecturer'];
-            $rec['distance'] = $rec['distance_km'];
-            return $rec;
+        );
+
+        // Convert to array format that Livewire can serialize
+        // Note: Lecturer models will be serialized by Livewire automatically
+        $this->recommendedSupervisors = $recommendations->map(function($rec) {
+            return [
+                'lecturer' => $rec['lecturer'],
+                'score' => $rec['score'],
+                'breakdown' => $rec['breakdown'],
+                'distance_km' => $rec['distance_km'],
+                'distance' => $rec['distance_km'],
+                'available_quota' => $rec['available_quota'],
+            ];
         })->values()->toArray();
 
         $this->selectedSupervisorID = null;
@@ -182,15 +190,23 @@ class SupervisorAssignmentTable extends Component
 
         // Reload recommendations if student is selected
         if ($this->selectedStudent) {
-            $this->recommendedSupervisors = $this->supervisorRecommendationService->getRecommendedSupervisors(
+            $recommendations = $this->supervisorRecommendationService->getRecommendedSupervisors(
                 $this->selectedStudent,
                 10,
                 $this->quotaOverride
-            )->map(function($rec) {
-                // Add lecturer property for backward compatibility with view
-                $rec['lecturer'] = $rec['lecturer'];
-                $rec['distance'] = $rec['distance_km'];
-                return $rec;
+            );
+
+            // Convert to array format that Livewire can serialize
+            // Note: Lecturer models will be serialized by Livewire automatically
+            $this->recommendedSupervisors = $recommendations->map(function($rec) {
+                return [
+                    'lecturer' => $rec['lecturer'],
+                    'score' => $rec['score'],
+                    'breakdown' => $rec['breakdown'],
+                    'distance_km' => $rec['distance_km'],
+                    'distance' => $rec['distance_km'],
+                    'available_quota' => $rec['available_quota'],
+                ];
             })->values()->toArray();
         }
     }
