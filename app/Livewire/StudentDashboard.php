@@ -16,7 +16,7 @@ class StudentDashboard extends Component
     public function render()
     {
         $student = Auth::user()->student;
-        
+
         if (!$student) {
             return view('livewire.student-dashboard', [
                 'stats' => $this->getEmptyStats(),
@@ -166,7 +166,7 @@ class StudentDashboard extends Component
         $latestVerification = CourseVerification::where('studentID', $student->studentID)
             ->latest('updated_at')
             ->first();
-        
+
         if ($latestVerification) {
             $activities->push([
                 'type' => 'course_verification',
@@ -182,7 +182,7 @@ class StudentDashboard extends Component
         $latestApplication = PlacementApplication::where('studentID', $student->studentID)
             ->latest('updated_at')
             ->first();
-        
+
         if ($latestApplication) {
             $activities->push([
                 'type' => 'placement_application',
@@ -198,7 +198,7 @@ class StudentDashboard extends Component
         $latestDefer = RequestDefer::where('studentID', $student->studentID)
             ->latest('updated_at')
             ->first();
-        
+
         if ($latestDefer) {
             $activities->push([
                 'type' => 'defer_request',

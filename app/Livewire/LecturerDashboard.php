@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use App\Models\CourseVerification;
 use App\Models\PlacementApplication;
 use App\Models\RequestDefer;
@@ -16,6 +17,42 @@ use Illuminate\Support\Facades\DB;
 
 class LecturerDashboard extends Component
 {
+    use WithPagination;
+
+    public $selectedStudent = null;
+    public $showStudentModal = false;
+    public $activitiesPerPage = 5;
+    public $activitiesPage = 1;
+    public $tasksPerPage = 5;
+    public $tasksPage = 1;
+    public $adviseesPerPage = 5;
+    public $adviseesPage = 1;
+    public $supervisedPerPage = 5;
+    public $supervisedPage = 1;
+
+    public function viewStudentDetail($studentId)
+    {
+        $this->selectedStudent = Student::with([
+            'user',
+            'academicAdvisor.user',
+            'courseVerifications' => function ($q) {
+                $q->latest()->limit(5);
+            },
+            'placementApplications' => function ($q) {
+                $q->latest()->limit(5);
+            },
+            'supervisorAssignments.supervisor.user'
+        ])->find($studentId);
+
+        $this->showStudentModal = true;
+    }
+
+    public function closeStudentModal()
+    {
+        $this->showStudentModal = false;
+        $this->selectedStudent = null;
+    }
+
     public function render()
     {
         $lecturer = Auth::user()->lecturer;
@@ -37,11 +74,21 @@ class LecturerDashboard extends Component
         $recentActivities = $this->getRecentActivities($lecturer);
         $analytics = $this->getAnalytics($lecturer);
 
+        // Get advisees for academic advisors
+        $advisees = $this->getAdvisees($lecturer);
+
+        // Paginate all collections
+        $paginatedTasks = $this->paginateCollection($pendingTasks, $this->tasksPage, $this->tasksPerPage, 'tasksPage');
+        $paginatedAdvisees = $this->paginateCollection($advisees, $this->adviseesPage, $this->adviseesPerPage, 'adviseesPage');
+        $paginatedSupervised = $this->paginateCollection($supervisedStudents, $this->supervisedPage, $this->supervisedPerPage, 'supervisedPage');
+        $paginatedActivities = $this->paginateCollection($recentActivities, $this->activitiesPage, $this->activitiesPerPage, 'activitiesPage');
+
         return view('livewire.lecturer-dashboard', [
             'stats' => $stats,
-            'pendingTasks' => $pendingTasks,
-            'supervisedStudents' => $supervisedStudents,
-            'recentActivities' => $recentActivities,
+            'pendingTasks' => $paginatedTasks,
+            'supervisedStudents' => $paginatedSupervised,
+            'advisees' => $paginatedAdvisees,
+            'recentActivities' => $paginatedActivities,
             'analytics' => $analytics,
         ]);
     }
@@ -116,6 +163,9 @@ class LecturerDashboard extends Component
         if ($lecturer->isAcademicAdvisor) {
             $stats['academicAdvisor'] = [
                 'adviseeCount' => Student::where('academicAdvisorID', $lecturer->lecturerID)->count(),
+                'pendingCourseVerifications' => CourseVerification::whereHas('student', function ($q) use ($lecturer) {
+                    $q->where('academicAdvisorID', $lecturer->lecturerID);
+                })->whereNull('academicAdvisorStatus')->count(),
             ];
         }
 
@@ -126,24 +176,48 @@ class LecturerDashboard extends Component
     {
         $tasks = collect([]);
 
-        // Course verifications needing review
-        $pendingVerifications = CourseVerification::where('lecturerID', $lecturer->lecturerID)
-            ->where('status', 'pending')
+        // Course verifications needing review - for academic advisors
+        if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+            $pendingVerifications = CourseVerification::whereHas('student', function ($q) use ($lecturer) {
+                $q->where('academicAdvisorID', $lecturer->lecturerID);
+            })
+            ->whereNull('academicAdvisorStatus')
             ->with(['student.user'])
             ->orderBy('applicationDate', 'asc')
             ->limit(5)
             ->get();
 
-        foreach ($pendingVerifications as $verification) {
-            $tasks->push([
-                'type' => 'course_verification',
-                'title' => 'Review Course Verification',
-                'description' => "Student: {$verification->student->user->name} ({$verification->student->studentID})",
-                'date' => $verification->applicationDate,
-                'priority' => 'high',
-                'link' => route('lecturer.courseVerificationManagement'),
-                'id' => $verification->courseVerificationID,
-            ]);
+            foreach ($pendingVerifications as $verification) {
+                $tasks->push([
+                    'type' => 'course_verification',
+                    'title' => 'Review Course Verification (Academic Advisor)',
+                    'description' => "Student: {$verification->student->user->name} ({$verification->student->studentID})",
+                    'date' => $verification->applicationDate,
+                    'priority' => 'high',
+                    'link' => route('lecturer.courseVerificationManagement'),
+                    'id' => $verification->courseVerificationID,
+                ]);
+            }
+        } else {
+            // Course verifications needing review - for coordinators/committee
+            $pendingVerifications = CourseVerification::where('lecturerID', $lecturer->lecturerID)
+                ->where('status', 'pending')
+                ->with(['student.user'])
+                ->orderBy('applicationDate', 'asc')
+                ->limit(5)
+                ->get();
+
+            foreach ($pendingVerifications as $verification) {
+                $tasks->push([
+                    'type' => 'course_verification',
+                    'title' => 'Review Course Verification',
+                    'description' => "Student: {$verification->student->user->name} ({$verification->student->studentID})",
+                    'date' => $verification->applicationDate,
+                    'priority' => 'high',
+                    'link' => route('lecturer.courseVerificationManagement'),
+                    'id' => $verification->courseVerificationID,
+                ]);
+            }
         }
 
         // Placement applications to review (if committee)
@@ -318,7 +392,7 @@ class LecturerDashboard extends Component
                 return $priorityCompare;
             }
             return $a['date'] <=> $b['date'];
-        })->take(10);
+        });
     }
 
     private function getSupervisedStudents($lecturer): Collection
@@ -341,6 +415,31 @@ class LecturerDashboard extends Component
                     'student' => $assignment->student,
                     'placement' => $placement,
                     'status' => $placement ? 'Active' : 'Pending Placement',
+                ];
+            });
+    }
+
+    private function getAdvisees($lecturer): Collection
+    {
+        if (!$lecturer->isAcademicAdvisor) {
+            return collect([]);
+        }
+
+        return Student::where('academicAdvisorID', $lecturer->lecturerID)
+            ->with(['user', 'courseVerifications' => function ($q) {
+                $q->latest()->limit(1);
+            }, 'placementApplications' => function ($q) {
+                $q->latest()->limit(1);
+            }])
+            ->orderBy('studentID', 'asc')
+            ->get()
+            ->map(function ($student) {
+                $latestVerification = $student->courseVerifications->first();
+                $latestPlacement = $student->placementApplications->first();
+                return [
+                    'student' => $student,
+                    'latestVerification' => $latestVerification,
+                    'latestPlacement' => $latestPlacement,
                 ];
             });
     }
@@ -435,8 +534,46 @@ class LecturerDashboard extends Component
             }
         }
 
-        // Sort by date (most recent first) and take top 10
-        return $activities->sortByDesc('date')->take(10);
+        // Sort by date (most recent first)
+        return $activities->sortByDesc('date');
+    }
+
+    private function paginateCollection(Collection $collection, $currentPage, $perPage, $pageName)
+    {
+        $items = $collection->forPage($currentPage, $perPage)->values();
+        $total = $collection->count();
+
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $currentPage,
+            [
+                'path' => request()->url(),
+                'pageName' => $pageName,
+                'query' => request()->query(),
+            ]
+        );
+
+        return $paginator;
+    }
+
+    public function goToPage($page, $pageType)
+    {
+        switch ($pageType) {
+            case 'tasks':
+                $this->tasksPage = $page;
+                break;
+            case 'advisees':
+                $this->adviseesPage = $page;
+                break;
+            case 'supervised':
+                $this->supervisedPage = $page;
+                break;
+            case 'activities':
+                $this->activitiesPage = $page;
+                break;
+        }
     }
 
     private function getAnalytics($lecturer): array
@@ -518,7 +655,7 @@ class LecturerDashboard extends Component
                 'totalSupervisorAssignments' => 0,
                 'availableSupervisors' => 0,
             ],
-            'academicAdvisor' => ['adviseeCount' => 0],
+            'academicAdvisor' => ['adviseeCount' => 0, 'pendingCourseVerifications' => 0],
         ];
     }
 }

@@ -40,11 +40,37 @@
                                     <p class="text-sm font-medium text-gray-900 mb-2">
                                         <strong>Choose Your Preferred Placement</strong>
                                     </p>
-                                    <ul class="text-sm text-gray-700 space-y-1 ml-4 list-disc">
+                                    <ul class="text-sm text-gray-700 space-y-1 ml-4 list-disc mb-3">
                                         <li>Search for suitable internship opportunities related to your course.</li>
                                         <li>You may use platforms such as Indeed, JobStreet, LinkedIn, or any other
                                             trusted source.</li>
                                     </ul>
+                                    <div class="mt-3">
+                                        <p class="text-sm font-medium text-gray-700 mb-2">Recommended Internship Platforms:</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <a href="https://mytalenthub.com.my/"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="inline-flex items-center px-3 py-2 border border-blue-400 rounded-md text-xs font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                                <i class="fa fa-external-link mr-1.5"></i>
+                                                MyTalent Hub
+                                            </a>
+                                            <a href="https://www.mynext.my/"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="inline-flex items-center px-3 py-2 border border-blue-400 rounded-md text-xs font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                                <i class="fa fa-external-link mr-1.5"></i>
+                                                MyNext
+                                            </a>
+                                            <a href="https://internseek.raegrp.com/"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="inline-flex items-center px-3 py-2 border border-blue-400 rounded-md text-xs font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                                <i class="fa fa-external-link mr-1.5"></i>
+                                                InternSeek
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
