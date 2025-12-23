@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Student;
 
 use Livewire\Component;
 use App\Models\Student;
 use App\Models\SupervisorAssignment;
 use Illuminate\Support\Facades\Auth;
 
-class StudentSupervisorCard extends Component
+class SupervisorCard extends Component
 {
     public $student;
     public $supervisorAssignment;

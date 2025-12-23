@@ -6,7 +6,7 @@
     </x-slot>
 
     <div>
-        @livewire('auto-supervisor-assignment')
+        @livewire('lecturer.auto-supervisor-assignment')
     </div>
 </x-app-layout>
 

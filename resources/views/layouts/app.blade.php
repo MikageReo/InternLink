@@ -40,7 +40,7 @@
 
         <!-- Placement Chatbot (Student Only) -->
         @if(auth()->check() && auth()->user()->isStudent())
-            @livewire('placement-chatbot')
+            @livewire('student.placement-chatbot')
         @endif
 
         @livewireScripts

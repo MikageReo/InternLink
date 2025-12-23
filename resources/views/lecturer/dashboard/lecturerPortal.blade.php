@@ -5,5 +5,5 @@
         </h2>
     </x-slot>
 
-    @livewire('lecturer-dashboard')
+    @livewire('lecturer.dashboard')
 </x-app-layout>

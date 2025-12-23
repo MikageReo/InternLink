@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class LecturerDashboard extends Component
+class Dashboard extends Component
 {
     use WithPagination;
 
