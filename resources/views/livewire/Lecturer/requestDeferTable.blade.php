@@ -517,5 +517,5 @@
     </div>
 
     <!-- Include the detail modal -->
-    @include('livewire.lecturer-request-defer-modal')
+    @include('livewire.lecturer.requestDeferModal')
 </div>

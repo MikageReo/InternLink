@@ -817,7 +817,7 @@ class SupervisorAssignmentTable extends Component
         $availableYears = Student::distinct()->pluck('year')->filter()->sort()->values();
         $availableSemesters = [1, 2];
 
-        return view('livewire.supervisor-assignment-table', [
+        return view('livewire.lecturer.supervisorAssignmentTable', [
             'students' => $students,
             'stats' => $stats,
             'availableYears' => $availableYears,

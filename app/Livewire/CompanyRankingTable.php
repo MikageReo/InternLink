@@ -63,7 +63,7 @@ class CompanyRankingTable extends Component
         }
         $totalCompanies = $baseQuery->distinct('companyName')->count('companyName');
 
-        return view('livewire.company-ranking-table', [
+        return view('livewire.companyRankingTable', [
             'rankings' => $rankings,
             'totalCompanies' => $totalCompanies,
         ]);

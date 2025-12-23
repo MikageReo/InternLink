@@ -132,7 +132,7 @@ class AutoSupervisorAssignment extends Component
             })->count(),
         ];
 
-        return view('livewire.auto-supervisor-assignment', [
+        return view('livewire.lecturer.autoSupervisorAssignment', [
             'students' => $students,
             'stats' => $stats,
         ]);

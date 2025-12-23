@@ -256,7 +256,7 @@ class ChangeRequestHistory extends Component
         $requests = $this->getFilteredRequests()->paginate($this->perPage);
         $analytics = $this->getAnalyticsData();
 
-        return view('livewire.student-change-request-history', [
+        return view('livewire.student.changeRequestHistory', [
             'requests' => $requests,
             'analytics' => $analytics,
         ]);

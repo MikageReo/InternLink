@@ -107,7 +107,7 @@ class AHPWeightCalculator extends Component
         if (empty($this->calculatedWeights)) {
             $this->calculateWeights();
         }
-        
+
         // Ensure mode is always simple
         $this->mode = 'simple';
     }
@@ -115,7 +115,7 @@ class AHPWeightCalculator extends Component
     public function loadLatestWeights()
     {
         $this->latestWeights = AHPWeight::getLatest();
-        
+
         // Store only serializable data for Livewire
         if ($this->latestWeights) {
             $creator = $this->latestWeights->creator;
@@ -130,7 +130,7 @@ class AHPWeightCalculator extends Component
             $this->latestWeightsData = null;
         }
     }
-    
+
     /**
      * Get latest weights model (for internal use)
      */
@@ -355,7 +355,7 @@ class AHPWeightCalculator extends Component
     {
         // Ensure weights are normalized before saving
         $this->normalizeDirectWeights();
-        
+
         // Convert direct weights to matrix first
         $this->convertDirectWeightsToMatrix();
 
@@ -388,6 +388,6 @@ class AHPWeightCalculator extends Component
 
     public function render()
     {
-        return view('livewire.a-h-p-weight-calculator');
+        return view('livewire.lecturer.AHPWeightCalculator');
     }
 }

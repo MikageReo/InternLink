@@ -2556,6 +2556,6 @@ class PlacementChatbot extends Component
 
     public function render()
     {
-        return view('livewire.placement-chatbot');
+        return view('livewire.student.placementChatbot');
     }
 }

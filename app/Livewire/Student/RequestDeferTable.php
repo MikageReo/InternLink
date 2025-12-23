@@ -368,7 +368,7 @@ class RequestDeferTable extends Component
         $canMakeRequest = $this->canStudentMakeRequest();
         $analytics = $this->getAnalyticsData();
 
-        return view('livewire.student-request-defer-table', [
+        return view('livewire.student.requestDeferTable', [
             'requests' => $requests,
             'canMakeRequest' => $canMakeRequest,
             'analytics' => $analytics,

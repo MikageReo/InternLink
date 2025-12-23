@@ -706,7 +706,7 @@ class PlacementApplicationTable extends Component
             }
         }
 
-        return view('livewire.lecturer-placement-application-table', [
+        return view('livewire.lecturer.placementApplicationTable', [
             'applications' => $applications,
             'analytics' => $analytics,
             'companies' => $companies,

@@ -298,7 +298,7 @@ class CourseVerificationTable extends Component
             $canApply = !$hasApprovedApplication && (!$currentApplication || $currentApplication->status === 'rejected');
         }
 
-        return view('livewire.course-verification-table', [
+        return view('livewire.student.courseVerificationTable', [
             'verifications' => $verifications,
             'totalCreditRequired' => $this->totalCreditRequired,
             'currentApplication' => $currentApplication,

@@ -672,7 +672,7 @@ class RequestDeferTable extends Component
         // Get unique students for filters
         $students = Student::with('user')->get()->pluck('user.name', 'studentID')->sort();
 
-        return view('livewire.lecturer-request-defer-table', [
+        return view('livewire.lecturer.requestDeferTable', [
             'requests' => $requests,
             'analytics' => $analytics,
             'students' => $students,

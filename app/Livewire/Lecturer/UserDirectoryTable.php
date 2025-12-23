@@ -664,7 +664,7 @@ class UserDirectoryTable extends Component
         $totalStudents = Student::count();
         $totalLecturers = Lecturer::count();
 
-        return view('livewire.user-directory-table', [
+        return view('livewire.lecturer.userDirectoryTable', [
             'users' => $users,
             'totalCount' => $totalCount,
             'totalStudents' => $totalStudents,

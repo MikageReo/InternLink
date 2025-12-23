@@ -725,7 +725,7 @@ class ChangeRequestTable extends Component
         $students = Student::with('user')->get()->pluck('user.name', 'studentID')->sort();
         $companies = PlacementApplication::distinct()->pluck('companyName')->sort();
 
-        return view('livewire.lecturer-change-request-table', [
+        return view('livewire.lecturer.changeRequestTable', [
             'requests' => $requests,
             'analytics' => $analytics,
             'students' => $students,

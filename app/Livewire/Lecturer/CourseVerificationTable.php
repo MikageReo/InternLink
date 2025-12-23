@@ -750,7 +750,7 @@ class CourseVerificationTable extends Component
             $rejectedApplications = 0;
         }
 
-        return view('livewire.lecturer-course-verification-table', [
+        return view('livewire.lecturer.courseVerificationTable', [
             'applications' => $applications,
             'totalApplications' => $totalApplications,
             'pendingApplications' => $pendingApplications,

@@ -118,69 +118,69 @@
                         </div>
 
                         <div class="p-6 space-y-6">
-                                @foreach (['course_match' => 'Course Match', 'preference_match' => 'Preference Match', 'distance_score' => 'Distance Score', 'workload_score' => 'Workload Score'] as $key => $label)
-                                    <div>
-                                        <div class="flex items-center justify-between mb-2">
-                                            <label class="text-sm font-medium text-gray-700">
-                                                {{ $label }}
-                                            </label>
-                                            <div class="flex items-center gap-3">
-                                                <input type="number"
-                                                    wire:model.live.debounce.300ms="directWeights.{{ $key }}"
-                                                    min="0" max="100" step="0.1"
-                                                    class="w-20 text-center border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                                <span class="text-sm font-bold text-gray-900 w-12 text-right">
-                                                    {{ number_format($directWeights[$key] ?? 0, 1) }}%
-                                                </span>
-                                            </div>
+                            @foreach (['course_match' => 'Course Match', 'preference_match' => 'Preference Match', 'distance_score' => 'Distance Score', 'workload_score' => 'Workload Score'] as $key => $label)
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <label class="text-sm font-medium text-gray-700">
+                                            {{ $label }}
+                                        </label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="number"
+                                                wire:model.live.debounce.300ms="directWeights.{{ $key }}"
+                                                min="0" max="100" step="0.1"
+                                                class="w-20 text-center border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <span class="text-sm font-bold text-gray-900 w-12 text-right">
+                                                {{ number_format($directWeights[$key] ?? 0, 1) }}%
+                                            </span>
                                         </div>
-                                        <input type="range"
-                                            wire:model.live.debounce.300ms="directWeights.{{ $key }}"
-                                            min="0" max="100" step="0.1"
-                                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
-                                        <div class="flex justify-between text-xs text-gray-500 mt-1">
-                                            <span>0%</span>
-                                            <span>50%</span>
-                                            <span>100%</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-1">
-                                            @if ($key === 'course_match')
-                                                How important is matching the student's program with the supervisor's
-                                                program?
-                                            @elseif($key === 'preference_match')
-                                                How important is matching the supervisor's travel preference with the
-                                                placement location?
-                                            @elseif($key === 'distance_score')
-                                                How important is the distance between supervisor and placement location?
-                                            @elseif($key === 'workload_score')
-                                                How important is the supervisor's current workload (availability)?
-                                            @endif
-                                        </p>
                                     </div>
-                                @endforeach
-
-                                <!-- Total Display -->
-                                <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm font-medium text-blue-900">Total Weight:</span>
-                                        <span class="text-lg font-bold text-green-600">
-                                            {{ number_format(array_sum($directWeights), 1) }}%
-                                        </span>
+                                    <input type="range"
+                                        wire:model.live.debounce.300ms="directWeights.{{ $key }}"
+                                        min="0" max="100" step="0.1"
+                                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+                                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                        <span>0%</span>
+                                        <span>50%</span>
+                                        <span>100%</span>
                                     </div>
-                                    <p class="text-xs text-blue-600 mt-1">
-                                        Weights are automatically normalized to 100% total
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        @if ($key === 'course_match')
+                                            How important is matching the student's program with the supervisor's
+                                            program?
+                                        @elseif($key === 'preference_match')
+                                            How important is matching the supervisor's travel preference with the
+                                            placement location?
+                                        @elseif($key === 'distance_score')
+                                            How important is the distance between supervisor and placement location?
+                                        @elseif($key === 'workload_score')
+                                            How important is the supervisor's current workload (availability)?
+                                        @endif
                                     </p>
                                 </div>
+                            @endforeach
 
-                                <!-- Action Buttons -->
-                                <div class="mt-6 flex gap-3">
-                                    <button wire:click="resetToEqual"
-                                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium transition">
-                                        Reset to Equal (25% each)
-                                    </button>
+                            <!-- Total Display -->
+                            <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-blue-900">Total Weight:</span>
+                                    <span class="text-lg font-bold text-green-600">
+                                        {{ number_format(array_sum($directWeights), 1) }}%
+                                    </span>
                                 </div>
+                                <p class="text-xs text-blue-600 mt-1">
+                                    Weights are automatically normalized to 100% total
+                                </p>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="mt-6 flex gap-3">
+                                <button wire:click="resetToEqual"
+                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium transition">
+                                    Reset to Equal (25% each)
+                                </button>
                             </div>
                         </div>
+                    </div>
                 </div>
 
                 <!-- Right Column: Results -->
@@ -216,14 +216,14 @@
 
                                 <!-- Save Button -->
                                 <div class="mt-6">
-                                    <button wire:click="saveWeights"
-                                        wire:loading.attr="disabled"
+                                    <button wire:click="saveWeights" wire:loading.attr="disabled"
                                         wire:target="saveWeights"
                                         class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
                                         <span wire:loading.remove wire:target="saveWeights">
                                             Save Weights
                                         </span>
-                                        <span wire:loading wire:target="saveWeights" class="flex items-center justify-center">
+                                        <span wire:loading wire:target="saveWeights"
+                                            class="flex items-center justify-center">
                                             <x-loading-spinner size="h-4 w-4" color="text-white" class="mr-2" />
                                             Saving...
                                         </span>

@@ -18,7 +18,7 @@ class Dashboard extends Component
         $student = Auth::user()->student;
 
         if (!$student) {
-            return view('livewire.student-dashboard', [
+            return view('livewire.student.dashboard', [
                 'stats' => $this->getEmptyStats(),
                 'latestCourseVerification' => null,
                 'placementApplicationStats' => [],
@@ -42,7 +42,7 @@ class Dashboard extends Component
         $recentActivities = $this->getRecentActivities($student);
         $latestPlacementApplication = $this->getLatestPlacementApplication($student);
 
-        return view('livewire.student-dashboard', [
+        return view('livewire.student.dashboard', [
             'stats' => $stats,
             'latestCourseVerification' => $latestCourseVerification,
             'placementApplicationStats' => $placementApplicationStats,

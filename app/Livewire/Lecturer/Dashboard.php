@@ -58,7 +58,7 @@ class Dashboard extends Component
         $lecturer = Auth::user()->lecturer;
 
         if (!$lecturer) {
-            return view('livewire.lecturer-dashboard', [
+            return view('livewire.lecturer.dashboard', [
                 'stats' => $this->getEmptyStats(),
                 'pendingTasks' => collect([]),
                 'supervisedStudents' => collect([]),
@@ -83,7 +83,7 @@ class Dashboard extends Component
         $paginatedSupervised = $this->paginateCollection($supervisedStudents, $this->supervisedPage, $this->supervisedPerPage, 'supervisedPage');
         $paginatedActivities = $this->paginateCollection($recentActivities, $this->activitiesPage, $this->activitiesPerPage, 'activitiesPage');
 
-        return view('livewire.lecturer-dashboard', [
+        return view('livewire.lecturer.dashboard', [
             'stats' => $stats,
             'pendingTasks' => $paginatedTasks,
             'supervisedStudents' => $paginatedSupervised,

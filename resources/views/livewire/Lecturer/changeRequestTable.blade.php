@@ -478,5 +478,5 @@
     </div>
 
     <!-- Include the detail modal -->
-    @include('livewire.lecturer-change-request-modal')
+    @include('livewire.lecturer.changeRequestModal')
 </div>

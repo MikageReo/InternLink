@@ -1034,7 +1034,7 @@ class PlacementApplicationTable extends Component
 
         $existingCompanies = $this->getExistingCompanies();
 
-        return view('livewire.student-placement-application-table', [
+        return view('livewire.student.placementApplicationTable', [
             'applications' => $applications,
             'canApply' => $canApply,
             'hasAcceptedApplication' => $hasAcceptedApplication,

@@ -26,6 +26,6 @@ class SupervisorCard extends Component
 
     public function render()
     {
-        return view('livewire.student-supervisor-card');
+        return view('livewire.student.supervisorCard');
     }
 }
