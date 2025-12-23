@@ -217,8 +217,16 @@
                                 <!-- Save Button -->
                                 <div class="mt-6">
                                     <button wire:click="saveWeights"
-                                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition">
-                                        Save Weights
+                                        wire:loading.attr="disabled"
+                                        wire:target="saveWeights"
+                                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span wire:loading.remove wire:target="saveWeights">
+                                            Save Weights
+                                        </span>
+                                        <span wire:loading wire:target="saveWeights" class="flex items-center justify-center">
+                                            <x-loading-spinner size="h-4 w-4" color="text-white" class="mr-2" />
+                                            Saving...
+                                        </span>
                                     </button>
                                     <p class="text-xs text-gray-500 mt-2 text-center">
                                         Weights automatically normalize to ensure consistency

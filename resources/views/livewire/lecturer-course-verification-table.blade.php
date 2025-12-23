@@ -255,23 +255,49 @@
 
                             <!-- Bulk Actions Buttons -->
                             <button wire:click="bulkDownload"
-                                class="px-4 py-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                <i class="fa fa-download mr-2"></i>
-                                Download All
+                                wire:loading.attr="disabled"
+                                wire:target="bulkDownload"
+                                class="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm hover:shadow-md">
+                                <span wire:loading.remove wire:target="bulkDownload" class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    </svg>
+                                    <span>Download All</span>
+                                </span>
+                                <span wire:loading wire:target="bulkDownload" class="flex items-center gap-2">
+                                    <x-loading-spinner size="h-4 w-4" color="text-white" />
+                                    <span>Downloading...</span>
+                                </span>
                             </button>
 
                             <button wire:click="bulkReject"
                                 wire:confirm="Are you sure you want to reject {{ count($selectedApplications) }} application(s)?"
-                                class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                <i class="fa fa-times mr-2"></i>
-                                Reject Selected
+                                wire:loading.attr="disabled"
+                                wire:target="bulkReject"
+                                class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove wire:target="bulkReject">
+                                    <i class="fa fa-times mr-2"></i>
+                                    Reject Selected
+                                </span>
+                                <span wire:loading wire:target="bulkReject" class="flex items-center">
+                                    <x-loading-spinner class="mr-2" />
+                                    Rejecting...
+                                </span>
                             </button>
 
                             <button wire:click="bulkApprove"
                                 wire:confirm="Are you sure you want to approve {{ count($selectedApplications) }} application(s)?"
-                                class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                <i class="fa fa-check mr-2"></i>
-                                Approve Selected
+                                wire:loading.attr="disabled"
+                                wire:target="bulkApprove"
+                                class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove wire:target="bulkApprove">
+                                    <i class="fa fa-check mr-2"></i>
+                                    Approve Selected
+                                </span>
+                                <span wire:loading wire:target="bulkApprove" class="flex items-center">
+                                    <x-loading-spinner class="mr-2" />
+                                    Approving...
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -476,16 +502,34 @@
                                         {{ $application->applicationDate->format('M d, Y') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button wire:click="viewApplication({{ $application->courseVerificationID }})"
-                                            class="text-blue-600 hover:text-blue-900 mr-3" title="View details">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                        @if ($application->files->count() > 0)
-                                            <button wire:click="downloadFile({{ $application->files->first()->id }})"
-                                                class="text-green-600 hover:text-green-900" title="Download file">
-                                                <i class="fa fa-download"></i>
+                                        <div class="flex items-center space-x-2">
+                                            <button wire:click="viewApplication({{ $application->courseVerificationID }})"
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                                                title="View details">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                </svg>
+                                                <span>View</span>
                                             </button>
-                                        @endif
+                                            @if ($application->files->count() > 0)
+                                                <button wire:click="downloadFile({{ $application->files->first()->id }})"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="downloadFile({{ $application->files->first()->id }})"
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Download file">
+                                                    <span wire:loading.remove wire:target="downloadFile({{ $application->files->first()->id }})" class="flex items-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                                        </svg>
+                                                        <span>Download</span>
+                                                    </span>
+                                                    <span wire:loading wire:target="downloadFile({{ $application->files->first()->id }})" class="flex items-center gap-1.5">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-green-600 dark:text-green-400" />
+                                                    </span>
+                                                </button>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -505,7 +549,7 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                <div class="bg-white dark:bg-gray-800 px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6">
                     {{ $applications->links() }}
                 </div>
             </div>
@@ -615,9 +659,19 @@
                                     </div>
                                 </div>
                                 <button wire:click="downloadFile({{ $selectedApplication->files->first()->id }})"
-                                    class="inline-flex items-center px-3 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                    <i class="fa fa-download mr-2"></i>
-                                    Download File
+                                    wire:loading.attr="disabled"
+                                    wire:target="downloadFile({{ $selectedApplication->files->first()->id }})"
+                                    class="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md">
+                                    <span wire:loading.remove wire:target="downloadFile({{ $selectedApplication->files->first()->id }})" class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                        </svg>
+                                        <span>Download File</span>
+                                    </span>
+                                    <span wire:loading wire:target="downloadFile({{ $selectedApplication->files->first()->id }})" class="flex items-center gap-2">
+                                        <x-loading-spinner size="h-4 w-4" color="text-white" />
+                                        <span>Downloading...</span>
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -771,32 +825,71 @@
 
                 <!-- Action Buttons -->
                 @if (($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus === null) || ($isCoordinator && $selectedApplication->status === 'pending' && $selectedApplication->academicAdvisorStatus === 'approved'))
-                    <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
                         <button type="button" wire:click="closeDetailModal"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Cancel
+                            class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                            <span>Cancel</span>
                         </button>
                         <button type="button"
                             wire:click="rejectApplication({{ $selectedApplication->courseVerificationID }})"
                             wire:confirm="Are you sure you want to reject this application?"
-                            class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                            <i class="fa fa-times mr-2"></i>
-                            @if($isAcademicAdvisor)
-                                Mark as Ineligible
-                            @else
-                                Reject
-                            @endif
+                            wire:loading.attr="disabled"
+                            wire:target="rejectApplication({{ $selectedApplication->courseVerificationID }})"
+                            class="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            <span wire:loading.remove wire:target="rejectApplication({{ $selectedApplication->courseVerificationID }})" class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                </svg>
+                                <span>
+                                    @if($isAcademicAdvisor)
+                                        Mark as Ineligible
+                                    @else
+                                        Reject
+                                    @endif
+                                </span>
+                            </span>
+                            <span wire:loading wire:target="rejectApplication({{ $selectedApplication->courseVerificationID }})" class="flex items-center gap-2">
+                                <x-loading-spinner size="h-4 w-4" color="text-white" />
+                                <span>
+                                    @if($isAcademicAdvisor)
+                                        Marking as Ineligible...
+                                    @else
+                                        Rejecting...
+                                    @endif
+                                </span>
+                            </span>
                         </button>
                         <button type="button"
                             wire:click="approveApplication({{ $selectedApplication->courseVerificationID }})"
                             wire:confirm="Are you sure you want to approve this application?"
-                            class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                            <i class="fa fa-check mr-2"></i>
-                            @if($isAcademicAdvisor)
-                                Mark as Eligible
-                            @else
-                                Approve
-                            @endif
+                            wire:loading.attr="disabled"
+                            wire:target="approveApplication({{ $selectedApplication->courseVerificationID }})"
+                            class="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            <span wire:loading.remove wire:target="approveApplication({{ $selectedApplication->courseVerificationID }})" class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                                <span>
+                                    @if($isAcademicAdvisor)
+                                        Mark as Eligible
+                                    @else
+                                        Approve
+                                    @endif
+                                </span>
+                            </span>
+                            <span wire:loading wire:target="approveApplication({{ $selectedApplication->courseVerificationID }})" class="flex items-center gap-2">
+                                <x-loading-spinner size="h-4 w-4" color="text-white" />
+                                <span>
+                                    @if($isAcademicAdvisor)
+                                        Marking as Eligible...
+                                    @else
+                                        Approving...
+                                    @endif
+                                </span>
+                            </span>
                         </button>
                     </div>
                 @else

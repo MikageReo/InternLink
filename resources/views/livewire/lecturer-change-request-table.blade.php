@@ -104,19 +104,35 @@
                                 @if (Auth::user()->lecturer->isCommittee)
                                     <button wire:click="bulkApproveCommittee"
                                         wire:confirm="Are you sure you want to approve these requests as committee?"
-                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        Committee Approve
+                                        wire:loading.attr="disabled"
+                                        wire:target="bulkApproveCommittee"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span wire:loading.remove wire:target="bulkApproveCommittee" class="flex items-center">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            Committee Approve
+                                        </span>
+                                        <span wire:loading wire:target="bulkApproveCommittee" class="flex items-center">
+                                            <x-loading-spinner size="h-4 w-4" class="mr-2" />
+                                            Approving...
+                                        </span>
                                     </button>
                                     <button wire:click="bulkRejectCommittee"
                                         wire:confirm="Are you sure you want to reject these requests as committee?"
-                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                        Committee Reject
+                                        wire:loading.attr="disabled"
+                                        wire:target="bulkRejectCommittee"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span wire:loading.remove wire:target="bulkRejectCommittee" class="flex items-center">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                            Committee Reject
+                                        </span>
+                                        <span wire:loading wire:target="bulkRejectCommittee" class="flex items-center">
+                                            <x-loading-spinner size="h-4 w-4" class="mr-2" />
+                                            Rejecting...
+                                        </span>
                                     </button>
                                 @endif
 
@@ -124,19 +140,35 @@
                                 @if (Auth::user()->lecturer->isCoordinator)
                                     <button wire:click="bulkApproveCoordinator"
                                         wire:confirm="Are you sure you want to approve these requests as coordinator?"
-                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        Coordinator Approve
+                                        wire:loading.attr="disabled"
+                                        wire:target="bulkApproveCoordinator"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span wire:loading.remove wire:target="bulkApproveCoordinator" class="flex items-center">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            Coordinator Approve
+                                        </span>
+                                        <span wire:loading wire:target="bulkApproveCoordinator" class="flex items-center">
+                                            <x-loading-spinner size="h-4 w-4" class="mr-2" />
+                                            Approving...
+                                        </span>
                                     </button>
                                     <button wire:click="bulkRejectCoordinator"
                                         wire:confirm="Are you sure you want to reject these requests as coordinator?"
-                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                        Coordinator Reject
+                                        wire:loading.attr="disabled"
+                                        wire:target="bulkRejectCoordinator"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span wire:loading.remove wire:target="bulkRejectCoordinator" class="flex items-center">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                            Coordinator Reject
+                                        </span>
+                                        <span wire:loading wire:target="bulkRejectCoordinator" class="flex items-center">
+                                            <x-loading-spinner size="h-4 w-4" class="mr-2" />
+                                            Rejecting...
+                                        </span>
                                     </button>
                                 @endif
 
@@ -326,8 +358,13 @@
                                         <div class="flex items-center space-x-2">
                                             <!-- View Details -->
                                             <button wire:click="viewRequest({{ $request->justificationID }})"
-                                                class="text-blue-600 hover:text-blue-900" title="View details">
-                                                👁️
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                                                title="View details">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                </svg>
+                                                <span>View</span>
                                             </button>
 
                                             <!-- Committee Actions -->
@@ -335,25 +372,31 @@
                                                 <button wire:click="approveAsCommittee({{ $request->justificationID }})"
                                                     wire:loading.attr="disabled"
                                                     wire:target="approveAsCommittee({{ $request->justificationID }})"
-                                                    class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed" title="Approve as Committee">
-                                                    <span wire:loading.remove wire:target="approveAsCommittee({{ $request->justificationID }})">✅</span>
-                                                    <span wire:loading wire:target="approveAsCommittee({{ $request->justificationID }})">
-                                                        <svg class="animate-spin h-4 w-4 text-green-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Approve as Committee">
+                                                    <span wire:loading.remove wire:target="approveAsCommittee({{ $request->justificationID }})" class="flex items-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                                         </svg>
+                                                        <span>Approve</span>
+                                                    </span>
+                                                    <span wire:loading wire:target="approveAsCommittee({{ $request->justificationID }})" class="flex items-center gap-1.5">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-white" />
                                                     </span>
                                                 </button>
                                                 <button wire:click="rejectAsCommittee({{ $request->justificationID }})"
                                                     wire:loading.attr="disabled"
                                                     wire:target="rejectAsCommittee({{ $request->justificationID }})"
-                                                    class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed" title="Reject as Committee">
-                                                    <span wire:loading.remove wire:target="rejectAsCommittee({{ $request->justificationID }})">❌</span>
-                                                    <span wire:loading wire:target="rejectAsCommittee({{ $request->justificationID }})">
-                                                        <svg class="animate-spin h-4 w-4 text-red-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 718-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Reject as Committee">
+                                                    <span wire:loading.remove wire:target="rejectAsCommittee({{ $request->justificationID }})" class="flex items-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                                         </svg>
+                                                        <span>Reject</span>
+                                                    </span>
+                                                    <span wire:loading wire:target="rejectAsCommittee({{ $request->justificationID }})" class="flex items-center gap-1.5">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-white" />
                                                     </span>
                                                 </button>
                                             @endif
@@ -363,27 +406,31 @@
                                                 <button wire:click="approveAsCoordinator({{ $request->justificationID }})"
                                                     wire:loading.attr="disabled"
                                                     wire:target="approveAsCoordinator({{ $request->justificationID }})"
-                                                    class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed" title="Approve as Coordinator">
-                                                    <span wire:loading.remove wire:target="approveAsCoordinator({{ $request->justificationID }})">Approve</span>
-                                                    <span wire:loading wire:target="approveAsCoordinator({{ $request->justificationID }})">
-                                                        <svg class="animate-spin h-4 w-4 text-green-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 718-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Approve as Coordinator">
+                                                    <span wire:loading.remove wire:target="approveAsCoordinator({{ $request->justificationID }})" class="flex items-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                                         </svg>
-
+                                                        <span>Approve</span>
+                                                    </span>
+                                                    <span wire:loading wire:target="approveAsCoordinator({{ $request->justificationID }})" class="flex items-center gap-1.5">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-white" />
                                                     </span>
                                                 </button>
                                                 <button wire:click="rejectAsCoordinator({{ $request->justificationID }})"
                                                     wire:loading.attr="disabled"
                                                     wire:target="rejectAsCoordinator({{ $request->justificationID }})"
-                                                    class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed" title="Reject as Coordinator">
-                                                    <span wire:loading.remove wire:target="rejectAsCoordinator({{ $request->justificationID }})">Reject</span>
-                                                    <span wire:loading wire:target="rejectAsCoordinator({{ $request->justificationID }})">
-                                                        <svg class="animate-spin h-4 w-4 text-red-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 718-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Reject as Coordinator">
+                                                    <span wire:loading.remove wire:target="rejectAsCoordinator({{ $request->justificationID }})" class="flex items-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                                         </svg>
-
+                                                        <span>Reject</span>
+                                                    </span>
+                                                    <span wire:loading wire:target="rejectAsCoordinator({{ $request->justificationID }})" class="flex items-center gap-1.5">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-white" />
                                                     </span>
                                                 </button>
                                             @endif
@@ -422,7 +469,7 @@
 
                 <!-- Pagination -->
                 @if ($requests->hasPages())
-                    <div class="px-6 py-4 border-t border-gray-200">
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                         {{ $requests->links() }}
                     </div>
                 @endif

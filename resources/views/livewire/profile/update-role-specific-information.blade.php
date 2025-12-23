@@ -540,63 +540,6 @@ new class extends Component {
                 </div>
             </div>
 
-            <!-- Supervisor Information Section -->
-            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Supervisor Information</h3>
-
-                <!-- First Row: Supervisor Faculty -->
-                <div class="mb-4">
-                    <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-2">Supervisor Faculty:</span>
-                    @if ($supervisorFacultyName)
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Name:</span>
-                                <span class="text-gray-600 dark:text-gray-400">{{ $supervisorFacultyName }}</span>
-                            </div>
-                            @if ($supervisorFacultyID)
-                                <div>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">ID:</span>
-                                    <span class="text-gray-600 dark:text-gray-400">{{ $supervisorFacultyID }}</span>
-                                </div>
-                            @endif
-                            @if ($supervisorFacultyEmail)
-                                <div>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Email:</span>
-                                    <span class="text-gray-600 dark:text-gray-400">{{ $supervisorFacultyEmail }}</span>
-                                </div>
-                            @endif
-                        </div>
-                    @else
-                        <span class="text-gray-600 dark:text-gray-400">Not Assigned</span>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
-                            ℹ️ Supervisor faculty will be assigned by the coordinator once you have an accepted placement application.
-                        </p>
-                    @endif
-                </div>
-
-                <!-- Second Row: Industry Supervisor -->
-                <div>
-                    <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-2">Industry Supervisor:</span>
-                    @if ($industrySupervisorName || $industrySupervisorContact || $industrySupervisorEmail)
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Name:</span>
-                                <span class="text-gray-600 dark:text-gray-400">{{ $industrySupervisorName ?: 'Not provided' }}</span>
-                            </div>
-                            <div>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Contact:</span>
-                                <span class="text-gray-600 dark:text-gray-400">{{ $industrySupervisorContact ?: 'Not provided' }}</span>
-                            </div>
-                            <div>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Email:</span>
-                                <span class="text-gray-600 dark:text-gray-400">{{ $industrySupervisorEmail ?: 'Not provided' }}</span>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-                </div>
-            </div>
-
         @elseif(auth()->user()->isLecturer())
             @php
                 $user = auth()->user();

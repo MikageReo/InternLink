@@ -236,7 +236,20 @@ class PlacementChatbot extends Component
             case 'submit_tip':
                 return $this->handleSubmitTip();
 
-            // ... existing cases ...
+            // Application viewing
+            case 'view_application':
+                return $this->handleViewApplication($student, $data);
+
+            // FAQ viewing
+            case 'view_faq':
+                return $this->handleViewFAQ($data);
+
+            // Navigation
+            case 'back_to_summary':
+                return $this->handleBackToSummary($student);
+
+            case 'back_to_faq_menu':
+                return $this->handleFAQs();
 
             case 'back_to_menu':
                 return $this->handleBackToMenu();
@@ -379,7 +392,14 @@ class PlacementChatbot extends Component
             ];
         }
 
-        $index = $number - 1;
+        if ($number === null || !is_numeric($number)) {
+            return [
+                'content' => "Please select a valid application number.",
+                'buttons' => $this->getApplicationListButtons()
+            ];
+        }
+
+        $index = (int)$number - 1;
         if (!isset($this->storedSummaries[$index])) {
             $maxNumber = count($this->storedSummaries);
             return [
@@ -505,7 +525,14 @@ class PlacementChatbot extends Component
             ];
         }
 
-        $index = $number - 1;
+        if ($number === null || !is_numeric($number)) {
+            return [
+                'content' => "Please select a valid FAQ number.",
+                'buttons' => $this->getFAQMenuButtons()
+            ];
+        }
+
+        $index = (int)$number - 1;
         if (!isset($this->storedFAQs[$index])) {
             $maxNumber = count($this->storedFAQs);
             return [
@@ -552,6 +579,12 @@ class PlacementChatbot extends Component
                 ['label' => '🎮 Mini Games', 'action' => 'mini_games']
             ]
         ];
+    }
+
+    private function handleBackToSummary($student): array
+    {
+        $this->viewingDetails = false;
+        return $this->showSummaryListWithButtons($student);
     }
 
     private function showSummaryListWithButtons($student): array

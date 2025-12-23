@@ -244,15 +244,23 @@
                                             @if ($request->committeeStatus === 'Pending' && $request->coordinatorStatus === 'Pending')
                                                 <!-- Edit button - only when both are pending -->
                                                 <button wire:click="edit({{ $request->deferID }})"
-                                                    class="text-blue-600 hover:text-blue-900" title="Edit request">
-                                                    ✏️ Edit
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                                                    title="Edit request">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                    </svg>
+                                                    <span>Edit</span>
                                                 </button>
                                             @else
                                                 <!-- View button - when any approval has been made -->
                                                 <button wire:click="view({{ $request->deferID }})"
-                                                    class="text-gray-600 hover:text-gray-900"
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                                     title="View details (read-only)">
-                                                    👁️ View
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                    </svg>
+                                                    <span>View</span>
                                                 </button>
                                             @endif
                                         </div>
@@ -278,7 +286,7 @@
 
                 <!-- Pagination -->
                 @if ($requests->hasPages())
-                    <div class="px-6 py-4 border-t border-gray-200">
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                         {{ $requests->links() }}
                     </div>
                 @endif
@@ -501,8 +509,16 @@
                         Cancel
                     </button>
                     <button wire:click="submit" type="button"
-                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                        {{ $editingId ? 'Update Request' : 'Submit Request' }}
+                        wire:loading.attr="disabled"
+                        wire:target="submit"
+                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="submit">
+                            {{ $editingId ? 'Update Request' : 'Submit Request' }}
+                        </span>
+                        <span wire:loading wire:target="submit" class="flex items-center">
+                            <x-loading-spinner size="h-4 w-4" color="text-white" class="mr-2" />
+                            {{ $editingId ? 'Updating...' : 'Submitting...' }}
+                        </span>
                     </button>
                 </div>
             </div>

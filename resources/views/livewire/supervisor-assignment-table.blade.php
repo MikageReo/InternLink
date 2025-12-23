@@ -272,35 +272,67 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex space-x-2">
+                                        <div class="flex items-center space-x-2">
                                             @if(!$student->supervisorAssignment)
                                                 <button wire:click="openAssignModal('{{ $student->studentID }}')"
-                                                    class="text-blue-600 hover:text-blue-900 mr-2">
-                                                    Assign
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                                                    </svg>
+                                                    <span>Assign</span>
                                                 </button>
                                                 <button wire:click="autoAssignSupervisor('{{ $student->studentID }}')"
                                                     wire:loading.attr="disabled"
                                                     wire:target="autoAssignSupervisor('{{ $student->studentID }}')"
-                                                    class="text-green-600 hover:text-green-900">
-                                                    <span wire:loading.remove wire:target="autoAssignSupervisor('{{ $student->studentID }}')">Auto Assign</span>
-                                                    <span wire:loading wire:target="autoAssignSupervisor('{{ $student->studentID }}')">Assigning...</span>
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                                    <span wire:loading.remove wire:target="autoAssignSupervisor('{{ $student->studentID }}')" class="flex items-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                        </svg>
+                                                        <span>Auto Assign</span>
+                                                    </span>
+                                                    <span wire:loading wire:target="autoAssignSupervisor('{{ $student->studentID }}')" class="flex items-center gap-1.5">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-white" />
+                                                        <span>Assigning...</span>
+                                                    </span>
                                                 </button>
                                             @else
                                                 <button wire:click="viewAssignment({{ $student->supervisorAssignment->id }})"
-                                                    class="text-indigo-600 hover:text-indigo-900 mr-2"
                                                     wire:loading.attr="disabled"
-                                                    wire:target="viewAssignment">
-                                                    <span wire:loading.remove wire:target="viewAssignment">View Details</span>
-                                                    <span wire:loading wire:target="viewAssignment">Loading...</span>
+                                                    wire:target="viewAssignment"
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400 dark:hover:bg-indigo-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                                    <span wire:loading.remove wire:target="viewAssignment" class="flex items-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                        </svg>
+                                                        <span>View</span>
+                                                    </span>
+                                                    <span wire:loading wire:target="viewAssignment" class="flex items-center gap-1.5">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-indigo-600 dark:text-indigo-400" />
+                                                    </span>
                                                 </button>
                                                 <button wire:click="openEditModal({{ $student->supervisorAssignment->id }})"
-                                                    class="text-yellow-600 hover:text-yellow-900 mr-2">
-                                                    Edit
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/30 rounded-lg transition-colors">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                    </svg>
+                                                    <span>Edit</span>
                                                 </button>
                                                 <button wire:click="removeAssignment({{ $student->supervisorAssignment->id }})"
                                                     wire:confirm="Are you sure you want to remove this supervisor assignment?"
-                                                    class="text-red-600 hover:text-red-900">
-                                                    Remove
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="removeAssignment({{ $student->supervisorAssignment->id }})"
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                                    <span wire:loading.remove wire:target="removeAssignment({{ $student->supervisorAssignment->id }})" class="flex items-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                        </svg>
+                                                        <span>Remove</span>
+                                                    </span>
+                                                    <span wire:loading wire:target="removeAssignment({{ $student->supervisorAssignment->id }})" class="flex items-center gap-1.5">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-red-600 dark:text-red-400" />
+                                                    </span>
                                                 </button>
                                             @endif
                                         </div>
@@ -318,7 +350,7 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="px-6 py-4 border-t border-gray-200">
+                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                     {{ $students->links() }}
                 </div>
             </div>
@@ -523,15 +555,26 @@
                     <!-- Actions -->
                     <div class="flex justify-end space-x-3">
                         <button wire:click="closeAssignModal"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Cancel
+                            class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                            <span>Cancel</span>
                         </button>
                         <button wire:click="assignSupervisor"
                             wire:loading.attr="disabled"
                             wire:target="assignSupervisor"
-                            class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
-                            <span wire:loading.remove wire:target="assignSupervisor">Assign Supervisor</span>
-                            <span wire:loading wire:target="assignSupervisor">Assigning...</span>
+                            class="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm hover:shadow-md">
+                            <span wire:loading.remove wire:target="assignSupervisor" class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                                </svg>
+                                <span>Assign Supervisor</span>
+                            </span>
+                            <span wire:loading wire:target="assignSupervisor" class="flex items-center gap-2">
+                                <x-loading-spinner size="h-4 w-4" color="text-white" />
+                                <span>Assigning...</span>
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -640,15 +683,26 @@
                     <!-- Actions -->
                     <div class="flex justify-end space-x-3">
                         <button wire:click="closeEditModal"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            Cancel
+                            class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                            <span>Cancel</span>
                         </button>
                         <button wire:click="updateAssignment"
                             wire:loading.attr="disabled"
                             wire:target="updateAssignment"
-                            class="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700 disabled:opacity-50">
-                            <span wire:loading.remove wire:target="updateAssignment">Update Assignment</span>
-                            <span wire:loading wire:target="updateAssignment">Updating...</span>
+                            class="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm hover:shadow-md">
+                            <span wire:loading.remove wire:target="updateAssignment" class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                </svg>
+                                <span>Update Assignment</span>
+                            </span>
+                            <span wire:loading wire:target="updateAssignment" class="flex items-center gap-2">
+                                <x-loading-spinner size="h-4 w-4" color="text-white" />
+                                <span>Updating...</span>
+                            </span>
                         </button>
                     </div>
                 </div>

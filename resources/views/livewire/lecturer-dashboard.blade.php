@@ -161,8 +161,11 @@
                                                 </p>
                                             </div>
                                             <a href="{{ $task['link'] }}"
-                                                class="ml-4 text-xs text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
-                                                View →
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700 rounded-lg transition-colors shadow-sm hover:shadow-md whitespace-nowrap">
+                                                <span>View</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3 w-3">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                                </svg>
                                             </a>
                                         </div>
                                     </div>
@@ -237,8 +240,12 @@
                                             </div>
                                             <div class="ml-4">
                                                 <button wire:click="viewStudentDetail('{{ $item['student']->studentID }}')"
-                                                    class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                                    <i class="fa fa-eye mr-1"></i> View Details
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700 rounded-lg transition-colors shadow-sm hover:shadow-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                    </svg>
+                                                    <span>View Details</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -318,8 +325,12 @@
                                             </div>
                                             <div class="ml-4">
                                                 <button wire:click="viewStudentDetail('{{ $item['student']->studentID }}')"
-                                                    class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                                                    <i class="fa fa-eye mr-1"></i> View Details
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700 rounded-lg transition-colors shadow-sm hover:shadow-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                    </svg>
+                                                    <span>View Details</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -390,8 +401,11 @@
                                         </p>
                                         @if ($activity['link'])
                                             <a href="{{ $activity['link'] }}"
-                                                class="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 inline-block">
-                                                View →
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700 rounded-lg transition-colors shadow-sm hover:shadow-md mt-2">
+                                                <span>View</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3 w-3">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                                </svg>
                                             </a>
                                         @endif
                                     </div>
@@ -401,31 +415,65 @@
                             <!-- Pagination -->
                             @if ($recentActivities->hasPages())
                                 <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
-                                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                                            Showing {{ $recentActivities->firstItem() }} to {{ $recentActivities->lastItem() }} of {{ $recentActivities->total() }} activities
+                                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                        <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                            Showing <span class="font-medium text-gray-900 dark:text-gray-100">{{ $recentActivities->firstItem() }}</span> to <span class="font-medium text-gray-900 dark:text-gray-100">{{ $recentActivities->lastItem() }}</span> of <span class="font-medium text-gray-900 dark:text-gray-100">{{ $recentActivities->total() }}</span> activities
                                         </div>
                                         <div class="flex items-center gap-2">
                                             @if ($recentActivities->onFirstPage())
-                                                <span class="px-3 py-1 text-sm text-gray-400 dark:text-gray-600 cursor-not-allowed">Previous</span>
+                                                <button disabled
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 dark:text-gray-600 bg-gray-100 dark:bg-gray-800 rounded-lg cursor-not-allowed">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                                                    </svg>
+                                                    <span>Previous</span>
+                                                </button>
                                             @else
                                                 <button wire:click="goToPage({{ $recentActivities->currentPage() - 1 }}, 'activities')"
-                                                    class="px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                                                    Previous
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="goToPage({{ $recentActivities->currentPage() - 1 }}, 'activities')"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow">
+                                                    <span wire:loading.remove wire:target="goToPage({{ $recentActivities->currentPage() - 1 }}, 'activities')" class="flex items-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                                                        </svg>
+                                                        <span>Previous</span>
+                                                    </span>
+                                                    <span wire:loading wire:target="goToPage({{ $recentActivities->currentPage() - 1 }}, 'activities')">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-gray-600 dark:text-gray-400" />
+                                                    </span>
                                                 </button>
                                             @endif
 
-                                            <span class="text-sm text-gray-700 dark:text-gray-300">
-                                                Page {{ $recentActivities->currentPage() }} of {{ $recentActivities->lastPage() }}
-                                            </span>
+                                            <div class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                                <span class="text-gray-900 dark:text-gray-100">{{ $recentActivities->currentPage() }}</span>
+                                                <span class="text-gray-500 dark:text-gray-500">/</span>
+                                                <span class="text-gray-600 dark:text-gray-400">{{ $recentActivities->lastPage() }}</span>
+                                            </div>
 
                                             @if ($recentActivities->hasMorePages())
                                                 <button wire:click="goToPage({{ $recentActivities->currentPage() + 1 }}, 'activities')"
-                                                    class="px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                                                    Next
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="goToPage({{ $recentActivities->currentPage() + 1 }}, 'activities')"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow">
+                                                    <span wire:loading.remove wire:target="goToPage({{ $recentActivities->currentPage() + 1 }}, 'activities')" class="flex items-center gap-1.5">
+                                                        <span>Next</span>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                                        </svg>
+                                                    </span>
+                                                    <span wire:loading wire:target="goToPage({{ $recentActivities->currentPage() + 1 }}, 'activities')">
+                                                        <x-loading-spinner size="h-4 w-4" color="text-gray-600 dark:text-gray-400" />
+                                                    </span>
                                                 </button>
                                             @else
-                                                <span class="px-3 py-1 text-sm text-gray-400 dark:text-gray-600 cursor-not-allowed">Next</span>
+                                                <button disabled
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 dark:text-gray-600 bg-gray-100 dark:bg-gray-800 rounded-lg cursor-not-allowed">
+                                                    <span>Next</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                                    </svg>
+                                                </button>
                                             @endif
                                         </div>
                                     </div>
