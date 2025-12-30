@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Livewire\Volt\Component;
 new class extends Component {
 
@@ -62,6 +63,9 @@ new class extends Component {
 
     // Edit mode state
     public bool $editMode = false;
+
+    // Success message state
+    public bool $showSuccessMessage = false;
 
     /**
      * Mount the component.
@@ -150,6 +154,7 @@ new class extends Component {
     public function cancelEdit(): void
     {
         $this->editMode = false;
+        $this->showSuccessMessage = false;
 
         // Reset to original values
         $this->mount();
@@ -169,7 +174,11 @@ new class extends Component {
         }
 
         $this->editMode = false;
+        $this->showSuccessMessage = true;
         $this->dispatch('role-profile-updated');
+
+        // Hide success message after 3 seconds
+        $this->dispatch('hide-success-message');
     }
 
     /**
@@ -178,13 +187,13 @@ new class extends Component {
     private function updateStudentProfile(User $user): void
     {
         $validated = $this->validate([
-            'studentEmail' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'studentAddress' => ['nullable', 'string', 'max:500'],
-            'studentCity' => ['nullable', 'string', 'max:100'],
-            'studentPostcode' => ['nullable', 'string', 'max:20'],
-            'studentState' => ['nullable', 'string', 'max:100'],
-            'studentCountry' => ['nullable', 'string', 'max:100'],
+            'studentEmail' => ['required', 'email', 'max:30', 'unique:users,email,' . $user->id],
+            'phone' => ['required', 'string', 'max:20', 'regex:/^[0-9]+$/'],
+            'studentAddress' => ['required', 'string', 'max:500'],
+            'studentCity' => ['required', 'string', 'max:30'],
+            'studentPostcode' => ['required', 'string', 'max:10', 'regex:/^[0-9]+$/'],
+            'studentState' => ['required', 'string', 'max:20'],
+            'studentCountry' => ['required', 'string', 'max:100'],
         ]);
 
         $student = $user->student;
@@ -236,12 +245,12 @@ new class extends Component {
     private function updateLecturerProfile(User $user): void
     {
         $validated = $this->validate([
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'lecturerAddress' => ['nullable', 'string', 'max:500'],
-            'city' => ['nullable', 'string', 'max:100'],
-            'postcode' => ['nullable', 'string', 'max:20'],
-            'country' => ['nullable', 'string', 'max:100'],
-            'state' => ['nullable', 'string', 'max:100'],
+            'email' => ['required', 'email', 'max:30', 'unique:users,email,' . $user->id],
+            'lecturerAddress' => ['required', 'string', 'max:500'],
+            'city' => ['required', 'string', 'max:30'],
+            'postcode' => ['required', 'string', 'max:10', 'regex:/^[0-9]+$/'],
+            'country' => ['required', 'string', 'max:100'],
+            'state' => ['required', 'string', 'max:20'],
             'travelPreference' => ['required', 'in:local,nationwide'],
         ]);
 
@@ -295,6 +304,24 @@ new class extends Component {
 }; ?>
 
 <section>
+    @if ($showSuccessMessage)
+        <div x-data="{ show: @entangle('showSuccessMessage') }"
+             x-show="show"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 transform scale-100"
+             x-transition:leave-end="opacity-0 transform scale-95"
+             x-init="setTimeout(() => { show = false }, 3000)"
+             class="mb-4 flex items-center gap-2 px-4 py-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-600 dark:text-green-400">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="text-sm font-medium text-green-800 dark:text-green-200">{{ __('Profile updated successfully!') }}</span>
+        </div>
+    @endif
+
     <form wire:submit="updateRoleSpecificInformation" class="space-y-6">
         @if (auth()->user()->isStudent())
             @php
@@ -322,6 +349,18 @@ new class extends Component {
                     : ($student && $student->full_address
                         ? $student->full_address
                         : 'Not provided');
+                $countries = [
+                    'Malaysia','Afghanistan','Albania','Algeria','Argentina','Australia','Austria',
+                    'Bangladesh','Belgium','Brazil','Brunei','Cambodia','Canada','Chile','China',
+                    'Colombia','Denmark','Egypt','Finland','France','Germany','Greece','Hong Kong',
+                    'Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy','Japan',
+                    'Jordan','Kenya','Kuwait','Laos','Lebanon','Libya','Mexico','Morocco','Myanmar',
+                    'Nepal','Netherlands','New Zealand','Nigeria','Norway','Oman','Pakistan',
+                    'Palestine','Philippines','Poland','Portugal','Qatar','Russia','Saudi Arabia',
+                    'Singapore','South Africa','South Korea','Spain','Sri Lanka','Sudan','Sweden',
+                    'Switzerland','Syria','Taiwan','Thailand','Turkey','United Arab Emirates',
+                    'United Kingdom','United States','Vietnam','Yemen'
+                ];
             @endphp
 
             <!-- Profile Header -->
@@ -352,7 +391,7 @@ new class extends Component {
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Email:</span>
                         @if ($editMode)
                             <x-text-input wire:model="studentEmail" id="studentEmail" name="studentEmail" type="email"
-                                class="mt-1 block w-full" placeholder="your.email@example.com" />
+                                class="mt-1 block w-full" placeholder="your.email@example.com" required maxlength="30" />
                             <x-input-error class="mt-2" :messages="$errors->get('studentEmail')" />
                         @else
                             <span class="text-gray-600 dark:text-gray-400">{{ $studentEmail }}</span>
@@ -362,7 +401,9 @@ new class extends Component {
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Phone:</span>
                         @if ($editMode)
                             <x-text-input wire:model="phone" id="phone" name="phone" type="text"
-                                class="mt-1 block w-full" placeholder="e.g., +60123456789" />
+                                class="mt-1 block w-full" placeholder="e.g., 0123456789" required maxlength="20"
+                                inputmode="numeric" pattern="[0-9]*"
+                                oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
                             <x-input-error class="mt-2" :messages="$errors->get('phone')" />
                         @else
                             <span class="text-gray-600 dark:text-gray-400">{{ $phone ?: 'Not provided' }}</span>
@@ -372,7 +413,7 @@ new class extends Component {
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">State:</span>
                         @if ($editMode)
                             <x-text-input wire:model="studentState" id="studentState" name="studentState" type="text"
-                                class="mt-1 block w-full" placeholder="e.g., Pahang" />
+                                class="mt-1 block w-full" placeholder="e.g., Pahang" required maxlength="20" />
                             <x-input-error class="mt-2" :messages="$errors->get('studentState')" />
                         @else
                             <span class="text-gray-600 dark:text-gray-400">{{ $studentState ?: 'Not provided' }}</span>
@@ -382,26 +423,33 @@ new class extends Component {
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Address:</span>
                         @if ($editMode)
                             <x-text-input wire:model="studentAddress" id="studentAddress" name="studentAddress"
-                                type="text" class="mt-1 block w-full" placeholder="Street address" />
+                                type="text" class="mt-1 block w-full" placeholder="Street address" required maxlength="255" />
                             <x-input-error class="mt-2" :messages="$errors->get('studentAddress')" />
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                                 <div>
                                     <x-input-label for="studentCity" :value="__('City')" />
                                     <x-text-input wire:model="studentCity" id="studentCity" name="studentCity"
-                                        type="text" class="mt-1 block w-full" placeholder="City" />
+                                        type="text" class="mt-1 block w-full" placeholder="City" required maxlength="30" />
                                     <x-input-error class="mt-2" :messages="$errors->get('studentCity')" />
                                 </div>
                                 <div>
                                     <x-input-label for="studentPostcode" :value="__('Postcode')" />
                                     <x-text-input wire:model="studentPostcode" id="studentPostcode"
                                         name="studentPostcode" type="text" class="mt-1 block w-full"
-                                        placeholder="Postcode" />
+                                        placeholder="Postcode" required maxlength="10" inputmode="numeric" pattern="[0-9]*"
+                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
                                     <x-input-error class="mt-2" :messages="$errors->get('studentPostcode')" />
                                 </div>
                                 <div>
                                     <x-input-label for="studentCountry" :value="__('Country')" />
-                                    <x-text-input wire:model="studentCountry" id="studentCountry" name="studentCountry"
-                                        type="text" class="mt-1 block w-full" placeholder="Country" />
+                                    <select wire:model="studentCountry" id="studentCountry" name="studentCountry"
+                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                        required>
+                                        <option value="">{{ __('Select Country') }}</option>
+                                        @foreach ($countries as $countryName)
+                                            <option value="{{ $countryName }}">{{ $countryName }}</option>
+                                        @endforeach
+                                    </select>
                                     <x-input-error class="mt-2" :messages="$errors->get('studentCountry')" />
                                 </div>
                             </div>
@@ -485,6 +533,18 @@ new class extends Component {
                 } elseif (!empty($this->lecturerProgram)) {
                     $displayProgram = $this->lecturerProgram;
                 }
+                $countries = [
+                    'Malaysia','Afghanistan','Albania','Algeria','Argentina','Australia','Austria',
+                    'Bangladesh','Belgium','Brazil','Brunei','Cambodia','Canada','Chile','China',
+                    'Colombia','Denmark','Egypt','Finland','France','Germany','Greece','Hong Kong',
+                    'Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy','Japan',
+                    'Jordan','Kenya','Kuwait','Laos','Lebanon','Libya','Mexico','Morocco','Myanmar',
+                    'Nepal','Netherlands','New Zealand','Nigeria','Norway','Oman','Pakistan',
+                    'Palestine','Philippines','Poland','Portugal','Qatar','Russia','Saudi Arabia',
+                    'Singapore','South Africa','South Korea','Spain','Sri Lanka','Sudan','Sweden',
+                    'Switzerland','Syria','Taiwan','Thailand','Turkey','United Arab Emirates',
+                    'United Kingdom','United States','Vietnam','Yemen'
+                ];
                 $activeRoles = [];
                 if ($isAcademicAdvisor) {
                     $activeRoles[] = 'Academic Advisor';
@@ -538,7 +598,7 @@ new class extends Component {
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Email:</span>
                         @if ($editMode)
                             <x-text-input wire:model="email" id="email" name="email" type="email"
-                                class="mt-1 block w-full" placeholder="your.email@example.com" />
+                                class="mt-1 block w-full" placeholder="your.email@example.com" required maxlength="30" />
                             <x-input-error class="mt-2" :messages="$errors->get('email')" />
                         @else
                             <span class="text-gray-600 dark:text-gray-400">{{ $email }}</span>
@@ -548,7 +608,7 @@ new class extends Component {
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">State:</span>
                         @if ($editMode)
                             <x-text-input wire:model="state" id="state" name="state" type="text"
-                                class="mt-1 block w-full" placeholder="e.g., Pahang" />
+                                class="mt-1 block w-full" placeholder="e.g., Pahang" required maxlength="20" />
                             <x-input-error class="mt-2" :messages="$errors->get('state')" />
                         @else
                             <span class="text-gray-600 dark:text-gray-400">{{ $state ?: 'Not provided' }}</span>
@@ -558,25 +618,33 @@ new class extends Component {
                         <span class="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Address:</span>
                         @if ($editMode)
                             <x-text-input wire:model="lecturerAddress" id="lecturerAddress" name="lecturerAddress"
-                                type="text" class="mt-1 block w-full" placeholder="Street address" />
+                                type="text" class="mt-1 block w-full" placeholder="Street address" required maxlength="255" />
                             <x-input-error class="mt-2" :messages="$errors->get('lecturerAddress')" />
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                                 <div>
                                     <x-input-label for="city" :value="__('City')" />
                                     <x-text-input wire:model="city" id="city" name="city" type="text"
-                                        class="mt-1 block w-full" placeholder="City" />
+                                        class="mt-1 block w-full" placeholder="City" required maxlength="30" />
                                     <x-input-error class="mt-2" :messages="$errors->get('city')" />
                                 </div>
                                 <div>
                                     <x-input-label for="postcode" :value="__('Postcode')" />
                                     <x-text-input wire:model="postcode" id="postcode" name="postcode"
-                                        type="text" class="mt-1 block w-full" placeholder="Postcode" />
+                                        type="text" class="mt-1 block w-full" placeholder="Postcode" required maxlength="10"
+                                        inputmode="numeric" pattern="[0-9]*"
+                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
                                     <x-input-error class="mt-2" :messages="$errors->get('postcode')" />
                                 </div>
                                 <div>
                                     <x-input-label for="country" :value="__('Country')" />
-                                    <x-text-input wire:model="country" id="country" name="country" type="text"
-                                        class="mt-1 block w-full" placeholder="Country" />
+                                    <select wire:model="country" id="country" name="country"
+                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                        required>
+                                        <option value="">{{ __('Select Country') }}</option>
+                                        @foreach ($countries as $countryName)
+                                            <option value="{{ $countryName }}">{{ $countryName }}</option>
+                                        @endforeach
+                                    </select>
                                     <x-input-error class="mt-2" :messages="$errors->get('country')" />
                                 </div>
                             </div>
@@ -681,16 +749,26 @@ new class extends Component {
 
         @if ($editMode)
             <div class="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <x-primary-button>{{ __('Save Changes') }}</x-primary-button>
+                <x-primary-button wire:loading.attr="disabled" wire:target="updateRoleSpecificInformation">
+                    <span wire:loading wire:target="updateRoleSpecificInformation" class="flex items-center gap-2">
+                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        <span>{{ __('Saving...') }}</span>
+                    </span>
+                    <span wire:loading.remove wire:target="updateRoleSpecificInformation">
+                        {{ __('Save Changes') }}
+                    </span>
+                </x-primary-button>
 
                 <button type="button" wire:click="cancelEdit"
                     class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-md transition-colors duration-200">
                     {{ __('CANCEL') }}
                 </button>
-
-                <x-action-message class="me-3" on="role-profile-updated">
-                    {{ __('Saved.') }}
-                </x-action-message>
             </div>
         @endif
     </form>

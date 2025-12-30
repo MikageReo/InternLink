@@ -225,10 +225,6 @@ new class extends Component {
                     <x-slot name="trigger">
                         <button
                             class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition duration-150 ease-in-out text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
-                            <!-- User Avatar -->
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                            </div>
                             <div class="hidden md:block text-left">
                                 <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
                                     x-on:profile-updated.window="name = $event.detail.name" class="text-sm font-medium"></div>
@@ -243,9 +239,6 @@ new class extends Component {
                     <x-slot name="content">
                         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                </div>
                                 <div class="flex-1 min-w-0">
                                     <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
                                         x-on:profile-updated.window="name = $event.detail.name" class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate"></div>
@@ -427,9 +420,6 @@ new class extends Component {
         <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-700">
             <div class="px-4 pb-3">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                    </div>
                     <div class="flex-1 min-w-0">
                         <div class="font-medium text-base text-gray-800 dark:text-gray-200 truncate" x-data="{{ json_encode(['name' => auth()->user()->name]) }}"
                             x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
