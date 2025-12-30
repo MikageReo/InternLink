@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Forms;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -12,7 +14,7 @@ use Livewire\Form;
 
 class LoginForm extends Form
 {
-    #[Validate('required|string|email')]
+    #[Validate('required|string|email|max:191')]
     public string $email = '';
 
     #[Validate('required|string')]
@@ -20,6 +22,14 @@ class LoginForm extends Form
 
     #[Validate('boolean')]
     public bool $remember = false;
+
+    /**
+     * Custom validation messages for the login form.
+     */
+    protected array $messages = [
+        'form.email.required' => 'Please enter your email address.',
+        'form.password.required' => 'Please enter your password.',
+    ];
 
     /**
      * Attempt to authenticate the request's credentials.
@@ -30,13 +40,23 @@ class LoginForm extends Form
     {
         $this->ensureIsNotRateLimited();
 
-        $credentials = $this->only(['email', 'password']);
+        // First check if the email exists so we can give a specific error
+        $user = User::where('email', $this->email)->first();
 
-        if (! Auth::attempt($credentials, $this->remember)) {
+        if (! $user) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'form.email' => trans('auth.failed'),
+                'form.email' => __('The provided email address is not registered.'),
+            ]);
+        }
+
+        // If the email exists but authentication fails, treat it as an invalid password
+        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'form.password' => __('The provided password is incorrect.'),
             ]);
         }
 

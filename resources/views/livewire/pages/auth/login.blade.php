@@ -113,6 +113,7 @@ new #[Layout('layouts.guest')] class extends Component
                         name="email"
                         required
                         autofocus
+                        maxlength="30"
                         autocomplete="username"
                         placeholder="Enter your email" />
                     <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
@@ -133,12 +134,8 @@ new #[Layout('layouts.guest')] class extends Component
                     <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
                 </div>
 
-                <!-- Remember Me & Forgot Password -->
-                <div class="flex items-center justify-between">
-                    <label class="flex items-center">
-                        <input type="checkbox" wire:model="form.remember" class="rounded border-gray-300 dark:border-gray-700 text-purple-600 dark:text-purple-500 focus:ring-purple-500 dark:bg-gray-800">
-                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
-                    </label>
+                <!-- Forgot Password -->
+                <div class="flex items-center justify-end">
                     @if (Route::has('password.request'))
                         <a class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium" href="{{ route('password.request') }}" wire:navigate>
                             {{ __('Forgot password?') }}
@@ -148,8 +145,22 @@ new #[Layout('layouts.guest')] class extends Component
 
                 <!-- Submit Button -->
                 <div>
-                    <button type="submit" class="w-full bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
-                        {{ __('Sign In') }}
+                    <button
+                        type="submit"
+                        wire:loading.attr="disabled"
+                        wire:target="login"
+                        class="w-full bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 flex items-center justify-center"
+                    >
+                        <span wire:loading.remove wire:target="login">
+                            {{ __('Sign In') }}
+                        </span>
+                        <span wire:loading wire:target="login" class="inline-flex items-center gap-2">
+                            <svg class="w-5 h-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <span>{{ __('Signing in...') }}</span>
+                        </span>
                     </button>
                 </div>
             </form>

@@ -14,7 +14,7 @@ new #[Layout('layouts.guest')] class extends Component
     public function sendPasswordResetLink(): void
     {
         $this->validate([
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'email', 'max:191'],
         ]);
 
         // We will send the password reset link to this user. Once we have attempted
@@ -45,24 +45,24 @@ new #[Layout('layouts.guest')] class extends Component
                 <!-- Monitor Base -->
                 <rect x="100" y="200" width="100" height="15" rx="3" fill="#ffffff" opacity="0.3"/>
                 <rect x="120" y="215" width="60" height="8" rx="2" fill="#ffffff" opacity="0.2"/>
-                
+
                 <!-- Monitor Screen -->
                 <rect x="50" y="50" width="200" height="150" rx="8" fill="#ffffff" opacity="0.2" stroke="#ffffff" stroke-width="2"/>
                 <rect x="60" y="60" width="180" height="130" rx="4" fill="#ffffff" opacity="0.1"/>
-                
+
                 <!-- Email Icon on Screen -->
                 <rect x="110" y="90" width="80" height="60" rx="4" fill="#ffffff" opacity="0.3"/>
                 <path d="M120 100 L150 120 L180 100" stroke="#9333ea" stroke-width="2" fill="none" opacity="0.8"/>
                 <line x1="120" y1="100" x2="120" y2="140" stroke="#9333ea" stroke-width="2" opacity="0.8"/>
                 <line x1="180" y1="100" x2="180" y2="140" stroke="#9333ea" stroke-width="2" opacity="0.8"/>
                 <line x1="120" y1="140" x2="180" y2="140" stroke="#9333ea" stroke-width="2" opacity="0.8"/>
-                
+
                 <!-- Key/Lock Icon -->
                 <circle cx="150" cy="110" r="8" fill="#9333ea" opacity="0.6"/>
                 <rect x="145" y="118" width="10" height="15" rx="2" fill="#9333ea" opacity="0.6"/>
             </svg>
         </div>
-        
+
         <!-- Welcome Text -->
         <div class="text-center text-white">
             <p class="text-xl mb-2">Reset Your Password</p>
@@ -85,7 +85,7 @@ new #[Layout('layouts.guest')] class extends Component
                     <rect x="25" y="30" width="30" height="40" fill="#ffffff" class="dark:fill-gray-800"/>
                     <line x1="45" y1="30" x2="45" y2="70" stroke="#3b82f6" stroke-width="1" class="dark:stroke-blue-400"/>
                     <line x1="30" y1="45" x2="55" y2="45" stroke="#3b82f6" stroke-width="1" class="dark:stroke-blue-400"/>
-                    
+
                     <!-- Stylized Crest/Flower above book -->
                     <circle cx="40" cy="15" r="8" fill="#fbbf24" class="dark:fill-yellow-400"/>
                     <path d="M40 7 L42 12 L47 12 L43 16 L45 21 L40 17 L35 21 L37 16 L33 12 L38 12 Z" fill="#ffffff" class="dark:fill-gray-800"/>
@@ -109,22 +109,37 @@ new #[Layout('layouts.guest')] class extends Component
                 <!-- Email Address -->
                 <div>
                     <x-input-label for="email" :value="__('Email')" class="mb-2 dark:text-gray-300" />
-                    <input 
-                        wire:model="email" 
-                        id="email" 
-                        class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400" 
-                        type="email" 
-                        name="email" 
-                        required 
-                        autofocus 
+                    <input
+                        wire:model="email"
+                        id="email"
+                        class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        type="email"
+                        name="email"
+                        required
+                        autofocus
+                        maxlength="191"
                         placeholder="Enter your email address" />
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
 
                 <!-- Submit Button -->
                 <div>
-                    <button type="submit" class="w-full bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
-                        {{ __('Email Password Reset Link') }}
+                    <button
+                        type="submit"
+                        wire:loading.attr="disabled"
+                        wire:target="sendPasswordResetLink"
+                        class="w-full bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 flex items-center justify-center"
+                    >
+                        <span wire:loading.remove wire:target="sendPasswordResetLink">
+                            {{ __('Forgot Password') }}
+                        </span>
+                        <span wire:loading wire:target="sendPasswordResetLink" class="inline-flex items-center gap-2">
+                            <svg class="w-5 h-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            <span>{{ __('Sending link...') }}</span>
+                        </span>
                     </button>
                 </div>
             </form>
