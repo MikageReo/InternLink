@@ -44,31 +44,23 @@ class PlacementChatbot extends Component
     public function mount()
     {
         // Initialize with welcome message
-    $messageIndex = count($this->messages);
-    $this->messages[] = [
-        'type' => 'bot',
-        'content' => "Hello! I'm Lia, your InternLink Assistant. I can help you with:\n\n" .
-            "📊 Evaluate placements before applying\n" .
-            "📋 Check your application status\n" .
-            "❓ Answer FAQs\n" .
-            "🎤 Interview preparation\n" .
-            "💡 Daily tips & motivation\n" .
-            "👥 Peer support\n" .
-            "🎮 Mini games\n\n" .
-            "Please click a button below to get started:",
-        'timestamp' => now()
-    ];
+        $messageIndex = count($this->messages);
+        $this->messages[] = [
+            'type' => 'bot',
+            'content' => "Hello! I'm Lia, your InternLink Assistant. How can I help you today?",
+            'timestamp' => now()
+        ];
 
-    // Set up buttons for welcome message
-    $this->messageButtons[$messageIndex] = [
-        ['label' => '📊 Evaluate Placement', 'action' => 'evaluate_placement'],
-        ['label' => '📋 Check Status', 'action' => 'check_status'],
-        ['label' => '❓ FAQs', 'action' => 'faqs'],
-        ['label' => '🎤 Interview Prep', 'action' => 'interview_prep'],
-        ['label' => '💡 Daily Tip', 'action' => 'daily_tip'],
-        ['label' => '👥 Peer Support', 'action' => 'peer_support'],
-        ['label' => '🎮 Mini Games', 'action' => 'mini_games']
-    ];
+        // Set up buttons for welcome message
+        $this->messageButtons[$messageIndex] = [
+            ['label' => '📊 Evaluate Placement', 'action' => 'evaluate_placement'],
+            ['label' => '📋 Check Status', 'action' => 'check_status'],
+            ['label' => '❓ FAQs', 'action' => 'faqs'],
+            ['label' => '🎤 Interview Prep', 'action' => 'interview_prep'],
+            ['label' => '💡 Daily Tip', 'action' => 'daily_tip'],
+            ['label' => '👥 Peer Support', 'action' => 'peer_support'],
+            ['label' => '🎮 Mini Games', 'action' => 'mini_games']
+        ];
     }
 
     public function toggleChat()
@@ -200,7 +192,7 @@ class PlacementChatbot extends Component
             case 'mini_games':
                 return $this->handleMiniGames();
 
-            // Interview prep sub-actions
+                // Interview prep sub-actions
             case 'interview_tips':
                 return $this->handleInterviewTips();
 
@@ -213,7 +205,7 @@ class PlacementChatbot extends Component
             case 'interview_do_dont':
                 return $this->handleInterviewDoDont();
 
-            // Mini games sub-actions
+                // Mini games sub-actions
             case 'game_trivia':
                 return $this->handleTriviaGame();
 
@@ -226,7 +218,7 @@ class PlacementChatbot extends Component
             case 'submit_game_answer':
                 return $this->handleSubmitGameAnswer();
 
-            // Peer support sub-actions
+                // Peer support sub-actions
             case 'view_tips':
                 return $this->handleViewPeerTips();
 
@@ -236,15 +228,15 @@ class PlacementChatbot extends Component
             case 'submit_tip':
                 return $this->handleSubmitTip();
 
-            // Application viewing
+                // Application viewing
             case 'view_application':
                 return $this->handleViewApplication($student, $data);
 
-            // FAQ viewing
+                // FAQ viewing
             case 'view_faq':
                 return $this->handleViewFAQ($data);
 
-            // Navigation
+                // Navigation
             case 'back_to_summary':
                 return $this->handleBackToSummary($student);
 
@@ -428,7 +420,7 @@ class PlacementChatbot extends Component
             [
                 'key' => 'requirement',
                 'title' => 'Placement Requirements',
-                'answer' => "**Placement Requirements:**\n\n" .
+                'answer' => "Placement Requirements:\n\n" .
                     "1. ✅ Approved course verification\n" .
                     "2. ✅ Complete placement application form\n" .
                     "3. ✅ Submit required documents\n" .
@@ -437,12 +429,12 @@ class PlacementChatbot extends Component
             [
                 'key' => 'document',
                 'title' => 'Required Documents',
-                'answer' => "**Required Documents:**\n\n" .
-                    "📄 **For Placement Application:**\n" .
+                'answer' => "Required Documents:\n\n" .
+                    "📄 For Placement Application:\n" .
                     "• Offer letter from company\n" .
                     "• Acceptance form\n" .
                     "• Any other documents specified by the company\n\n" .
-                    "📄 **For Course Verification:**\n" .
+                    "📄 For Course Verification:\n" .
                     "• Course registration document\n" .
                     "• Transcript or academic record\n" .
                     "• Any other supporting documents"
@@ -450,40 +442,40 @@ class PlacementChatbot extends Component
             [
                 'key' => 'apply',
                 'title' => 'How to Apply',
-                'answer' => "**How to Apply for Placement:**\n\n" .
+                'answer' => "How to Apply for Placement:\n\n" .
                     "1. 📋 Go to 'Internship Placement' page in the navigation menu\n" .
                     "2. ➕ Click 'New Application' button\n" .
                     "3. ✍️ Fill in all company details (name, address, contact, etc.)\n" .
                     "4. 📎 Upload required documents (offer letter, acceptance form)\n" .
                     "5. ✅ Submit your application\n\n" .
-                    "**Note:** Your application will be reviewed by the committee and coordinator."
+                    "Note: Your application will be reviewed by the committee and coordinator."
             ],
             [
                 'key' => 'supervisor',
                 'title' => 'Supervisor Assignment',
-                'answer' => "**Supervisor Assignment:**\n\n" .
-                    "👨‍🏫 **When are supervisors assigned?**\n" .
+                'answer' => "Supervisor Assignment:\n\n" .
+                    "👨‍🏫 When are supervisors assigned?\n" .
                     "Supervisors are automatically assigned after you accept a placement offer.\n\n" .
-                    "⚙️ **How are supervisors selected?**\n" .
+                    "⚙️ How are supervisors selected?\n" .
                     "The system automatically considers:\n" .
                     "• Distance between supervisor and company location\n" .
                     "• Supervisor's current workload (quota)\n" .
                     "• Supervisor's preferences and availability\n\n" .
-                    "📧 **Notification:**\n" .
+                    "📧 Notification:\n" .
                     "You will be notified via email once a supervisor is assigned to you."
             ],
             [
                 'key' => 'time',
                 'title' => 'Processing Time',
-                'answer' => "**Processing Time:**\n\n" .
-                    "📋 **Course Verification:**\n" .
+                'answer' => "Processing Time:\n\n" .
+                    "📋 Course Verification:\n" .
                     "• Usually takes 1-2 weeks\n" .
                     "• Depends on lecturer availability\n\n" .
-                    "💼 **Placement Application:**\n" .
+                    "💼 Placement Application:\n" .
                     "• Committee review: Usually 1-2 weeks\n" .
                     "• Coordinator review: Usually 1-2 weeks\n" .
                     "• Total: Usually 2-4 weeks\n\n" .
-                    "👨‍🏫 **Supervisor Assignment:**\n" .
+                    "👨‍🏫 Supervisor Assignment:\n" .
                     "• Usually assigned within 1 week after accepting placement\n" .
                     "• May vary depending on supervisor availability"
             ],
@@ -492,12 +484,12 @@ class PlacementChatbot extends Component
         $this->storedFAQs = $faqs;
         $this->faqMenuShown = true;
 
-        $menu = "**Frequently Asked Questions:**\n\n";
+        $menu = "Frequently Asked Questions:\n\n";
         $menu .= "Please click a button below to view the answer:\n\n";
 
         $icons = ['📋', '📄', '💼', '👨‍🏫', '⏱️'];
         foreach ($faqs as $index => $faq) {
-            $menu .= "**" . ($index + 1) . ". {$icons[$index]} {$faq['title']}**\n";
+            $menu .= "" . ($index + 1) . ". {$icons[$index]} {$faq['title']}\n";
         }
 
         $buttons = [];
@@ -593,7 +585,7 @@ class PlacementChatbot extends Component
             ->orderBy('applicationDate', 'desc')
             ->get();
 
-        $response = "📊 **Your Placement Applications Summary** ({$applications->count()} applications)\n\n";
+        $response = "📊 Your Placement Applications Summary ({$applications->count()} applications)\n\n";
 
         $summaries = [];
         foreach ($applications as $index => $application) {
@@ -617,9 +609,9 @@ class PlacementChatbot extends Component
         $this->storedSummaries = $summaries;
         $this->viewingDetails = false;
 
-        $response .= "**Ranked by Score:**\n\n";
+        $response .= "Ranked by Score:\n\n";
         foreach ($summaries as $rank => $summary) {
-            $response .= "**#" . ($rank + 1) . " - {$summary['company']}**\n";
+            $response .= "#" . ($rank + 1) . " - {$summary['company']}\n";
             $response .= "📅 Applied: {$summary['date']}\n";
             $response .= "⭐ Score: {$summary['score']}/100 ({$summary['rating']})\n";
             $response .= "💡 {$summary['recommendation']}\n\n";
@@ -771,14 +763,13 @@ class PlacementChatbot extends Component
         $rating = $this->getRating($score);
         $recommendation = $this->getRecommendation($score, $factors);
 
-        return "📊 **Placement Evaluation for {$application->companyName}**\n\n" .
-            "**Overall Score: {$score}/{$maxScore}** ({$rating})\n\n" .
-            "**Evaluation Factors:**\n" . implode("\n", $factors) . "\n\n" .
-            "**Recommendation:**\n{$recommendation}";
+        return "📊 Placement Evaluation for {$application->companyName}\n\n" .
+            "Overall Score: {$score}/{$maxScore} ({$rating})\n\n" .
+            "Evaluation Factors:\n" . implode("\n", $factors) . "\n\n" .
+            "Recommendation:\n{$recommendation}";
     }
 
-    /**
-     * Calculate jobscope match score (40 points max)
+    /**     * Calculate jobscope match score (40 points max)
      */
     private function calculateJobscopeMatch($student, $application): float
     {
@@ -823,8 +814,7 @@ class PlacementChatbot extends Component
         return 0; // No match
     }
 
-    /**
-     * Extract keywords from student program
+    /**     * Extract keywords from student program
      * Based on UMP's Bachelor of Computer Science programs
      */
     private function extractProgramKeywords($program): array
@@ -1142,8 +1132,7 @@ class PlacementChatbot extends Component
         return array_unique($keywords);
     }
 
-    /**
-     * Get jobscope factor text
+    /**     * Get jobscope factor text
      */
     private function getJobscopeFactorText($score, $student, $application): string
     {
@@ -1160,8 +1149,7 @@ class PlacementChatbot extends Component
         }
     }
 
-    /**
-     * Calculate distance score (20 points max)
+    /**     * Calculate distance score (20 points max)
      */
     private function calculateDistanceScore($student, $application): float
     {
@@ -1191,8 +1179,7 @@ class PlacementChatbot extends Component
         return 1; // Very far (>500 km) but still willing
     }
 
-    /**
-     * Get distance factor text
+    /**     * Get distance factor text
      */
     private function getDistanceFactorText($score, $student, $application): string
     {
@@ -1222,8 +1209,7 @@ class PlacementChatbot extends Component
         }
     }
 
-    /**
-     * Calculate company history score (20 points max)
+    /**     * Calculate company history score (20 points max)
      */
     private function calculateCompanyHistoryScore($application): float
     {
@@ -1244,8 +1230,7 @@ class PlacementChatbot extends Component
         return 0;
     }
 
-    /**
-     * Get company history factor text
+    /**     * Get company history factor text
      */
     private function getCompanyHistoryFactorText($score, $application): string
     {
@@ -1264,8 +1249,7 @@ class PlacementChatbot extends Component
         }
     }
 
-    /**
-     * Calculate allowance score (20 points max)
+    /**     * Calculate allowance score (20 points max)
      */
     private function calculateAllowanceScore($application): float
     {
@@ -1310,8 +1294,7 @@ class PlacementChatbot extends Component
         }
     }
 
-    /**
-     * Get allowance factor text
+    /**     * Get allowance factor text
      */
     private function getAllowanceFactorText($score, $application): string
     {
@@ -1361,20 +1344,19 @@ class PlacementChatbot extends Component
     private function getRecommendation($score, $factors): string
     {
         if ($score >= 80) {
-            return "✅ **Highly Recommended** - This placement demonstrates excellent alignment with your preferences and qualifications.";
+            return "✅ Highly Recommended - This placement demonstrates excellent alignment with your preferences and qualifications.";
         } elseif ($score >= 60) {
-            return "✅ **Recommended** - This placement is suitable and meets most of your criteria.";
+            return "✅ Recommended - This placement is suitable and meets most of your criteria.";
         } elseif ($score >= 40) {
-            return "⚠️ **Moderately Recommended** - This placement meets some criteria but has certain limitations to review.";
+            return "⚠️ Moderately Recommended - This placement meets some criteria but has certain limitations to review.";
         } elseif ($score >= 20) {
-            return "⚠️ **Consider Carefully** - This placement has notable issues, review carefully before proceeding.";
+            return "⚠️ Consider Carefully - This placement has notable issues, review carefully before proceeding.";
         } else {
-            return "❌ **Not Recommended** - This placement does not sufficiently match your requirements. Explore other options.";
+            return "❌ Not Recommended - This placement does not sufficiently match your requirements. Explore other options.";
         }
     }
 
-    /**
-     * Perform quick evaluation for summary list (just score and rating, no detailed factors)
+    /**     * Perform quick evaluation for summary list (just score and rating, no detailed factors)
      */
     private function performQuickEvaluation($student, $application): array
     {
@@ -1402,8 +1384,7 @@ class PlacementChatbot extends Component
         ];
     }
 
-    /**
-     * Get quick recommendation text for summary list
+    /**     * Get quick recommendation text for summary list
      */
     private function getQuickRecommendation($score): string
     {
@@ -1428,9 +1409,10 @@ class PlacementChatbot extends Component
             ->first();
 
         if ($courseVerification) {
-            $statusInfo[] = "📋 **Course Verification:** {$courseVerification->status}";
+            $statusIcon = $this->getStatusIcon(strtolower($courseVerification->status));
+            $statusInfo[] = "📋 Course Verification: {$statusIcon} " . ucfirst($courseVerification->status);
         } else {
-            $statusInfo[] = "📋 **Course Verification:** Not submitted";
+            $statusInfo[] = "📋 Course Verification: ⚪ Not submitted";
         }
 
         // Placement Applications
@@ -1439,26 +1421,41 @@ class PlacementChatbot extends Component
             ->get();
 
         if ($applications->count() > 0) {
-            $statusInfo[] = "\n💼 **Placement Applications:** {$applications->count()} total";
+            $statusInfo[] = "\n💼 Placement Applications: {$applications->count()} total";
             foreach ($applications->take(3) as $app) {
                 $status = $app->overall_status;
-                $studentAcceptance = $app->studentAcceptance ? " (Acceptance: {$app->studentAcceptance})" : "";
-                $statusInfo[] = "   • {$app->companyName}: {$status}{$studentAcceptance}";
+                $statusIcon = $this->getStatusIcon(strtolower($status));
+                $statusInfo[] = "   • {$app->companyName}: {$statusIcon} {$status}";
             }
         } else {
-            $statusInfo[] = "\n💼 **Placement Applications:** None submitted";
+            $statusInfo[] = "\n💼 Placement Applications: None submitted";
         }
 
         // Supervisor Assignment
         $supervisorAssignment = $student->supervisorAssignment;
         if ($supervisorAssignment) {
             $supervisor = $supervisorAssignment->supervisor;
-            $statusInfo[] = "\n👨‍🏫 **Supervisor:** {$supervisor->user->name} (Assigned)";
+            $statusInfo[] = "\n👨‍🏫 Supervisor: ✅ {$supervisor->user->name}";
         } else {
-            $statusInfo[] = "\n👨‍🏫 **Supervisor:** Not assigned yet";
+            $statusInfo[] = "\n👨‍🏫 Supervisor: ⚪ Not assigned yet";
         }
 
         return implode("\n", $statusInfo);
+    }
+
+    private function getStatusIcon($status): string
+    {
+        $status = strtolower($status);
+        switch ($status) {
+            case 'approved':
+                return '✅';
+            case 'rejected':
+                return '❌';
+            case 'pending':
+                return '⏳';
+            default:
+                return '⚪';
+        }
     }
 
     private function getCompanyInsights($message): string
@@ -1493,8 +1490,8 @@ class PlacementChatbot extends Component
             ->limit(5)
             ->get();
 
-        $insights = "💼 **Company Insights: {$companyStats->companyName}**\n\n";
-        $insights .= "📊 **Statistics:**\n";
+        $insights = "💼 Company Insights: {$companyStats->companyName}\n\n";
+        $insights .= "📊 Statistics:\n";
         $insights .= "• Total UMP Students Accepted: {$companyStats->total_students}\n";
 
         if ($companyStats->avg_allowance) {
@@ -1510,7 +1507,7 @@ class PlacementChatbot extends Component
         }
 
         if ($positions->count() > 0) {
-            $insights .= "\n📋 **Common Positions:**\n";
+            $insights .= "\n📋 Common Positions:\n";
             foreach ($positions as $position) {
                 $insights .= "• {$position->position} ({$position->count} students)\n";
             }
@@ -1529,7 +1526,7 @@ class PlacementChatbot extends Component
                 "Example: 'Compare Maybank and Grab' or 'Compare Maybank vs Grab'";
         }
 
-        $comparison = "📊 **Company Comparison**\n\n";
+        $comparison = "📊 Company Comparison\n\n";
 
         foreach ($companies as $companyName) {
             $stats = PlacementApplication::where('companyName', 'like', '%' . $companyName . '%')
@@ -1541,13 +1538,13 @@ class PlacementChatbot extends Component
                 ->first();
 
             if ($stats) {
-                $comparison .= "**{$companyName}:**\n";
+                $comparison .= "{$companyName}:\n";
                 $comparison .= "• Students Accepted: {$stats->total_students}\n";
                 if ($stats->avg_allowance) {
                     $comparison .= "• Avg Allowance: RM " . number_format($stats->avg_allowance, 2) . "\n";
                 }
             } else {
-                $comparison .= "**{$companyName}:** No data available\n";
+                $comparison .= "{$companyName}: No data available\n";
             }
             $comparison .= "\n";
         }
@@ -1563,7 +1560,7 @@ class PlacementChatbot extends Component
             [
                 'key' => 'requirement',
                 'title' => 'Placement Requirements',
-                'answer' => "**Placement Requirements:**\n\n" .
+                'answer' => "Placement Requirements:\n\n" .
                     "1. ✅ Approved course verification\n" .
                     "2. ✅ Complete placement application form\n" .
                     "3. ✅ Submit required documents\n" .
@@ -1572,12 +1569,12 @@ class PlacementChatbot extends Component
             [
                 'key' => 'document',
                 'title' => 'Required Documents',
-                'answer' => "**Required Documents:**\n\n" .
-                    "📄 **For Placement Application:**\n" .
+                'answer' => "Required Documents:\n\n" .
+                    "📄 For Placement Application:\n" .
                     "• Offer letter from company\n" .
                     "• Acceptance form\n" .
                     "• Any other documents specified by the company\n\n" .
-                    "📄 **For Course Verification:**\n" .
+                    "📄 For Course Verification:\n" .
                     "• Course registration document\n" .
                     "• Transcript or academic record\n" .
                     "• Any other supporting documents"
@@ -1585,40 +1582,40 @@ class PlacementChatbot extends Component
             [
                 'key' => 'apply',
                 'title' => 'How to Apply',
-                'answer' => "**How to Apply for Placement:**\n\n" .
+                'answer' => "How to Apply for Placement:\n\n" .
                     "1. 📋 Go to 'Internship Placement' page in the navigation menu\n" .
                     "2. ➕ Click 'New Application' button\n" .
                     "3. ✍️ Fill in all company details (name, address, contact, etc.)\n" .
                     "4. 📎 Upload required documents (offer letter, acceptance form)\n" .
                     "5. ✅ Submit your application\n\n" .
-                    "**Note:** Your application will be reviewed by the committee and coordinator."
+                    "Note: Your application will be reviewed by the committee and coordinator."
             ],
             [
                 'key' => 'supervisor',
                 'title' => 'Supervisor Assignment',
-                'answer' => "**Supervisor Assignment:**\n\n" .
-                    "👨‍🏫 **When are supervisors assigned?**\n" .
+                'answer' => "Supervisor Assignment:\n\n" .
+                    "👨‍🏫 When are supervisors assigned?\n" .
                     "Supervisors are automatically assigned after you accept a placement offer.\n\n" .
-                    "⚙️ **How are supervisors selected?**\n" .
+                    "⚙️ How are supervisors selected?\n" .
                     "The system automatically considers:\n" .
                     "• Distance between supervisor and company location\n" .
                     "• Supervisor's current workload (quota)\n" .
                     "• Supervisor's preferences and availability\n\n" .
-                    "📧 **Notification:**\n" .
+                    "📧 Notification:\n" .
                     "You will be notified via email once a supervisor is assigned to you."
             ],
             [
                 'key' => 'time',
                 'title' => 'Processing Time',
-                'answer' => "**Processing Time:**\n\n" .
-                    "📋 **Course Verification:**\n" .
+                'answer' => "Processing Time:\n\n" .
+                    "📋 Course Verification:\n" .
                     "• Usually takes 1-2 weeks\n" .
                     "• Depends on lecturer availability\n\n" .
-                    "💼 **Placement Application:**\n" .
+                    "💼 Placement Application:\n" .
                     "• Committee review: Usually 1-2 weeks\n" .
                     "• Coordinator review: Usually 1-2 weeks\n" .
                     "• Total: Usually 2-4 weeks\n\n" .
-                    "👨‍🏫 **Supervisor Assignment:**\n" .
+                    "👨‍🏫 Supervisor Assignment:\n" .
                     "• Usually assigned within 1 week after accepting placement\n" .
                     "• May vary depending on supervisor availability"
             ],
@@ -1652,12 +1649,11 @@ class PlacementChatbot extends Component
         return $this->showFAQMenu();
     }
 
-    /**
-     * Show FAQ menu with numbered options
+    /**     * Show FAQ menu with numbered options
      */
     private function showFAQMenu(): string
     {
-        $menu = "**Frequently Asked Questions:**\n\n";
+        $menu = "Frequently Asked Questions:\n\n";
         $menu .= "Please select a number to view the answer:\n\n";
 
         $icons = ['📋', '📄', '💼', '👨‍🏫', '⏱️'];
@@ -1670,18 +1666,17 @@ class PlacementChatbot extends Component
         ];
 
         foreach ($this->storedFAQs as $index => $faq) {
-            $menu .= "**" . ($index + 1) . ". {$icons[$index]} {$faq['title']}**\n";
+            $menu .= "" . ($index + 1) . ". {$icons[$index]} {$faq['title']}\n";
         }
 
         $menu .= "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
-        $menu .= "💬 **To view an answer, type the number (e.g., 1, 2, 3, 4, or 5)**\n";
-        $menu .= "Or type **'back'** to return to main menu";
+        $menu .= "💬 To view an answer, type the number (e.g., 1, 2, 3, 4, or 5)\n";
+        $menu .= "Or type 'back' to return to main menu";
 
         return $menu;
     }
 
-    /**
-     * Show FAQ answer based on number selection
+    /**     * Show FAQ answer based on number selection
      */
     private function showFAQAnswer($number): string
     {
@@ -1701,27 +1696,25 @@ class PlacementChatbot extends Component
         return $faq['answer'] . "\n\n" . $this->getFAQNavigationOptions();
     }
 
-    /**
-     * Get navigation options after showing FAQ answer
+    /**     * Get navigation options after showing FAQ answer
      */
     private function getFAQNavigationOptions(): string
     {
         $options = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
-        $options .= "💬 **What would you like to do next?**\n\n";
+        $options .= "💬 What would you like to do next?\n\n";
 
         if (!empty($this->storedFAQs)) {
             $maxNumber = count($this->storedFAQs);
-            $options .= "• Type **1** to **{$maxNumber}** to view another FAQ\n";
+            $options .= "• Type 1 to {$maxNumber} to view another FAQ\n";
         }
 
-        $options .= "• Type **'back'** or **'menu'** to return to FAQ menu\n";
-        $options .= "• Type **'exit'** to return to main menu";
+        $options .= "• Type 'back' or 'menu' to return to FAQ menu\n";
+        $options .= "• Type 'exit' to return to main menu";
 
         return $options;
     }
 
-    /**
-     * Show summary list of all applications
+    /**     * Show summary list of all applications
      */
     private function showSummaryList($student): string
     {
@@ -1729,7 +1722,7 @@ class PlacementChatbot extends Component
             ->orderBy('applicationDate', 'desc')
             ->get();
 
-        $response = "📊 **Your Placement Applications Summary** ({$applications->count()} applications)\n\n";
+        $response = "📊 Your Placement Applications Summary ({$applications->count()} applications)\n\n";
 
         $summaries = [];
         foreach ($applications as $index => $application) {
@@ -1754,25 +1747,24 @@ class PlacementChatbot extends Component
         $this->storedSummaries = $summaries;
         $this->viewingDetails = false;
 
-        $response .= "**Ranked by Score:**\n\n";
+        $response .= "Ranked by Score:\n\n";
         foreach ($summaries as $rank => $summary) {
-            $response .= "**#" . ($rank + 1) . " - {$summary['company']}**\n";
+            $response .= "#" . ($rank + 1) . " - {$summary['company']}\n";
             $response .= "📅 Applied: {$summary['date']}\n";
             $response .= "⭐ Score: {$summary['score']}/100 ({$summary['rating']})\n";
             $response .= "💡 {$summary['recommendation']}\n\n";
         }
 
         $response .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
-        $response .= "💬 **Want more details?** Type:\n";
-        $response .= "• **1** (to see details of #1)\n";
-        $response .= "• **2** (to see details of #2)\n";
-        $response .= "• Type **'back'** to return to main menu\n";
+        $response .= "💬 Want more details? Type:\n";
+        $response .= "• 1 (to see details of #1)\n";
+        $response .= "• 2 (to see details of #2)\n";
+        $response .= "• Type 'back' to return to main menu\n";
 
         return $response;
     }
 
-    /**
-     * Show details for a specific application by number
+    /**     * Show details for a specific application by number
      */
     private function showApplicationDetails($student, $number): string
     {
@@ -1799,26 +1791,24 @@ class PlacementChatbot extends Component
         return $evaluation;
     }
 
-    /**
-     * Get navigation options after showing details
+    /**     * Get navigation options after showing details
      */
     private function getNavigationOptions(): string
     {
         $options = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
-        $options .= "💬 **What would you like to do next?**\n\n";
+        $options .= "💬 What would you like to do next?\n\n";
 
         if (!empty($this->storedSummaries)) {
             $maxNumber = count($this->storedSummaries);
-            $options .= "• Type **1** to **{$maxNumber}** to view another application's details\n";
-            $options .= "• Type **'back'** to return to summary list\n";
+            $options .= "• Type 1 to {$maxNumber} to view another application's details\n";
+            $options .= "• Type 'back' to return to summary list\n";
         }
         $options .= "• Or ask me something else!";
 
         return $options;
     }
 
-    /**
-     * Extract number selection from message (e.g., "#1", "show #1", "details for #1")
+    /**     * Extract number selection from message (e.g., "#1", "show #1", "details for #1")
      */
     private function extractNumberSelection($message): ?int
     {
@@ -1876,7 +1866,7 @@ class PlacementChatbot extends Component
 
     private function handleInterviewPrep(): array
     {
-        $content = "🎤 **Interview Preparation Hub**\n\n";
+        $content = "🎤 Interview Preparation Hub\n\n";
         $content .= "Get ready for your placement interviews! Choose what you'd like to learn:\n\n";
         $content .= "• 💡 Interview Tips - Essential tips for success\n";
         $content .= "• ❓ Common Questions - Most asked interview questions\n";
@@ -1898,35 +1888,35 @@ class PlacementChatbot extends Component
     private function handleInterviewTips(): array
     {
         $tips = [
-            "**1. Research the Company** 📚\n" .
-            "Learn about the company's mission, values, recent news, and the role you're applying for.",
+            "1. Research the Company 📚\n" .
+                "Learn about the company's mission, values, recent news, and the role you're applying for.",
 
-            "**2. Prepare Your STAR Stories** ⭐\n" .
-            "Prepare Situation-Task-Action-Result stories that showcase your skills and experiences.",
+            "2. Prepare Your STAR Stories ⭐\n" .
+                "Prepare Situation-Task-Action-Result stories that showcase your skills and experiences.",
 
-            "**3. Dress Professionally** 👔\n" .
-            "First impressions matter. Dress appropriately for the company culture.",
+            "3. Dress Professionally 👔\n" .
+                "First impressions matter. Dress appropriately for the company culture.",
 
-            "**4. Practice Your Answers** 🗣️\n" .
-            "Practice common questions out loud. Record yourself to improve delivery.",
+            "4. Practice Your Answers 🗣️\n" .
+                "Practice common questions out loud. Record yourself to improve delivery.",
 
-            "**5. Prepare Questions to Ask** ❓\n" .
-            "Have 2-3 thoughtful questions ready. It shows genuine interest.",
+            "5. Prepare Questions to Ask ❓\n" .
+                "Have 2-3 thoughtful questions ready. It shows genuine interest.",
 
-            "**6. Arrive Early** ⏰\n" .
-            "Arrive 10-15 minutes early for in-person interviews. Test tech for virtual ones.",
+            "6. Arrive Early ⏰\n" .
+                "Arrive 10-15 minutes early for in-person interviews. Test tech for virtual ones.",
 
-            "**7. Show Enthusiasm** 😊\n" .
-            "Be positive and show genuine interest in the role and company.",
+            "7. Show Enthusiasm 😊\n" .
+                "Be positive and show genuine interest in the role and company.",
 
-            "**8. Follow Up** 📧\n" .
-            "Send a thank-you email within 24 hours after the interview."
+            "8. Follow Up 📧\n" .
+                "Send a thank-you email within 24 hours after the interview."
         ];
 
         $randomTip = $tips[array_rand($tips)];
 
         return [
-            'content' => "💡 **Interview Tips**\n\n" . $randomTip . "\n\n" .
+            'content' => "💡 Interview Tips\n\n" . $randomTip . "\n\n" .
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
                 "Would you like another tip?",
             'buttons' => [
@@ -1937,7 +1927,7 @@ class PlacementChatbot extends Component
         ];
     }
 
-        private function handleCommonQuestions(): array
+    private function handleCommonQuestions(): array
     {
         $questions = [
             [
@@ -1973,9 +1963,9 @@ class PlacementChatbot extends Component
         $selected = $questions[array_rand($questions)];
 
         return [
-            'content' => "❓ **Common Interview Question**\n\n" .
-                "**Q: {$selected['q']}**\n\n" .
-                "**A: {$selected['a']}**\n\n" .
+            'content' => "❓ Common Interview Question\n\n" .
+                "Q: {$selected['q']}\n\n" .
+                "A: {$selected['a']}\n\n" .
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
                 "Want to see another question?",
             'buttons' => [
@@ -1985,7 +1975,7 @@ class PlacementChatbot extends Component
             ]
         ];
     }
-        private function handlePracticeQuestions(): array
+    private function handlePracticeQuestions(): array
     {
         $scenarios = [
             [
@@ -2015,9 +2005,9 @@ class PlacementChatbot extends Component
         $selected = $scenarios[array_rand($scenarios)];
 
         return [
-            'content' => "📝 **Practice Scenario**\n\n" .
-                "**Scenario:**\n{$selected['scenario']}\n\n" .
-                "**💡 How to Answer:**\n{$selected['tip']}\n\n" .
+            'content' => "📝 Practice Scenario\n\n" .
+                "Scenario:\n{$selected['scenario']}\n\n" .
+                "💡 How to Answer:\n{$selected['tip']}\n\n" .
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
                 "Try practicing your answer out loud!",
             'buttons' => [
@@ -2028,11 +2018,11 @@ class PlacementChatbot extends Component
         ];
     }
 
-        private function handleInterviewDoDont(): array
+    private function handleInterviewDoDont(): array
     {
-        $content = "✅ **Interview Do's & Don'ts**\n\n";
+        $content = "✅ Interview Do's & Don'ts\n\n";
 
-        $content .= "**✅ DO:**\n";
+        $content .= "✅ DO:\n";
         $content .= "• Research the company thoroughly\n";
         $content .= "• Prepare questions to ask the interviewer\n";
         $content .= "• Arrive 10-15 minutes early\n";
@@ -2041,7 +2031,7 @@ class PlacementChatbot extends Component
         $content .= "• Show enthusiasm and interest\n";
         $content .= "• Follow up with a thank-you email\n\n";
 
-        $content .= "**❌ DON'T:**\n";
+        $content .= "❌ DON'T:\n";
         $content .= "• Arrive late or unprepared\n";
         $content .= "• Speak negatively about previous experiences\n";
         $content .= "• Interrupt the interviewer\n";
@@ -2065,49 +2055,49 @@ class PlacementChatbot extends Component
         $tips = [
             [
                 'type' => '💡 Tip',
-                'content' => "**Start Your Day Right!**\n\n" .
+                'content' => "Start Your Day Right!\n\n" .
                     "Check your application status every morning. Staying updated helps you respond quickly to any changes or requests.",
                 'motivation' => "✨ Remember: Every expert was once a beginner. Your internship journey is just beginning!"
             ],
             [
                 'type' => '💡 Tip',
-                'content' => "**Network Smartly**\n\n" .
+                'content' => "Network Smartly\n\n" .
                     "Connect with professionals on LinkedIn before applying. A warm introduction can make a huge difference!",
                 'motivation' => "🌟 Success is not final, failure is not fatal: it is the courage to continue that counts."
             ],
             [
                 'type' => '💡 Tip',
-                'content' => "**Customize Your Applications**\n\n" .
+                'content' => "Customize Your Applications\n\n" .
                     "Tailor each application to the specific company. Generic applications rarely stand out.",
                 'motivation' => "💪 The only way to do great work is to love what you do. Keep pushing forward!"
             ],
             [
                 'type' => '💡 Tip',
-                'content' => "**Follow Up Strategically**\n\n" .
+                'content' => "Follow Up Strategically\n\n" .
                     "Send a follow-up email 1-2 weeks after submitting if you haven't heard back. Be polite and brief.",
                 'motivation' => "🚀 Your future is created by what you do today, not tomorrow. Take action now!"
             ],
             [
                 'type' => '💡 Tip',
-                'content' => "**Prepare for Rejections**\n\n" .
+                'content' => "Prepare for Rejections\n\n" .
                     "Rejections are part of the process. Learn from each one and keep applying. Persistence pays off!",
                 'motivation' => "🌈 After every storm comes a rainbow. Keep going, your opportunity is coming!"
             ],
             [
                 'type' => '💡 Tip',
-                'content' => "**Document Everything**\n\n" .
+                'content' => "Document Everything\n\n" .
                     "Keep a spreadsheet of all applications: company, date applied, status, and follow-up dates.",
                 'motivation' => "⭐ You are capable of amazing things. Believe in yourself and your abilities!"
             ],
             [
                 'type' => '💡 Tip',
-                'content' => "**Practice Your Elevator Pitch**\n\n" .
+                'content' => "Practice Your Elevator Pitch\n\n" .
                     "Be ready to introduce yourself in 30 seconds. Practice until it feels natural and confident.",
                 'motivation' => "🎯 Focus on progress, not perfection. Every step forward is a victory!"
             ],
             [
                 'type' => '💡 Tip',
-                'content' => "**Stay Organized**\n\n" .
+                'content' => "Stay Organized\n\n" .
                     "Use a calendar to track deadlines, interviews, and follow-ups. Organization reduces stress!",
                 'motivation' => "💎 You are stronger than you think. Keep pushing through challenges!"
             ]
@@ -2117,7 +2107,7 @@ class PlacementChatbot extends Component
         $selected = $tips[array_rand($tips)];
 
         return [
-            'content' => "{$selected['type']} **Daily Tip**\n\n" .
+            'content' => "{$selected['type']} Daily Tip\n\n" .
                 "{$selected['content']}\n\n" .
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
                 "{$selected['motivation']}",
@@ -2132,7 +2122,7 @@ class PlacementChatbot extends Component
 
     private function handleMiniGames(): array
     {
-        $content = "🎮 **Mini Games Hub**\n\n";
+        $content = "🎮 Mini Games Hub\n\n";
         $content .= "Take a break and have some fun while learning!\n\n";
         $content .= "• 🎲 Trivia Game - Test your knowledge about internships\n";
         $content .= "• 🧠 Quick Quiz - Answer quick questions\n";
@@ -2193,11 +2183,11 @@ class PlacementChatbot extends Component
         $this->showingGameAnswer = false;
 
         return [
-            'content' => "🎲 **Trivia Question**\n\n" .
-                "**{$selected['q']}**\n\n" .
+            'content' => "🎲 Trivia Question\n\n" .
+                "{$selected['q']}\n\n" .
                 implode("\n", $selected['options']) . "\n\n" .
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
-                "💬 **Type your answer (A, B, C, or D) in the input field below, then click 'Submit Answer' to see if you're correct!**",
+                "💬 Type your answer (A, B, C, or D) in the input field below, then click 'Submit Answer' to see if you're correct!",
             'buttons' => [
                 ['label' => '✅ Submit Answer', 'action' => 'submit_game_answer'],
                 ['label' => '🎮 Games Hub', 'action' => 'mini_games'],
@@ -2269,12 +2259,12 @@ class PlacementChatbot extends Component
         $this->showingGameAnswer = false;
 
         return [
-            'content' => "🧠 **Quick Quiz**\n\n" .
-                "**Topic: {$selected['topic']}**\n\n" .
-                "**Q: {$selected['question']}**\n\n" .
+            'content' => "🧠 Quick Quiz\n\n" .
+                "Topic: {$selected['topic']}\n\n" .
+                "Q: {$selected['question']}\n\n" .
                 implode("\n", $selected['options']) . "\n\n" .
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
-                "💬 **Type your answer (A, B, C, or D) in the input field below, then click 'Submit Answer' to see if you're correct!**",
+                "💬 Type your answer (A, B, C, or D) in the input field below, then click 'Submit Answer' to see if you're correct!",
             'buttons' => [
                 ['label' => '✅ Submit Answer', 'action' => 'submit_game_answer'],
                 ['label' => '🎮 Games Hub', 'action' => 'mini_games'],
@@ -2323,12 +2313,12 @@ class PlacementChatbot extends Component
         $this->showingGameAnswer = false;
 
         return [
-            'content' => "🔤 **Word Game**\n\n" .
-                "**Unscramble the word!**\n\n" .
-                "**Hint:** {$selected['hint']}\n\n" .
-                "**Scrambled:** {$selected['scrambled']}\n\n" .
+            'content' => "🔤 Word Game\n\n" .
+                "Unscramble the word!\n\n" .
+                "Hint: {$selected['hint']}\n\n" .
+                "Scrambled: {$selected['scrambled']}\n\n" .
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" .
-                "💬 **Type your answer in the input field below, then click 'Submit Answer' to see if you're correct!**",
+                "💬 Type your answer in the input field below, then click 'Submit Answer' to see if you're correct!",
             'buttons' => [
                 ['label' => '✅ Submit Answer', 'action' => 'submit_game_answer'],
                 ['label' => '🎮 Games Hub', 'action' => 'mini_games'],
@@ -2359,29 +2349,29 @@ class PlacementChatbot extends Component
             $isCorrect = ($userAnswer === $correctAnswer);
 
             if ($isCorrect) {
-                $feedback = "🎉 **Correct!** Well done!";
+                $feedback = "🎉 Correct! Well done!";
             } else {
-                $feedback = "❌ **Not quite right.** The correct answer is **{$correctAnswer}**.";
+                $feedback = "❌ Not quite right. The correct answer is {$correctAnswer}.";
             }
         } elseif ($gameType === 'word') {
             $correctWord = strtoupper($this->currentGameData['word']);
             $isCorrect = ($userAnswer === $correctWord);
 
             if ($isCorrect) {
-                $feedback = "🎉 **Correct!** Great job!";
+                $feedback = "🎉 Correct! Great job!";
             } else {
-                $feedback = "❌ **Not quite right.** The correct word is **{$correctWord}**.";
+                $feedback = "❌ Not quite right. The correct word is {$correctWord}.";
             }
         }
 
-        $content = "**Your Answer:** {$this->gameAnswer}\n\n";
+        $content = "Your Answer: {$this->gameAnswer}\n\n";
         $content .= "{$feedback}\n\n";
         $content .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
 
         if ($gameType === 'trivia' || $gameType === 'quiz') {
-            $content .= "**Correct Answer:** {$this->currentGameData['a']}\n\n";
+            $content .= "Correct Answer: {$this->currentGameData['a']}\n\n";
         } else {
-            $content .= "**Correct Word:** {$this->currentGameData['word']}\n\n";
+            $content .= "Correct Word: {$this->currentGameData['word']}\n\n";
         }
 
         // Determine next action button
@@ -2411,7 +2401,7 @@ class PlacementChatbot extends Component
 
     private function handlePeerSupport(): array
     {
-        $content = "👥 **Peer Support Hub**\n\n";
+        $content = "👥 Peer Support Hub\n\n";
         $content .= "Connect with fellow students and learn from their experiences!\n\n";
         $content .= "• 💬 View Tips - Read tips shared by other students\n";
         $content .= "• ✍️ Share a Tip - Help others by sharing your experience";
@@ -2435,7 +2425,7 @@ class PlacementChatbot extends Component
 
         if ($tips->isEmpty()) {
             return [
-                'content' => "💬 **Peer Tips**\n\n" .
+                'content' => "💬 Peer Tips\n\n" .
                     "No tips have been shared yet. Be the first to share a helpful tip! 🌟",
                 'buttons' => [
                     ['label' => '✍️ Share a Tip', 'action' => 'share_tip'],
@@ -2448,8 +2438,8 @@ class PlacementChatbot extends Component
         // Get a random tip
         $selectedTip = $tips->random();
 
-        $content = "💬 **Peer Tip**\n\n";
-        $content .= "**From: {$selectedTip->nickname}**\n\n";
+        $content = "💬 Peer Tip\n\n";
+        $content .= "From: {$selectedTip->nickname}\n\n";
         $content .= "{$selectedTip->tip_content}\n\n";
         $content .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
         $content .= "📅 Shared " . $selectedTip->created_at->diffForHumans();
@@ -2472,13 +2462,13 @@ class PlacementChatbot extends Component
         $this->tipContent = '';
 
         return [
-            'content' => "✍️ **Share Your Tip**\n\n" .
+            'content' => "✍️ Share Your Tip\n\n" .
                 "Help your fellow students by sharing a helpful tip!\n\n" .
-                "**Instructions:**\n" .
+                "Instructions:\n" .
                 "• Enter a nickname (can be anonymous)\n" .
                 "• Share your tip or advice\n" .
                 "• Your tip will be visible to other students\n\n" .
-                "💡 **Fill in the form below and click 'Submit Tip'**",
+                "💡 Fill in the form below and click 'Submit Tip'",
             'buttons' => [
                 ['label' => '✅ Submit Tip', 'action' => 'submit_tip'],
                 ['label' => '👥 Peer Support', 'action' => 'peer_support'],
@@ -2492,7 +2482,7 @@ class PlacementChatbot extends Component
         // Validate input
         if (empty(trim($this->tipNickname))) {
             return [
-                'content' => "❌ **Error**\n\nPlease enter a nickname!",
+                'content' => "❌ Error\n\nPlease enter a nickname!",
                 'buttons' => [
                     ['label' => '✍️ Share a Tip', 'action' => 'share_tip'],
                     ['label' => '👥 Peer Support', 'action' => 'peer_support'],
@@ -2503,7 +2493,7 @@ class PlacementChatbot extends Component
 
         if (empty(trim($this->tipContent))) {
             return [
-                'content' => "❌ **Error**\n\nPlease enter your tip!",
+                'content' => "❌ Error\n\nPlease enter your tip!",
                 'buttons' => [
                     ['label' => '✍️ Share a Tip', 'action' => 'share_tip'],
                     ['label' => '👥 Peer Support', 'action' => 'peer_support'],
@@ -2527,7 +2517,7 @@ class PlacementChatbot extends Component
         $this->tipContent = '';
 
         return [
-            'content' => "✅ **Thank You!**\n\n" .
+            'content' => "✅ Thank You!\n\n" .
                 "Your tip has been shared successfully! 🌟\n\n" .
                 "Other students can now benefit from your advice. Keep sharing and helping each other!",
             'buttons' => [

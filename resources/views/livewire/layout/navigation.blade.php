@@ -23,7 +23,13 @@ new class extends Component {
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2 group">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200 group-hover:opacity-80 transition-opacity" />
+                        {{-- TODO: Add your logo here. You can use either: --}}
+                        {{-- Option 1: Image file (place your logo in public/images/ folder) --}}
+                        {{-- <img src="{{ asset('images/your-logo.png') }}" alt="Logo" class="block h-9 w-auto group-hover:opacity-80 transition-opacity" /> --}}
+                        {{-- Option 2: SVG inline (paste your SVG code here) --}}
+                        {{-- <svg class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200 group-hover:opacity-80 transition-opacity" viewBox="0 0 100 100">
+                            <!-- Your SVG path elements here -->
+                        </svg> --}}
                         <span class="hidden sm:block text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent dark:from-purple-400 dark:to-purple-500">
                             InternLink
                         </span>
@@ -218,17 +224,17 @@ new class extends Component {
                 <x-dropdown align="right" width="56">
                     <x-slot name="trigger">
                         <button
-                            class="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm leading-4 font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition duration-150 ease-in-out text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
                             <!-- User Avatar -->
                             <div class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                             </div>
                             <div class="hidden md:block text-left">
                                 <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
-                                    x-on:profile-updated.window="name = $event.detail.name" class="text-sm font-medium text-gray-900 dark:text-gray-100"></div>
+                                    x-on:profile-updated.window="name = $event.detail.name" class="text-sm font-medium"></div>
                                 <div class="text-xs text-gray-500 dark:text-gray-400">{{ ucfirst(auth()->user()->role) }}</div>
                             </div>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500 dark:text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                             </svg>
                         </button>

@@ -44,15 +44,15 @@ new #[Layout('layouts.guest')] class extends Component
                 <!-- Monitor Base -->
                 <rect x="100" y="200" width="100" height="15" rx="3" fill="#ffffff" opacity="0.3"/>
                 <rect x="120" y="215" width="60" height="8" rx="2" fill="#ffffff" opacity="0.2"/>
-                
+
                 <!-- Monitor Screen -->
                 <rect x="50" y="50" width="200" height="150" rx="8" fill="#ffffff" opacity="0.2" stroke="#ffffff" stroke-width="2"/>
                 <rect x="60" y="60" width="180" height="130" rx="4" fill="#ffffff" opacity="0.1"/>
-                
+
                 <!-- User Icon on Screen -->
                 <circle cx="150" cy="100" r="20" fill="#9333ea" opacity="0.8"/>
                 <path d="M150 85 C145 85, 140 90, 140 95 L140 105 C140 110, 145 115, 150 115 C155 115, 160 110, 160 105 L160 95 C160 90, 155 85, 150 85 Z" fill="#ffffff"/>
-                
+
                 <!-- Password Field on Screen -->
                 <rect x="80" y="130" width="140" height="30" rx="4" fill="#ffffff" opacity="0.3"/>
                 <circle cx="100" cy="145" r="3" fill="#1f2937"/>
@@ -62,7 +62,7 @@ new #[Layout('layouts.guest')] class extends Component
                 <circle cx="140" cy="145" r="3" fill="#1f2937"/>
             </svg>
         </div>
-        
+
         <!-- Welcome Text -->
         <div class="text-center text-white">
             <p class="text-xl mb-2">Welcome to</p>
@@ -85,14 +85,13 @@ new #[Layout('layouts.guest')] class extends Component
                     <rect x="25" y="30" width="30" height="40" fill="#ffffff" class="dark:fill-gray-800"/>
                     <line x1="45" y1="30" x2="45" y2="70" stroke="#3b82f6" stroke-width="1" class="dark:stroke-blue-400"/>
                     <line x1="30" y1="45" x2="55" y2="45" stroke="#3b82f6" stroke-width="1" class="dark:stroke-blue-400"/>
-                    
+
                     <!-- Stylized Crest/Flower above book -->
                     <circle cx="40" cy="15" r="8" fill="#fbbf24" class="dark:fill-yellow-400"/>
                     <path d="M40 7 L42 12 L47 12 L43 16 L45 21 L40 17 L35 21 L37 16 L33 12 L38 12 Z" fill="#ffffff" class="dark:fill-gray-800"/>
                 </svg>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">INTERNLINK</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Where Learning Never Ends...</p>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">InternLink</h2>
         </div>
 
         <!-- Sign In Form -->
@@ -106,15 +105,15 @@ new #[Layout('layouts.guest')] class extends Component
                 <!-- Email Address -->
                 <div>
                     <x-input-label for="email" :value="__('Email')" class="mb-2 dark:text-gray-300" />
-                    <input 
-                        wire:model="form.email" 
-                        id="email" 
-                        class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400" 
-                        type="email" 
-                        name="email" 
-                        required 
-                        autofocus 
-                        autocomplete="username" 
+                    <input
+                        wire:model="form.email"
+                        id="email"
+                        class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        type="email"
+                        name="email"
+                        required
+                        autofocus
+                        autocomplete="username"
                         placeholder="Enter your email" />
                     <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
                 </div>
@@ -122,13 +121,13 @@ new #[Layout('layouts.guest')] class extends Component
                 <!-- Password -->
                 <div>
                     <x-input-label for="password" :value="__('Password')" class="mb-2 dark:text-gray-300" />
-                    <input 
-                        wire:model="form.password" 
-                        id="password" 
+                    <input
+                        wire:model="form.password"
+                        id="password"
                         class="block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         type="password"
                         name="password"
-                        required 
+                        required
                         autocomplete="current-password"
                         placeholder="Enter your password" />
                     <x-input-error :messages="$errors->get('form.password')" class="mt-2" />

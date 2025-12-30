@@ -3,12 +3,8 @@
 use App\Models\User;
 use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Component;
-use Livewire\WithFileUploads;
-
 new class extends Component {
-    use WithFileUploads;
 
     // Student fields
     public string $studentEmail = '';
@@ -24,8 +20,6 @@ new class extends Component {
     public string $year = '';
     public string $status = '';
     public string $academicAdvisorID = '';
-    public $profilePhoto;
-    public ?string $currentProfilePhoto = null;
 
     // Industry supervisor info from accepted placement application (read-only)
     public ?string $industrySupervisorName = null;
@@ -91,7 +85,6 @@ new class extends Component {
             $this->year = $student->year ?? '';
             $this->status = $student->status ?? '';
             $this->academicAdvisorID = $student->academicAdvisorID ?? '';
-            $this->currentProfilePhoto = $student->profilePhoto;
 
             // Get academic advisor name
             if ($student->academicAdvisor && $student->academicAdvisor->user) {
@@ -157,7 +150,6 @@ new class extends Component {
     public function cancelEdit(): void
     {
         $this->editMode = false;
-        $this->profilePhoto = null;
 
         // Reset to original values
         $this->mount();
@@ -193,7 +185,6 @@ new class extends Component {
             'studentPostcode' => ['nullable', 'string', 'max:20'],
             'studentState' => ['nullable', 'string', 'max:100'],
             'studentCountry' => ['nullable', 'string', 'max:100'],
-            'profilePhoto' => ['nullable', 'image', 'max:2048'], // 2MB max
         ]);
 
         $student = $user->student;
@@ -204,19 +195,6 @@ new class extends Component {
         // Update user email
         $user->email = $validated['studentEmail'];
         $user->save();
-
-        // Handle profile photo upload
-        if ($this->profilePhoto) {
-            // Delete old photo if exists
-            if ($student->profilePhoto) {
-                Storage::disk('public')->delete($student->profilePhoto);
-            }
-
-            // Store new photo
-            $photoPath = $this->profilePhoto->store('profile-photos', 'public');
-            $student->profilePhoto = $photoPath;
-            $this->currentProfilePhoto = $photoPath;
-        }
 
         // Update student address fields
         $student->phone = $validated['phone'];
@@ -250,9 +228,6 @@ new class extends Component {
         }
 
         $student->save();
-
-        // Reset the file input
-        $this->profilePhoto = null;
     }
 
     /**
@@ -317,27 +292,6 @@ new class extends Component {
         $lecturer->save();
     }
 
-    /**
-     * Remove the current profile photo.
-     */
-    public function removeProfilePhoto(): void
-    {
-        $user = Auth::user();
-
-        if ($user->isStudent() && $user->student && $user->student->profilePhoto) {
-            // Delete the file
-            Storage::disk('public')->delete($user->student->profilePhoto);
-
-            // Update database
-            $user->student->profilePhoto = null;
-            $user->student->save();
-
-            // Update component state
-            $this->currentProfilePhoto = null;
-
-            $this->dispatch('role-profile-updated');
-        }
-    }
 }; ?>
 
 <section>
@@ -372,32 +326,15 @@ new class extends Component {
 
             <!-- Profile Header -->
             <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center gap-4">
-                    <!-- Avatar with Initials or Photo -->
-                    <div
-                        class="w-16 h-16 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-white text-xl font-semibold overflow-hidden">
-                        @if ($currentProfilePhoto)
-                            <img src="{{ asset('storage/' . $currentProfilePhoto) }}" alt="Profile Photo"
-                                class="w-full h-full object-cover"
-                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="w-full h-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-white text-xl font-semibold"
-                                style="display: none;">
-                                {{ $initials }}
-                            </div>
-                        @else
-                            {{ $initials }}
-                        @endif
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                            {{ $name }}
-                        </h2>
-                        @if ($program)
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                {{ $program }}
-                            </p>
-                        @endif
-                    </div>
+                <div>
+                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                        {{ $name }}
+                    </h2>
+                    @if ($program)
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {{ $program }}
+                        </p>
+                    @endif
                 </div>
                 @if (!$editMode)
                     <button type="button" wire:click="enableEditMode"
@@ -406,33 +343,6 @@ new class extends Component {
                     </button>
                 @endif
             </div>
-
-            @if ($editMode)
-                <!-- Profile Photo Upload Section -->
-                <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                    <x-input-label for="profilePhoto" :value="__('Profile Photo')" class="text-base font-medium mb-2" />
-                    <input wire:model="profilePhoto" id="profilePhoto" name="profilePhoto" type="file"
-                        accept="image/*"
-                        class="block w-full max-w-md text-sm text-gray-900 dark:text-gray-300 border border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 focus:outline-none">
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        {{ __('PNG, JPG or JPEG (MAX. 2MB)') }}
-                    </p>
-                    @if ($currentProfilePhoto)
-                        <button type="button" wire:click="removeProfilePhoto"
-                            class="mt-2 px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors duration-200">
-                            {{ __('Remove Photo') }}
-                        </button>
-                    @endif
-                    <x-input-error class="mt-2" :messages="$errors->get('profilePhoto')" />
-                    @if ($profilePhoto)
-                        <div class="mt-2">
-                            <p class="text-sm text-green-600 dark:text-green-400">
-                                {{ __('New photo selected: ') . $profilePhoto->getClientOriginalName() }}
-                            </p>
-                        </div>
-                    @endif
-                </div>
-            @endif
 
             <!-- Contact Details Section -->
             <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
