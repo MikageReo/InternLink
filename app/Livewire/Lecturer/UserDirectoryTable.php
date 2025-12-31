@@ -223,6 +223,9 @@ class UserDirectoryTable extends Component
     public $showBulkRegistration = false;
     public $showStudentRegistration = false;
     public $showLecturerRegistration = false;
+    public $showEditStudent = false;
+    public $showEditLecturer = false;
+    public $editingUserId = null;
 
     // CSV Upload properties
     public $csvFile;
@@ -1262,20 +1265,20 @@ xmlns="http://www.w3.org/TR/REC-html40">
     public function registerStudent()
     {
         $this->validate([
-            'studentName' => 'required|string|max:255',
-            'studentEmail' => 'required|email|unique:users,email',
-            'studentID' => 'required|string|unique:students,studentID',
-            'studentPhone' => 'nullable|string',
-            'studentAddress' => 'nullable|string',
-            'studentCity' => 'nullable|string',
-            'studentPostcode' => 'nullable|string',
-            'studentState' => 'nullable|string',
-            'studentCountry' => 'nullable|string',
-            'studentNationality' => 'nullable|string',
-            'studentProgram' => 'nullable|in:BCS,BCN,BCM,BCY,DRC',
+            'studentName' => 'required|string|max:50',
+            'studentEmail' => 'required|email|max:30|unique:users,email',
+            'studentID' => 'required|string|max:8|unique:students,studentID',
+            'studentPhone' => 'required|string|max:15|regex:/^[0-9]+$/',
+            'studentAddress' => 'required|string|max:200',
+            'studentCity' => 'required|string|max:20',
+            'studentPostcode' => 'required|string|max:10|regex:/^[0-9]+$/',
+            'studentState' => 'required|string',
+            'studentCountry' => 'required|string',
+            'studentNationality' => 'required|string|max:15',
+            'studentProgram' => 'required|in:BCS,BCN,BCM,BCY,DRC',
             'studentSemester' => 'required|in:1,2',
-            'studentYear' => 'required|integer|min:2020|max:2040',
-            'studentAcademicAdvisorID' => 'nullable|string|exists:lecturers,lecturerID',
+            'studentYear' => 'required|integer|digits:4|min:2020|max:2040',
+            'studentAcademicAdvisorID' => 'required|string|exists:lecturers,lecturerID',
         ]);
 
         try {
@@ -1350,25 +1353,41 @@ xmlns="http://www.w3.org/TR/REC-html40">
     // Individual lecturer registration
     public function registerLecturer()
     {
+        // Custom validation: at least one permission must be selected
+        $atLeastOnePermission = $this->lecturerIsAcademicAdvisor ||
+                               $this->lecturerIsSupervisorFaculty ||
+                               $this->lecturerIsCommittee ||
+                               $this->lecturerIsCoordinator ||
+                               $this->lecturerIsAdmin;
+
         $this->validate([
-            'lecturerName' => 'required|string|max:255',
-            'lecturerEmail' => 'required|email|unique:users,email',
-            'lecturerID' => 'required|string|unique:lecturers,lecturerID',
-            'lecturerStaffGrade' => 'nullable|string',
-            'lecturerRole' => 'nullable|string',
-            'lecturerPosition' => 'nullable|string',
-            'lecturerAddress' => 'nullable|string',
-            'lecturerCity' => 'nullable|string',
-            'lecturerPostcode' => 'nullable|string',
-            'lecturerState' => 'nullable|string',
-            'lecturerCountry' => 'nullable|string',
-            'lecturerResearchGroup' => 'nullable|string',
-            'lecturerDepartment' => 'nullable|string',
-            'lecturerProgram' => 'nullable|in:BCS,BCN,BCM,BCY,DRC',
+            'lecturerName' => 'required|string|max:50',
+            'lecturerEmail' => 'required|email|max:30|unique:users,email',
+            'lecturerID' => 'required|string|max:8|unique:lecturers,lecturerID',
+            'lecturerStaffGrade' => 'required|string',
+            'lecturerRole' => 'required|string',
+            'lecturerPosition' => 'required|string',
+            'lecturerAddress' => 'required|string|max:200',
+            'lecturerCity' => 'required|string|max:20',
+            'lecturerPostcode' => 'required|string|max:10|regex:/^[0-9]+$/',
+            'lecturerState' => 'required|string',
+            'lecturerCountry' => 'required|string',
+            'lecturerResearchGroup' => 'required|string',
+            'lecturerDepartment' => 'required|string',
+            'lecturerProgram' => 'required|in:BCS,BCN,BCM,BCY,DRC',
             'lecturerSemester' => 'required|in:1,2',
-            'lecturerYear' => 'required|integer|min:2020|max:2040',
-            'lecturerSupervisorQuota' => 'nullable|integer|min:0',
+            'lecturerYear' => 'required|integer|digits:4|min:2020|max:2040',
+            'lecturerSupervisorQuota' => 'required|integer|min:1|max:99',
+        ], [
+            'lecturerSupervisorQuota.required' => 'The supervisor quota field is required.',
+            'lecturerSupervisorQuota.min' => 'The supervisor quota must be at least 1.',
         ]);
+
+        // Validate at least one permission is selected
+        if (!$atLeastOnePermission) {
+            $this->addError('permissions', 'Please select at least one permission.');
+            return;
+        }
 
         try {
             DB::beginTransaction();
@@ -1418,7 +1437,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'program' => $this->getProgramFullName($this->lecturerProgram),
                 'semester' => $this->lecturerSemester,
                 'year' => $this->lecturerYear,
-                'supervisor_quota' => $this->lecturerSupervisorQuota ?? 0,
+                'supervisor_quota' => $this->lecturerSupervisorQuota,
                 'isAcademicAdvisor' => $this->lecturerIsAcademicAdvisor,
                 'isSupervisorFaculty' => $this->lecturerIsSupervisorFaculty,
                 'isCommittee' => $this->lecturerIsCommittee,
@@ -1445,5 +1464,286 @@ xmlns="http://www.w3.org/TR/REC-html40">
             DB::rollback();
             session()->flash('error', 'Failed to register lecturer: ' . $e->getMessage());
         }
+    }
+
+    // Edit user methods
+    public function editStudent($userId)
+    {
+        $user = User::with('student')->findOrFail($userId);
+
+        if (!$user->student) {
+            session()->flash('error', 'Student record not found.');
+            return;
+        }
+
+        $this->editingUserId = $userId;
+        $this->studentName = $user->name;
+        $this->studentEmail = $user->email;
+        $this->studentID = $user->student->studentID;
+        $this->studentPhone = $user->student->phone ?? '';
+        $this->studentAddress = $user->student->address ?? '';
+        $this->studentCity = $user->student->city ?? '';
+        $this->studentPostcode = $user->student->postcode ?? '';
+        $this->studentState = $user->student->state ?? '';
+        $this->studentCountry = $user->student->country ?? '';
+        $this->studentLatitude = $user->student->latitude;
+        $this->studentLongitude = $user->student->longitude;
+        $this->studentNationality = $user->student->nationality ?? '';
+        $this->studentProgram = $this->convertFullNameToProgramCode($user->student->program ?? '');
+        $this->studentSemester = $user->student->semester ?? '';
+        $this->studentYear = $user->student->year ?? date('Y');
+        $this->studentAcademicAdvisorID = $user->student->academicAdvisorID ?? '';
+
+        $this->showEditStudent = true;
+    }
+
+    public function editLecturer($userId)
+    {
+        $user = User::with('lecturer')->findOrFail($userId);
+
+        if (!$user->lecturer) {
+            session()->flash('error', 'Lecturer record not found.');
+            return;
+        }
+
+        $this->editingUserId = $userId;
+        $this->lecturerName = $user->name;
+        $this->lecturerEmail = $user->email;
+        $this->lecturerID = $user->lecturer->lecturerID;
+        $this->lecturerStaffGrade = $user->lecturer->staffGrade ?? '';
+        $this->lecturerRole = $user->lecturer->role ?? '';
+        $this->lecturerPosition = $user->lecturer->position ?? '';
+        $this->lecturerAddress = $user->lecturer->address ?? '';
+        $this->lecturerCity = $user->lecturer->city ?? '';
+        $this->lecturerPostcode = $user->lecturer->postcode ?? '';
+        $this->lecturerState = $user->lecturer->state ?? '';
+        $this->lecturerCountry = $user->lecturer->country ?? '';
+        $this->lecturerLatitude = $user->lecturer->latitude;
+        $this->lecturerLongitude = $user->lecturer->longitude;
+        $this->lecturerResearchGroup = $user->lecturer->researchGroup ?? '';
+        $this->lecturerDepartment = $user->lecturer->department ?? '';
+        $this->lecturerProgram = $this->convertFullNameToProgramCode($user->lecturer->program ?? '');
+        $this->lecturerSemester = $user->lecturer->semester ?? '';
+        $this->lecturerYear = $user->lecturer->year ?? date('Y');
+        $this->lecturerSupervisorQuota = $user->lecturer->supervisor_quota ?? 0;
+        $this->lecturerIsAcademicAdvisor = $user->lecturer->isAcademicAdvisor ?? false;
+        $this->lecturerIsSupervisorFaculty = $user->lecturer->isSupervisorFaculty ?? false;
+        $this->lecturerIsCommittee = $user->lecturer->isCommittee ?? false;
+        $this->lecturerIsCoordinator = $user->lecturer->isCoordinator ?? false;
+        $this->lecturerIsAdmin = $user->lecturer->isAdmin ?? false;
+
+        $this->showEditLecturer = true;
+    }
+
+    public function updateStudent()
+    {
+        $user = User::findOrFail($this->editingUserId);
+
+        $this->validate([
+            'studentName' => 'required|string|max:50',
+            'studentEmail' => 'required|email|max:30|unique:users,email,' . $user->id,
+            'studentID' => 'required|string|max:8|unique:students,studentID,' . $user->student->studentID . ',studentID',
+            'studentPhone' => 'required|string|max:15|regex:/^[0-9]+$/',
+            'studentAddress' => 'required|string|max:200',
+            'studentCity' => 'required|string|max:20',
+            'studentPostcode' => 'required|string|max:10|regex:/^[0-9]+$/',
+            'studentState' => 'required|string',
+            'studentCountry' => 'required|string',
+            'studentNationality' => 'required|string|max:15',
+            'studentProgram' => 'required|in:BCS,BCN,BCM,BCY,DRC',
+            'studentSemester' => 'required|in:1,2',
+            'studentYear' => 'required|integer|digits:4|min:2020|max:2040',
+            'studentAcademicAdvisorID' => 'required|string|exists:lecturers,lecturerID',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $user->update([
+                'name' => $this->studentName,
+                'email' => $this->studentEmail,
+            ]);
+
+            // Try to geocode the address if coordinates are not provided
+            $latitude = $this->studentLatitude;
+            $longitude = $this->studentLongitude;
+
+            if (empty($latitude) || empty($longitude)) {
+                $geocodeResult = $this->geocodingService->geocodeStructuredAddress([
+                    'street' => $this->studentAddress,
+                    'city' => $this->studentCity,
+                    'postcode' => $this->studentPostcode,
+                    'state' => $this->studentState,
+                    'country' => $this->studentCountry
+                ]);
+
+                if ($geocodeResult) {
+                    $latitude = $geocodeResult['latitude'];
+                    $longitude = $geocodeResult['longitude'];
+                }
+            }
+
+            $user->student->update([
+                'studentID' => $this->studentID,
+                'phone' => $this->studentPhone,
+                'address' => $this->studentAddress,
+                'city' => $this->studentCity,
+                'postcode' => $this->studentPostcode,
+                'state' => $this->studentState,
+                'country' => $this->studentCountry,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'nationality' => $this->studentNationality,
+                'program' => $this->convertProgramToFullName($this->studentProgram),
+                'semester' => $this->studentSemester,
+                'year' => $this->studentYear,
+                'academicAdvisorID' => $this->studentAcademicAdvisorID ?: null,
+            ]);
+
+            DB::commit();
+
+            session()->flash('message', 'Student updated successfully!');
+            $this->showEditStudent = false;
+            $this->resetStudentForm();
+            $this->editingUserId = null;
+        } catch (\Exception $e) {
+            DB::rollback();
+            session()->flash('error', 'Failed to update student: ' . $e->getMessage());
+        }
+    }
+
+    public function updateLecturer()
+    {
+        $user = User::findOrFail($this->editingUserId);
+
+        // Custom validation: at least one permission must be selected
+        $atLeastOnePermission = $this->lecturerIsAcademicAdvisor ||
+                               $this->lecturerIsSupervisorFaculty ||
+                               $this->lecturerIsCommittee ||
+                               $this->lecturerIsCoordinator ||
+                               $this->lecturerIsAdmin;
+
+        $this->validate([
+            'lecturerName' => 'required|string|max:50',
+            'lecturerEmail' => 'required|email|max:30|unique:users,email,' . $user->id,
+            'lecturerID' => 'required|string|max:8|unique:lecturers,lecturerID,' . $user->lecturer->lecturerID . ',lecturerID',
+            'lecturerStaffGrade' => 'required|string',
+            'lecturerRole' => 'required|string',
+            'lecturerPosition' => 'required|string',
+            'lecturerAddress' => 'required|string|max:200',
+            'lecturerCity' => 'required|string|max:20',
+            'lecturerPostcode' => 'required|string|max:10|regex:/^[0-9]+$/',
+            'lecturerState' => 'required|string',
+            'lecturerCountry' => 'required|string',
+            'lecturerResearchGroup' => 'required|string',
+            'lecturerDepartment' => 'required|string',
+            'lecturerProgram' => 'required|in:BCS,BCN,BCM,BCY,DRC',
+            'lecturerSemester' => 'required|in:1,2',
+            'lecturerYear' => 'required|integer|digits:4|min:2020|max:2040',
+            'lecturerSupervisorQuota' => 'required|integer|min:1|max:99',
+        ], [
+            'lecturerSupervisorQuota.required' => 'The supervisor quota field is required.',
+            'lecturerSupervisorQuota.min' => 'The supervisor quota must be at least 1.',
+        ]);
+
+        // Validate at least one permission is selected
+        if (!$atLeastOnePermission) {
+            $this->addError('permissions', 'Please select at least one permission.');
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $user->update([
+                'name' => $this->lecturerName,
+                'email' => $this->lecturerEmail,
+            ]);
+
+            // Try to geocode the address if coordinates are not provided
+            $latitude = $this->lecturerLatitude;
+            $longitude = $this->lecturerLongitude;
+
+            if (empty($latitude) || empty($longitude)) {
+                $geocodeResult = $this->geocodingService->geocodeStructuredAddress([
+                    'street' => $this->lecturerAddress,
+                    'city' => $this->lecturerCity,
+                    'postcode' => $this->lecturerPostcode,
+                    'state' => $this->lecturerState,
+                    'country' => $this->lecturerCountry
+                ]);
+
+                if ($geocodeResult) {
+                    $latitude = $geocodeResult['latitude'];
+                    $longitude = $geocodeResult['longitude'];
+                }
+            }
+
+            $user->lecturer->update([
+                'lecturerID' => $this->lecturerID,
+                'staffGrade' => $this->lecturerStaffGrade,
+                'role' => $this->lecturerRole,
+                'position' => $this->lecturerPosition,
+                'address' => $this->lecturerAddress,
+                'city' => $this->lecturerCity,
+                'postcode' => $this->lecturerPostcode,
+                'state' => $this->lecturerState,
+                'country' => $this->lecturerCountry,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'researchGroup' => $this->lecturerResearchGroup,
+                'department' => $this->lecturerDepartment,
+                'program' => $this->getProgramFullName($this->lecturerProgram),
+                'semester' => $this->lecturerSemester,
+                'year' => $this->lecturerYear,
+                'supervisor_quota' => $this->lecturerSupervisorQuota,
+                'isAcademicAdvisor' => $this->lecturerIsAcademicAdvisor,
+                'isSupervisorFaculty' => $this->lecturerIsSupervisorFaculty,
+                'isCommittee' => $this->lecturerIsCommittee,
+                'isCoordinator' => $this->lecturerIsCoordinator,
+                'isAdmin' => $this->lecturerIsAdmin,
+            ]);
+
+            DB::commit();
+
+            session()->flash('message', 'Lecturer updated successfully!');
+            $this->showEditLecturer = false;
+            $this->resetLecturerForm();
+            $this->editingUserId = null;
+        } catch (\Exception $e) {
+            DB::rollback();
+            session()->flash('error', 'Failed to update lecturer: ' . $e->getMessage());
+        }
+    }
+
+    public function toggleEditStudent()
+    {
+        $this->showEditStudent = !$this->showEditStudent;
+        if (!$this->showEditStudent) {
+            $this->resetStudentForm();
+            $this->editingUserId = null;
+        }
+    }
+
+    public function toggleEditLecturer()
+    {
+        $this->showEditLecturer = !$this->showEditLecturer;
+        if (!$this->showEditLecturer) {
+            $this->resetLecturerForm();
+            $this->editingUserId = null;
+        }
+    }
+
+    private function convertFullNameToProgramCode($fullName)
+    {
+        $programs = [
+            'Bachelor of Computer Science (Software Engineering) with Honours' => 'BCS',
+            'Bachelor of Computer Science (Computer Systems & Networking) with Honours' => 'BCN',
+            'Bachelor of Computer Science (Multimedia Software) with Honours' => 'BCM',
+            'Bachelor of Computer Science (Cyber Security) with Honours' => 'BCY',
+            'Diploma in Computer Science' => 'DRC',
+        ];
+
+        return $programs[$fullName] ?? '';
     }
 }
