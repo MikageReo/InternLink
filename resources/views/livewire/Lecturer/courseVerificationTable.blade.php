@@ -67,94 +67,104 @@
             max-height: 90vh;
             overflow-y: auto;
         }
+
+        /* Responsive table styling for 50% screen display */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 1024px) {
+            .table-container table {
+                min-width: 1000px;
+            }
+        }
     </style>
 
-    <div class="py-12">
-        <div class="w-full px-4 sm:px-6 lg:px-8">
-            <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div class="bg-white rounded-lg shadow-md p-6">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-blue-100">
-                            <i class="fa fa-file text-blue-600 text-xl"></i>
+                        <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                            <i class="fa fa-file text-blue-600 dark:text-blue-400 text-xl"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 @if($isAcademicAdvisor)
                                     Pending Review
                                 @else
                                     Pending Review
                                 @endif
                             </p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $pendingApplications }}</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 dark:text-gray-100">{{ $pendingApplications }}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-yellow-100">
-                            <i class="fa fa-clock text-yellow-600 text-xl"></i>
+                        <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900">
+                            <i class="fa fa-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Total Applications</p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $totalApplications }}</p>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Applications</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 dark:text-gray-100">{{ $totalApplications }}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-green-100">
-                            <i class="fa fa-check text-green-600 text-xl"></i>
+                        <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                            <i class="fa fa-check text-green-600 dark:text-green-400 text-xl"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 @if($isAcademicAdvisor)
                                     Eligible
                                 @else
                                     Approved
                                 @endif
                             </p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $approvedApplications }}</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 dark:text-gray-100">{{ $approvedApplications }}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-red-100">
-                            <i class="fa fa-times text-red-600 text-xl"></i>
+                        <div class="p-3 rounded-full bg-red-100 dark:bg-red-900">
+                            <i class="fa fa-times text-red-600 dark:text-red-400 text-xl"></i>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 @if($isAcademicAdvisor)
                                     Ineligible
                                 @else
                                     Rejected
                                 @endif
                             </p>
-                            <p class="text-2xl font-bold text-gray-900">{{ $rejectedApplications }}</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 dark:text-gray-100">{{ $rejectedApplications }}</p>
                         </div>
                     </div>
                 </div>
-            </div>
+    </div>
 
-            <!-- Flash Messages -->
-            @if (session()->has('message'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
-                    <span class="block sm:inline">{{ session('message') }}</span>
-                </div>
-            @endif
+    <!-- Flash Messages -->
+    @if (session()->has('message'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+            <span class="block sm:inline">{{ session('message') }}</span>
+        </div>
+    @endif
 
-            @if (session()->has('error'))
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-                    <span class="block sm:inline">{{ session('error') }}</span>
-                </div>
-            @endif
+    @if (session()->has('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
 
-            <!-- Advanced Filters -->
-            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-lg">
+    <!-- Advanced Filters -->
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
                     <!-- Search -->
                     <div class="lg:col-span-2">
@@ -191,7 +201,7 @@
                         <select wire:model.live="year"
                             class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
                             <option value="">All Years</option>
-                            @for($y = date('Y'); $y >= 2020; $y--)
+                            @for($y = date('Y'); $y >= 2023; $y--)
                                 <option value="{{ $y }}">{{ $y }}</option>
                             @endfor
                         </select>
@@ -301,25 +311,24 @@
                             </button>
                         </div>
                     </div>
-                </div>
-            @endif
-            <br>
+        </div>
+    @endif
 
-            <!-- Table Section -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+    <!-- Table Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto table-container">
+            <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="min-width: 1200px;">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-12">
                                     <input type="checkbox" wire:model.live="selectAll"
                                         class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                         title="Select all">
                                 </th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('courseVerificationID')"
-                                        class="flex items-center hover:text-gray-700">
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <button wire:click="sortBy('courseVerificationID')"
+                            class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
                                         Application ID
                                         <span class="ml-1 sort-icon">
                                             @if ($sortField === 'courseVerificationID')
@@ -353,9 +362,9 @@
                                     </button>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     <button wire:click="sortBy('studentName')"
-                                        class="flex items-center hover:text-gray-700">
+                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
                                         Student Name
                                         <span class="ml-1 sort-icon">
                                             @if ($sortField === 'studentName')
@@ -371,12 +380,12 @@
                                     </button>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Current Credit
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('status')" class="flex items-center hover:text-gray-700">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    <button wire:click="sortBy('status')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
                                         @if($isAcademicAdvisor)
                                             Eligibility Status
                                         @else
@@ -396,9 +405,9 @@
                                     </button>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     <button wire:click="sortBy('applicationDate')"
-                                        class="flex items-center hover:text-gray-700">
+                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
                                         Application Date
                                         <span class="ml-1 sort-icon">
                                             @if ($sortField === 'applicationDate')
@@ -414,15 +423,15 @@
                                     </button>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse($applications as $application)
-                                <tr
-                                    class="hover:bg-gray-50 {{ ($isAcademicAdvisor && $application->academicAdvisorStatus === null) || ($isCoordinator && $application->status === 'pending' && $application->academicAdvisorStatus === 'approved') ? 'bg-yellow-50' : '' }}">
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                @forelse($applications as $application)
+                    <tr
+                        class="hover:bg-gray-50 dark:hover:bg-gray-700 {{ ($isAcademicAdvisor && $application->academicAdvisorStatus === null) || ($isCoordinator && $application->status === 'pending' && $application->academicAdvisorStatus === 'approved') ? 'bg-yellow-50 dark:bg-yellow-900/20' : '' }}">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if($isAcademicAdvisor)
                                             @if ($application->academicAdvisorStatus === null)
@@ -448,16 +457,16 @@
                                             @endif
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                         {{ $application->courseVerificationID }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ $application->studentID }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ $application->student->user->name ?? 'N/A' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ $application->currentCredit }} / 130
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -493,12 +502,12 @@
                                             </span>
                                             @if($application->academicAdvisorStatus === 'approved')
                                                 <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800" title="Approved by Academic Advisor">
-                                                    AA ✓
+                                                    Academic Advisor ✓
                                                 </span>
                                             @endif
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ $application->applicationDate->format('M d, Y') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -544,16 +553,14 @@
                                     </td>
                                 </tr>
                             @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="bg-white dark:bg-gray-800 px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6">
-                    {{ $applications->links() }}
-                </div>
-            </div>
+            </tbody>
+            </table>
         </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6 bg-white dark:bg-gray-800 rounded-b-lg">
+        {{ $applications->links() }}
     </div>
 
     <!-- Application Detail Modal -->
@@ -562,7 +569,7 @@
             <div class="modal-content bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-medium text-gray-900">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                             Application Details - ID: {{ $selectedApplication->courseVerificationID }}
                         </h3>
                         <button type="button" wire:click="closeDetailModal"
@@ -575,25 +582,25 @@
                 <div class="px-6 py-4 space-y-6">
                     <!-- Student Information -->
                     <div class="bg-gray-50 rounded-lg p-4">
-                        <h4 class="text-md font-semibold text-gray-900 mb-3">Student Information</h4>
+                        <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Student Information</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Student ID</p>
-                                <p class="text-sm text-gray-900">{{ $selectedApplication->studentID }}</p>
+                                <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->studentID }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Name</p>
-                                <p class="text-sm text-gray-900">
+                                <p class="text-sm text-gray-900 dark:text-gray-100">
                                     {{ $selectedApplication->student->user->name ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Email</p>
-                                <p class="text-sm text-gray-900">
+                                <p class="text-sm text-gray-900 dark:text-gray-100">
                                     {{ $selectedApplication->student->user->email ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Program</p>
-                                <p class="text-sm text-gray-900">{{ $selectedApplication->student->program ?? 'N/A' }}
+                                <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->student->program ?? 'N/A' }}
                                 </p>
                             </div>
                         </div>
@@ -601,11 +608,11 @@
 
                     <!-- Application Information -->
                     <div class="bg-blue-50 rounded-lg p-4">
-                        <h4 class="text-md font-semibold text-gray-900 mb-3">Application Information</h4>
+                        <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Application Information</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Current Credit</p>
-                                <p class="text-sm text-gray-900">{{ $selectedApplication->currentCredit }} / 130</p>
+                                <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->currentCredit }} / 130</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Status</p>
@@ -622,25 +629,25 @@
                                 </span>
                                 @if($selectedApplication->academicAdvisorStatus)
                                     <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$selectedApplication->academicAdvisorStatus] ?? 'bg-gray-100 text-gray-800' }}" title="Academic Advisor Status">
-                                        AA: {{ ucfirst($selectedApplication->academicAdvisorStatus) }}
+                                        Academic Advisor: {{ ucfirst($selectedApplication->academicAdvisorStatus) }}
                                     </span>
                                 @endif
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-600">Application Date</p>
-                                <p class="text-sm text-gray-900">
+                                <p class="text-sm text-gray-900 dark:text-gray-100">
                                     {{ $selectedApplication->applicationDate->format('F d, Y') }}</p>
                             </div>
                             @if ($selectedApplication->academicAdvisorID && $selectedApplication->academicAdvisor)
                                 <div>
                                     <p class="text-sm font-medium text-gray-600">Academic Advisor</p>
-                                    <p class="text-sm text-gray-900">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</p>
+                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</p>
                                 </div>
                             @endif
                             @if ($selectedApplication->lecturerID && $selectedApplication->lecturer)
                                 <div>
                                     <p class="text-sm font-medium text-gray-600">Reviewed By Coordinator</p>
-                                    <p class="text-sm text-gray-900">{{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}</p>
+                                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}</p>
                                 </div>
                             @endif
                         </div>
@@ -649,12 +656,12 @@
                     <!-- Submitted File -->
                     @if ($selectedApplication->files->count() > 0)
                         <div class="bg-green-50 rounded-lg p-4">
-                            <h4 class="text-md font-semibold text-gray-900 mb-3">Submitted Document</h4>
+                            <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Submitted Document</h4>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <i class="fa fa-file text-green-600 text-xl mr-3"></i>
                                     <div>
-                                        <p class="text-sm font-medium text-gray-900">{{ $selectedApplication->files->first()->original_name ?? 'Course Documentation' }}</p>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $selectedApplication->files->first()->original_name ?? 'Course Documentation' }}</p>
                                         <p class="text-xs text-gray-600">{{ $selectedApplication->files->first()->mime_type }} - {{ number_format($selectedApplication->files->first()->file_size / 1024, 1) }} KB</p>
                                     </div>
                                 </div>
@@ -681,12 +688,12 @@
                     @if($isAcademicAdvisor)
                         @if($selectedApplication->academicAdvisorStatus === null)
                             <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
-                                <h4 class="text-md font-semibold text-gray-900 mb-2">Academic Advisor Review</h4>
+                                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">Academic Advisor Review</h4>
                                 <p class="text-sm text-gray-700 mb-3">Please review this application and determine if it is eligible for coordinator approval.</p>
                             </div>
                         @else
                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                <h4 class="text-md font-semibold text-gray-900 mb-2">Your Review History</h4>
+                                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">Your Review History</h4>
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2">
                                         <span class="text-sm font-medium text-gray-700">Review Status:</span>
@@ -703,7 +710,7 @@
                                     @if($selectedApplication->academicAdvisor)
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-medium text-gray-700">Reviewed By:</span>
-                                            <span class="text-sm text-gray-900">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</span>
+                                            <span class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</span>
                                         </div>
                                     @endif
                                     @if($selectedApplication->academicAdvisorStatus === 'approved' && $selectedApplication->status)
@@ -733,12 +740,12 @@
                     @if($isCoordinator)
                         @if($selectedApplication->status === 'pending' && $selectedApplication->academicAdvisorStatus === 'approved')
                             <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
-                                <h4 class="text-md font-semibold text-gray-900 mb-2">Coordinator Review</h4>
+                                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">Coordinator Review</h4>
                                 <p class="text-sm text-gray-700 mb-3">This application has been approved by the academic advisor. Please review and make a final decision.</p>
                             </div>
                         @elseif($selectedApplication->status !== 'pending' && $selectedApplication->academicAdvisorStatus === 'approved')
                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                <h4 class="text-md font-semibold text-gray-900 mb-2">Your Review History</h4>
+                                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">Your Review History</h4>
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2">
                                         <span class="text-sm font-medium text-gray-700">Review Status:</span>
@@ -755,13 +762,13 @@
                                     @if($selectedApplication->lecturer)
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-medium text-gray-700">Reviewed By:</span>
-                                            <span class="text-sm text-gray-900">{{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}</span>
+                                            <span class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}</span>
                                         </div>
                                     @endif
                                     @if($selectedApplication->academicAdvisor)
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-medium text-gray-700">Academic Advisor:</span>
-                                            <span class="text-sm text-gray-900">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</span>
+                                            <span class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</span>
                                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 ml-2">
                                                 Approved
                                             </span>
@@ -775,7 +782,7 @@
                     <!-- Remarks Section -->
                     @if (($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus === null) || ($isCoordinator && $selectedApplication->status === 'pending' && $selectedApplication->academicAdvisorStatus === 'approved'))
                         <div class="bg-yellow-50 rounded-lg p-4">
-                            <h4 class="text-md font-semibold text-gray-900 mb-3">Review Remarks</h4>
+                            <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Review Remarks</h4>
                             <div>
                                 <label for="remarks" class="block text-sm font-medium text-gray-700 mb-2">
                                     @if($isAcademicAdvisor)
@@ -798,7 +805,7 @@
                         </div>
                     @elseif ($selectedApplication->remarks)
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="text-md font-semibold text-gray-900 mb-3">
+                            <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">
                                 @if($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus)
                                     Your Remarks
                                 @elseif($isCoordinator && $selectedApplication->status !== 'pending')
@@ -808,7 +815,7 @@
                                 @endif
                             </h4>
                             <div class="bg-white border rounded-md p-3">
-                                <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ $selectedApplication->remarks }}</p>
+                                <p class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{{ $selectedApplication->remarks }}</p>
                             </div>
                             <p class="text-xs text-gray-500 mt-1">
                                 @if($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus)

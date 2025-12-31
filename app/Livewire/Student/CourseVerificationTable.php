@@ -42,19 +42,19 @@ class CourseVerificationTable extends Component
     ];
 
     protected $rules = [
-        'currentCredit' => 'required|integer|min:0|max:130',
-        'submittedFile' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB max
+        'currentCredit' => 'required|integer|min:118|max:130',
+        'submittedFile' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:5120', // 5MB max
     ];
 
     protected $messages = [
         'currentCredit.required' => 'Current credit is required.',
         'currentCredit.integer' => 'Current credit must be a number.',
-        'currentCredit.min' => 'Current credit cannot be negative.',
+        'currentCredit.min' => 'Current credit must be at least 118.',
         'currentCredit.max' => 'Current credit cannot exceed 130.',
         'submittedFile.required' => 'Course file is required.',
         'submittedFile.file' => 'Please upload a valid file.',
-        'submittedFile.mimes' => 'File must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',
-        'submittedFile.max' => 'File size cannot exceed 10MB.',
+        'submittedFile.mimes' => 'File must be PDF, DOC, DOCX, JPG, JPEG, PNG, or ZIP.',
+        'submittedFile.max' => 'File size cannot exceed 5MB.',
     ];
 
     public function mount()
@@ -125,9 +125,15 @@ class CourseVerificationTable extends Component
             return;
         }
 
-        // Only allow editing if status is pending
+        // Only allow editing if status is pending AND academic advisor hasn't approved yet
         if ($verification->status !== 'pending') {
             session()->flash('error', 'You can only edit pending applications.');
+            return;
+        }
+
+        // Prevent editing if academic advisor has already approved
+        if ($verification->academicAdvisorStatus === 'approved') {
+            session()->flash('error', 'You cannot edit this application as it has already been approved by your academic advisor.');
             return;
         }
 
@@ -159,8 +165,17 @@ class CourseVerificationTable extends Component
                 return;
             }
 
-            // Store the uploaded file
-            $filePath = $this->submittedFile->store('course-verification-files', 'public');
+            // Get user ID for file naming
+            $userId = Auth::user()->id;
+            
+            // Get file extension
+            $extension = $this->submittedFile->getClientOriginalExtension();
+            
+            // Generate new filename: CourseVerification{UserID}.{extension}
+            $newFileName = 'CourseVerification' . $userId . '.' . $extension;
+            
+            // Store the uploaded file with custom name
+            $filePath = $this->submittedFile->storeAs('course-verification-files', $newFileName, 'public');
 
             if ($this->editingId) {
                 // Update existing verification
@@ -221,9 +236,15 @@ class CourseVerificationTable extends Component
             return;
         }
 
-        // Only allow deletion if status is pending
+        // Only allow deletion if status is pending AND academic advisor hasn't approved yet
         if ($verification->status !== 'pending') {
             session()->flash('error', 'You can only delete pending applications.');
+            return;
+        }
+
+        // Prevent deletion if academic advisor has already approved
+        if ($verification->academicAdvisorStatus === 'approved') {
+            session()->flash('error', 'You cannot delete this application as it has already been approved by your academic advisor.');
             return;
         }
 

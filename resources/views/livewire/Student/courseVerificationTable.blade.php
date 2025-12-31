@@ -67,10 +67,49 @@
         }
     </style>
 
-    <div class="py-12">
-        <div class="w-full px-4 sm:px-6 lg:px-8">
-            <!-- Course Verification Guide -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+    <script>
+        function validateFileSize(input) {
+            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            const errorDiv = document.getElementById('fileSizeError');
+
+            if (input.files && input.files[0]) {
+                if (input.files[0].size > maxSize) {
+                    errorDiv.classList.remove('hidden');
+                    input.value = ''; // Clear the file input
+                    return false;
+                } else {
+                    errorDiv.classList.add('hidden');
+                }
+            }
+            return true;
+        }
+
+        function validateCreditInput(input) {
+            // Remove non-numeric characters
+            let value = input.value.replace(/[^0-9]/g, '');
+
+            // Limit to 3 digits
+            if (value.length > 3) {
+                value = value.substring(0, 3);
+            }
+
+            // Enforce range 118-130
+            if (value) {
+                const numValue = parseInt(value);
+                if (numValue < 118) {
+                    // If user is typing and value is less than 118, allow typing but will validate on blur/submit
+                    // Don't auto-correct while typing to allow user to type "1" then "18" then "118"
+                } else if (numValue > 130) {
+                    value = '130';
+                }
+            }
+
+            input.value = value;
+        }
+    </script>
+
+    <!-- Course Verification Guide -->
+    <div class="bg-blue-50 dark:bg-white-100/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 mt-6">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -282,17 +321,17 @@
                                 <div class="mt-3 space-y-2">
                                     <!-- Academic Advisor Status -->
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-gray-700">Academic Advisor Review:</span>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Academic Advisor Review:</span>
                                         @if($currentApplication->academicAdvisorStatus === 'approved')
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                                                 <i class="fa fa-check mr-1"></i>Approved (Eligible)
                                             </span>
                                         @elseif($currentApplication->academicAdvisorStatus === 'rejected')
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                                                 <i class="fa fa-times mr-1"></i>Rejected (Ineligible)
                                             </span>
                                         @else
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                                                 <i class="fa fa-clock mr-1"></i>Pending Review
                                             </span>
                                         @endif
@@ -300,22 +339,22 @@
 
                                     <!-- Coordinator Status -->
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-gray-700">Coordinator Review:</span>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Coordinator Review:</span>
                                         @if($currentApplication->academicAdvisorStatus === 'rejected')
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
                                                 Not Applicable
                                             </span>
                                         @elseif($currentApplication->academicAdvisorStatus === 'approved')
                                             @if($currentApplication->status === 'approved')
-                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                                                     <i class="fa fa-check mr-1"></i>Approved
                                                 </span>
                                             @elseif($currentApplication->status === 'rejected')
-                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                                                     <i class="fa fa-times mr-1"></i>Rejected
                                                 </span>
                                             @else
-                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                                                     <i class="fa fa-clock mr-1"></i>Pending Review
                                                 </span>
                                             @endif
@@ -381,7 +420,7 @@
             @endif
 
             <!-- Controls Section -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <!-- Search -->
                     <div class="flex-1 lg:max-w-md">
@@ -424,7 +463,7 @@
                                 @endif
                             @else
                                 <div
-                                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-100">
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700">
                                     <i class="fa fa-ban mr-2"></i>
                                     Cannot Apply
                                 </div>
@@ -435,15 +474,15 @@
             </div>
 
             <!-- Table Section -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     <button wire:click="sortBy('courseVerificationID')"
-                                        class="flex items-center hover:text-gray-700">
+                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
                                         ID
                                         <span class="ml-1 sort-icon">
                                             @if ($sortField === 'courseVerificationID')
@@ -459,9 +498,9 @@
                                     </button>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     <button wire:click="sortBy('currentCredit')"
-                                        class="flex items-center hover:text-gray-700">
+                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
                                         Current Credit
                                         <span class="ml-1 sort-icon">
                                             @if ($sortField === 'currentCredit')
@@ -477,8 +516,8 @@
                                     </button>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <button wire:click="sortBy('status')" class="flex items-center hover:text-gray-700">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    <button wire:click="sortBy('status')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
                                         Status
                                         <span class="ml-1 sort-icon">
                                             @if ($sortField === 'status')
@@ -494,9 +533,9 @@
                                     </button>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     <button wire:click="sortBy('applicationDate')"
-                                        class="flex items-center hover:text-gray-700">
+                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
                                         Application Date
                                         <span class="ml-1 sort-icon">
                                             @if ($sortField === 'applicationDate')
@@ -512,19 +551,19 @@
                                     </button>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Remarks
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                              @forelse($verifications as $verification)
-                                 <tr class="hover:bg-gray-50 {{ $verification->status === 'approved' ? 'bg-green-50 border-l-4 border-green-400' : '' }}">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 {{ $verification->status === 'approved' ? 'bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 dark:border-green-500' : '' }}">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                         <div class="flex items-center">
                                             @if($verification->status === 'approved')
                                                 <i class="fa fa-check-circle text-green-500 mr-2" title="Approved"></i>
@@ -532,15 +571,15 @@
                                             {{ $verification->courseVerificationID }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ $verification->currentCredit }} / {{ $totalCreditRequired }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @php
                                             $statusClasses = [
-                                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                                'approved' => 'bg-green-100 text-green-800',
-                                                'rejected' => 'bg-red-100 text-red-800',
+                                                'pending' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+                                                'approved' => 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+                                                'rejected' => 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
                                             ];
                                         @endphp
                                         <div class="flex flex-col gap-1">
@@ -549,42 +588,42 @@
                                                 <span
                                                     class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$verification->academicAdvisorStatus] ?? 'bg-gray-100 text-gray-800' }}"
                                                     title="Academic Advisor Review">
-                                                    AA: {{ ucfirst($verification->academicAdvisorStatus) }}
+                                                    Academic Advisor: {{ ucfirst($verification->academicAdvisorStatus) }}
                                                 </span>
                                             @else
                                                 <span
-                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
                                                     title="Awaiting Academic Advisor Review">
-                                                    AA: Pending
+                                                    Academic Advisor: Pending
                                                 </span>
                                             @endif
 
                                             <!-- Coordinator Status -->
                                             @if($verification->academicAdvisorStatus === 'approved')
                                                 <span
-                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$verification->status] ?? 'bg-gray-100 text-gray-800' }}"
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$verification->status] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300' }}"
                                                     title="Coordinator Review">
                                                     Coordinator: {{ ucfirst($verification->status) }}
                                                 </span>
                                             @elseif($verification->academicAdvisorStatus === 'rejected')
                                                 <span
-                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
                                                     title="Rejected by Academic Advisor">
                                                     Coordinator: Not Applicable
                                                 </span>
                                             @else
                                                 <span
-                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
                                                     title="Awaiting Academic Advisor Approval">
                                                     Coordinator: Pending
                                                 </span>
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ $verification->applicationDate->format('M d, Y') }}
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 max-w-xs">
                                         @if (in_array($verification->status, ['approved', 'rejected']) && $verification->remarks)
                                             <div class="truncate" title="{{ $verification->remarks }}">
                                                 {{ Str::limit($verification->remarks, 50) }}
@@ -595,18 +634,11 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex items-center space-x-2">
-                                            <!-- View File -->
-                                            @if ($verification->files->count() > 0)
-                                                <a href="{{ $verification->files->first()->url }}"
-                                                    target="_blank" class="text-blue-600 hover:text-blue-900 title"
-                                                    title="View submitted file">
-                                                    <i class="fa fa-file"></i>
-                                                </a>
-                                            @endif
+
 
                                             <!-- Edit/Delete (only for current application and appropriate status) -->
                                             @if ($currentApplication && $currentApplication->courseVerificationID === $verification->courseVerificationID && !$hasApprovedApplication)
-                                                @if (in_array($verification->status, ['pending', 'rejected']))
+                                                @if (in_array($verification->status, ['pending', 'rejected']) && $verification->academicAdvisorStatus !== 'approved')
                                                     <button
                                                         wire:click="edit({{ $verification->courseVerificationID }})"
                                                         class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
@@ -642,15 +674,15 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                    <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                         <div class="flex flex-col items-center">
-                                            <i class="fa fa-file text-4xl text-gray-300 mb-4"></i>
-                                            <p class="text-lg font-medium mb-2">No applications found</p>
+                                            <i class="fa fa-file text-4xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                                            <p class="text-lg font-medium mb-2 text-gray-900 dark:text-gray-100">No applications found</p>
                                             @if ($canApply)
-                                                <p class="text-sm">Click "Apply for Verification" to submit your
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">Click "Apply for Verification" to submit your
                                                     application.</p>
                                             @else
-                                                <p class="text-sm">You cannot apply for course verification at this
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">You cannot apply for course verification at this
                                                     time.</p>
                                             @endif
                                         </div>
@@ -662,21 +694,19 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="bg-white dark:bg-gray-800 px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6">
+                <div class="px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6">
                     {{ $verifications->links() }}
                 </div>
             </div>
-        </div>
-    </div>
 
     <!-- Application Form Modal -->
     @if ($showForm)
         <div class="modal-overlay">
-            <div class="modal-content bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+            <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full mx-4">
                 <form wire:submit="submit">
-                    <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-lg font-medium text-gray-900">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                                 {{ $editingId ? 'Edit' : 'Apply for' }} Course Verification
                             </h3>
                             <button type="button" wire:click="closeForm" class="text-gray-400 hover:text-gray-600">
@@ -687,46 +717,50 @@
 
                     <div class="px-6 py-4 space-y-4">
                         <!-- Total Credit Info -->
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                            <p class="text-sm text-blue-700">
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
                                 <strong>Total Credits Required:</strong> {{ $totalCreditRequired }} credits
                             </p>
                         </div>
 
                         <!-- Current Credit -->
                         <div>
-                            <label for="currentCredit" class="block text-sm font-medium text-gray-700 mb-1">
+                            <label for="currentCredit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Total Taken Current Credit <span class="text-red-500">*</span>
                             </label>
-                            <input type="number" wire:model="currentCredit" id="currentCredit" min="0"
-                                max="118"
-                                class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Enter your current credit count">
+                            <input type="text" wire:model="currentCredit" id="currentCredit" maxlength="3"
+                                oninput="validateCreditInput(this)"
+                                class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter your current credit count (118-130)">
                             @error('currentCredit')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <!-- File Upload -->
                         <div>
-                            <label for="submittedFile" class="block text-sm font-medium text-gray-700 mb-1">
+                            <label for="submittedFile" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Course File <span class="text-red-500">*</span>
                             </label>
                             <input type="file" wire:model="submittedFile" id="submittedFile"
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
-                            <p class="mt-1 text-sm text-gray-500">
-                                Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 10MB)
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip"
+                                onchange="validateFileSize(this)"
+                                class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Accepted formats: PDF, DOC, DOCX, JPG, JPEG, PNG, ZIP (Max: 5MB)
                             </p>
+                            <div id="fileSizeError" class="mt-1 text-sm text-red-600 dark:text-red-400 hidden">
+                                File size cannot exceed 5MB.
+                            </div>
                             @error('submittedFile')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
 
-                    <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
                         <button type="button" wire:click="closeForm"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Cancel
                         </button>
                         <button type="submit" wire:loading.attr="disabled"

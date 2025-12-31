@@ -119,7 +119,28 @@ class CourseVerificationTable extends Component
             }
 
             // Check if user is academic advisor or coordinator
-            if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+            $hasCoordinatorAndAcademicAdvisor = $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
+            $hasCommitteeAndAcademicAdvisor = $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            
+            if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
+                // If lecturer has Academic Advisor combined with Coordinator/Committee, 
+                // check which role they're acting as based on application status
+                $application = CourseVerification::findOrFail($id);
+                
+                // If academic advisor hasn't reviewed yet, act as academic advisor
+                if ($application->academicAdvisorStatus === null && 
+                    $application->student->academicAdvisorID === $lecturer->lecturerID) {
+                    $this->approveAsAcademicAdvisor($id, $lecturer);
+                } 
+                // If academic advisor has approved, act as coordinator
+                elseif ($application->academicAdvisorStatus === 'approved') {
+                    $this->approveAsCoordinator($id, $lecturer);
+                } else {
+                    session()->flash('error', 'This application cannot be approved in its current state.');
+                    return;
+                }
+            } elseif ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
                 // Academic Advisor approval - check eligibility
                 $this->approveAsAcademicAdvisor($id, $lecturer);
             } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
@@ -161,7 +182,27 @@ class CourseVerificationTable extends Component
             $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'academicAdvisor', 'files'])
                 ->findOrFail($id);
 
-            session()->flash('message', 'Application marked as eligible! It will now appear for coordinator review.');
+            // Send email notification to coordinators
+            try {
+                $coordinators = Lecturer::where(function($q) {
+                    $q->where('isCoordinator', true)
+                      ->orWhere('isCommittee', true);
+                })->where('status', 'active')
+                  ->with('user')
+                  ->get();
+
+                foreach ($coordinators as $coordinator) {
+                    if ($coordinator->user) {
+                        $coordinator->user->notify(
+                            new \App\Notifications\CourseVerificationCoordinatorNotification($this->selectedApplication)
+                        );
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send coordinator notification: ' . $e->getMessage());
+            }
+
+            session()->flash('message', 'Application marked as eligible! It will now appear for coordinator review. Coordinators have been notified.');
 
             $this->resetPage();
             $this->dispatch('application-status-updated');
@@ -221,7 +262,28 @@ class CourseVerificationTable extends Component
             }
 
             // Check if user is academic advisor or coordinator
-            if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+            $hasCoordinatorAndAcademicAdvisor = $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
+            $hasCommitteeAndAcademicAdvisor = $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            
+            if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
+                // If lecturer has Academic Advisor combined with Coordinator/Committee, 
+                // check which role they're acting as based on application status
+                $application = CourseVerification::findOrFail($id);
+                
+                // If academic advisor hasn't reviewed yet, act as academic advisor
+                if ($application->academicAdvisorStatus === null && 
+                    $application->student->academicAdvisorID === $lecturer->lecturerID) {
+                    $this->rejectAsAcademicAdvisor($id, $lecturer);
+                } 
+                // If academic advisor has approved, act as coordinator
+                elseif ($application->academicAdvisorStatus === 'approved') {
+                    $this->rejectAsCoordinator($id, $lecturer);
+                } else {
+                    session()->flash('error', 'This application cannot be rejected in its current state.');
+                    return;
+                }
+            } elseif ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
                 // Academic Advisor rejection
                 $this->rejectAsAcademicAdvisor($id, $lecturer);
             } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
@@ -363,14 +425,36 @@ class CourseVerificationTable extends Component
         $query = CourseVerification::with(['student.user', 'lecturer', 'academicAdvisor', 'files']);
 
         // Filter based on lecturer role
+        // Show applications if lecturer has:
+        // - (Coordinator AND Academic Advisor) OR
+        // - (Committee AND Academic Advisor) OR
+        // - (Coordinator AND Committee AND Academic Advisor) OR
+        // - (Academic Advisor only) OR
+        // - (Coordinator/Committee only)
         if ($lecturer) {
-            if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
-                // Academic Advisor: Show all their advisees' applications (pending and reviewed history)
+            $hasCoordinatorAndAcademicAdvisor = $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
+            $hasCommitteeAndAcademicAdvisor = $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            $isAcademicAdvisorOnly = $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee;
+            $isCoordinatorOrCommitteeOnly = ($lecturer->isCoordinator || $lecturer->isCommittee) && !$lecturer->isAcademicAdvisor;
+            
+            if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
+                // If lecturer has Academic Advisor combined with Coordinator/Committee, show both:
+                // 1. Their advisees' applications (as academic advisor)
+                // 2. Applications approved by academic advisor (as coordinator/committee)
+                $query->where(function($q) use ($lecturer) {
+                    $q->whereHas('student', function ($subQ) use ($lecturer) {
+                        $subQ->where('academicAdvisorID', $lecturer->lecturerID);
+                    })
+                    ->orWhere('academicAdvisorStatus', 'approved');
+                });
+            } elseif ($isAcademicAdvisorOnly) {
+                // Academic Advisor only: Show all their advisees' applications (pending and reviewed history)
                 $query->whereHas('student', function ($q) use ($lecturer) {
                     $q->where('academicAdvisorID', $lecturer->lecturerID);
                 });
-            } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
-                // Coordinator/Committee: Show all applications approved by academic advisor (pending and reviewed history)
+            } elseif ($isCoordinatorOrCommitteeOnly) {
+                // Coordinator/Committee only: Show all applications approved by academic advisor (pending and reviewed history)
                 $query->where('academicAdvisorStatus', 'approved');
             }
         }
@@ -395,7 +479,26 @@ class CourseVerificationTable extends Component
 
         // Apply status filter
         if ($this->statusFilter) {
-            if ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+            $hasCoordinatorAndAcademicAdvisor = $lecturer && $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
+            $hasCommitteeAndAcademicAdvisor = $lecturer && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            $hasAllThreeRoles = $lecturer && $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            
+            if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
+                // For lecturers with combined roles, allow filtering by both statuses
+                // This is complex, so we'll filter by the most relevant status
+                if ($this->statusFilter === 'pending') {
+                    $query->where(function($q) {
+                        $q->whereNull('academicAdvisorStatus')
+                          ->orWhere('status', 'pending');
+                    });
+                } else {
+                    // For approved/rejected, check both statuses
+                    $query->where(function($q) {
+                        $q->where('academicAdvisorStatus', $this->statusFilter)
+                          ->orWhere('status', $this->statusFilter);
+                    });
+                }
+            } elseif ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
                 // For academic advisors, filter by academicAdvisorStatus
                 if ($this->statusFilter === 'pending') {
                     $query->whereNull('academicAdvisorStatus');
@@ -434,7 +537,25 @@ class CourseVerificationTable extends Component
 
         // Apply custom sorting - prioritize pending status and oldest applications
         if ($this->sortField === 'applicationDate') {
-            if ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+            $hasCoordinatorAndAcademicAdvisor = $lecturer && $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
+            $hasCommitteeAndAcademicAdvisor = $lecturer && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            $hasAllThreeRoles = $lecturer && $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            
+            if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
+                // For combined roles, prioritize by both academic advisor and coordinator status
+                $query->orderByRaw(
+                    "
+                    CASE
+                        WHEN academicAdvisorStatus IS NULL THEN 1
+                        WHEN academicAdvisorStatus = 'approved' AND status = 'pending' THEN 2
+                        WHEN academicAdvisorStatus = 'approved' AND status = 'approved' THEN 3
+                        WHEN academicAdvisorStatus = 'approved' AND status = 'rejected' THEN 4
+                        WHEN academicAdvisorStatus = 'rejected' THEN 5
+                        ELSE 6
+                    END ASC,
+                    applicationDate " . $this->sortDirection
+                );
+            } elseif ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
                 // For academic advisors, prioritize by academicAdvisorStatus
                 $query->orderByRaw(
                     "
@@ -485,7 +606,10 @@ class CourseVerificationTable extends Component
             return;
         }
 
-        return response()->download(Storage::disk('public')->path($file->file_path), $file->original_name);
+        // Use the stored filename (CourseVerification{UserID}.{extension}) instead of original_name
+        $downloadName = basename($file->file_path);
+        
+        return response()->download(Storage::disk('public')->path($file->file_path), $downloadName);
     }
 
     // Bulk selection methods
@@ -496,7 +620,20 @@ class CourseVerificationTable extends Component
             $query = $this->getFilteredApplications();
 
             // Select all eligible applications on current page
-            if ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+            $hasCoordinatorAndAcademicAdvisor = $lecturer && $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
+            $hasCommitteeAndAcademicAdvisor = $lecturer && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            $hasAllThreeRoles = $lecturer && $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+            
+            if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
+                // For combined roles, select both pending academic advisor reviews and pending coordinator reviews
+                $this->selectedApplications = $query->where(function($q) {
+                    $q->whereNull('academicAdvisorStatus')
+                      ->orWhere(function($subQ) {
+                          $subQ->where('academicAdvisorStatus', 'approved')
+                               ->where('status', 'pending');
+                      });
+                })->pluck('courseVerificationID')->toArray();
+            } elseif ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
                 // Academic advisor: select only applications not yet reviewed (can't bulk select already reviewed ones)
                 $this->selectedApplications = $query->whereNull('academicAdvisorStatus')
                     ->pluck('courseVerificationID')
@@ -533,7 +670,64 @@ class CourseVerificationTable extends Component
 
                 if (!$application) continue;
 
-                if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                $hasCoordinatorAndAcademicAdvisor = $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
+                $hasCommitteeAndAcademicAdvisor = $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+                $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+                
+                if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
+                    // For combined roles, check which role to act as
+                    if ($application->academicAdvisorStatus === null &&
+                        $application->student->academicAdvisorID === $lecturer->lecturerID) {
+                        // Act as academic advisor
+                        $application->update([
+                            'academicAdvisorStatus' => 'approved',
+                            'academicAdvisorID' => $lecturer->lecturerID,
+                            'remarks' => $this->remarks ?: 'Eligible for coordinator review.',
+                        ]);
+                        
+                        // Send email notification to coordinators (excluding self)
+                        try {
+                            $coordinators = Lecturer::where(function($q) {
+                                $q->where('isCoordinator', true)
+                                  ->orWhere('isCommittee', true);
+                            })->where('status', 'active')
+                              ->where('lecturerID', '!=', $lecturer->lecturerID)
+                              ->with('user')
+                              ->get();
+
+                            foreach ($coordinators as $coordinator) {
+                                if ($coordinator->user) {
+                                    $coordinator->user->notify(
+                                        new \App\Notifications\CourseVerificationCoordinatorNotification($application->fresh())
+                                    );
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send coordinator notification: ' . $e->getMessage());
+                        }
+                        
+                        $count++;
+                    } elseif ($application->academicAdvisorStatus === 'approved' && $application->status === 'pending') {
+                        // Act as coordinator
+                        $application->update([
+                            'status' => 'approved',
+                            'lecturerID' => $lecturer->lecturerID,
+                            'remarks' => $this->remarks ?: 'Approved',
+                        ]);
+
+                        // Send notification
+                        try {
+                            $application->load('student.user');
+                            $application->student->user->notify(
+                                new CourseVerificationStatusNotification($application)
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send approval notification: ' . $e->getMessage());
+                        }
+
+                        $count++;
+                    }
+                } elseif ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
                     // Academic advisor bulk approval
                     if ($application->academicAdvisorStatus === null &&
                         $application->student->academicAdvisorID === $lecturer->lecturerID) {
@@ -542,6 +736,27 @@ class CourseVerificationTable extends Component
                             'academicAdvisorID' => $lecturer->lecturerID,
                             'remarks' => $this->remarks ?: 'Eligible for coordinator review.',
                         ]);
+                        
+                        // Send email notification to coordinators
+                        try {
+                            $coordinators = Lecturer::where(function($q) {
+                                $q->where('isCoordinator', true)
+                                  ->orWhere('isCommittee', true);
+                            })->where('status', 'active')
+                              ->with('user')
+                              ->get();
+
+                            foreach ($coordinators as $coordinator) {
+                                if ($coordinator->user) {
+                                    $coordinator->user->notify(
+                                        new \App\Notifications\CourseVerificationCoordinatorNotification($application->fresh())
+                                    );
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send coordinator notification: ' . $e->getMessage());
+                        }
+                        
                         $count++;
                     }
                 } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
@@ -604,7 +819,55 @@ class CourseVerificationTable extends Component
 
                 if (!$application) continue;
 
-                if ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+                $hasCoordinatorAndAcademicAdvisor = $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
+                $hasCommitteeAndAcademicAdvisor = $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+                $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+                
+                if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
+                    // For combined roles, check which role to act as
+                    if ($application->academicAdvisorStatus === null &&
+                        $application->student->academicAdvisorID === $lecturer->lecturerID) {
+                        // Act as academic advisor
+                        $application->update([
+                            'academicAdvisorStatus' => 'rejected',
+                            'academicAdvisorID' => $lecturer->lecturerID,
+                            'status' => 'rejected',
+                            'lecturerID' => $lecturer->lecturerID,
+                            'remarks' => $this->remarks,
+                        ]);
+
+                        // Send notification
+                        try {
+                            $application->load('student.user');
+                            $application->student->user->notify(
+                                new CourseVerificationStatusNotification($application)
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send rejection notification: ' . $e->getMessage());
+                        }
+
+                        $count++;
+                    } elseif ($application->academicAdvisorStatus === 'approved' && $application->status === 'pending') {
+                        // Act as coordinator
+                        $application->update([
+                            'status' => 'rejected',
+                            'lecturerID' => $lecturer->lecturerID,
+                            'remarks' => $this->remarks,
+                        ]);
+
+                        // Send notification
+                        try {
+                            $application->load('student.user');
+                            $application->student->user->notify(
+                                new CourseVerificationStatusNotification($application)
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send rejection notification: ' . $e->getMessage());
+                        }
+
+                        $count++;
+                    }
+                } elseif ($lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
                     // Academic advisor bulk rejection
                     if ($application->academicAdvisorStatus === null &&
                         $application->student->academicAdvisorID === $lecturer->lecturerID) {
@@ -719,7 +982,45 @@ class CourseVerificationTable extends Component
         $lecturer = Auth::user()->lecturer;
 
         // Get statistics based on role - each role only sees their own analytics
-        if ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
+        $hasCoordinatorAndAcademicAdvisor = $lecturer && $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
+        $hasCommitteeAndAcademicAdvisor = $lecturer && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+        $hasAllThreeRoles = $lecturer && $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
+        
+        if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
+            // For combined roles, show combined statistics
+            $totalApplications = CourseVerification::where(function($q) use ($lecturer) {
+                $q->whereHas('student', function ($subQ) use ($lecturer) {
+                    $subQ->where('academicAdvisorID', $lecturer->lecturerID);
+                })->orWhere('academicAdvisorStatus', 'approved');
+            })->count();
+            
+            $pendingApplications = CourseVerification::where(function($q) use ($lecturer) {
+                $q->whereHas('student', function ($subQ) use ($lecturer) {
+                    $subQ->where('academicAdvisorID', $lecturer->lecturerID);
+                })->whereNull('academicAdvisorStatus');
+            })->orWhere(function($q) {
+                $q->where('academicAdvisorStatus', 'approved')
+                  ->where('status', 'pending');
+            })->count();
+            
+            $approvedApplications = CourseVerification::where(function($q) use ($lecturer) {
+                $q->whereHas('student', function ($subQ) use ($lecturer) {
+                    $subQ->where('academicAdvisorID', $lecturer->lecturerID);
+                })->where('academicAdvisorStatus', 'approved');
+            })->orWhere(function($q) {
+                $q->where('academicAdvisorStatus', 'approved')
+                  ->where('status', 'approved');
+            })->count();
+            
+            $rejectedApplications = CourseVerification::where(function($q) use ($lecturer) {
+                $q->whereHas('student', function ($subQ) use ($lecturer) {
+                    $subQ->where('academicAdvisorID', $lecturer->lecturerID);
+                })->where('academicAdvisorStatus', 'rejected');
+            })->orWhere(function($q) {
+                $q->where('academicAdvisorStatus', 'approved')
+                  ->where('status', 'rejected');
+            })->count();
+        } elseif ($lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee) {
             // Academic advisor statistics - all their advisees' applications (including history)
             $totalApplications = CourseVerification::whereHas('student', function ($q) use ($lecturer) {
                 $q->where('academicAdvisorID', $lecturer->lecturerID);
@@ -757,7 +1058,7 @@ class CourseVerificationTable extends Component
             'approvedApplications' => $approvedApplications,
             'rejectedApplications' => $rejectedApplications,
             'isAcademicAdvisor' => $lecturer && $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee,
-            'isCoordinator' => $lecturer && ($lecturer->isCoordinator || $lecturer->isCommittee),
+            'isCoordinator' => $lecturer && (($lecturer->isCoordinator || $lecturer->isCommittee) && ($lecturer->isAcademicAdvisor || !$lecturer->isAcademicAdvisor)),
         ]);
     }
 }
