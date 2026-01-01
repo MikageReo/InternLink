@@ -1,4 +1,41 @@
 <div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Restrict numeric fields to numbers only
+            const numericFields = document.querySelectorAll('input[pattern="[0-9]{1,10}"], input[pattern="[0-9]{1,15}"], input[pattern="[0-9]{1,5}"]');
+
+            numericFields.forEach(function(field) {
+                // Prevent paste of non-numeric characters
+                field.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const paste = (e.clipboardData || window.clipboardData).getData('text');
+                    const numericOnly = paste.replace(/[^0-9]/g, '');
+                    field.value = numericOnly;
+                    // Trigger Livewire update
+                    field.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+
+                field.addEventListener('input', function(e) {
+                    // Remove any non-numeric characters
+                    const originalValue = e.target.value;
+                    const numericOnly = originalValue.replace(/[^0-9]/g, '');
+                    if (originalValue !== numericOnly) {
+                        e.target.value = numericOnly;
+                        // Trigger Livewire update
+                        e.target.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
+
+                field.addEventListener('keypress', function(e) {
+                    // Only allow numeric keys
+                    if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
+
     <div class="py-12">
         <div class="w-full px-4 sm:px-6 lg:px-8">
             <!-- Placement Application Guide -->
@@ -207,11 +244,11 @@
                                         verified:
                                     </p>
                                     <ul class="text-sm text-gray-700 space-y-1 ml-4 list-disc">
-                                        <li>✅ Relevance to your course/program</li>
-                                        <li>✅ Faculty approval obtained</li>
-                                        <li>✅ Suitable working hours</li>
-                                        <li>✅ Feasible transportation and accommodation arrangements</li>
-                                        <li>✅ Allowance (if any) is clearly stated</li>
+                                        <li>Relevance to your course/program</li>
+                                        <li>Faculty approval obtained</li>
+                                        <li>Suitable working hours</li>
+                                        <li>Feasible transportation and accommodation arrangements</li>
+                                        <li>Allowance (if any) is clearly stated</li>
                                     </ul>
                                 </div>
                             </div>
@@ -371,6 +408,17 @@
         </div>
     </div>
 
+    <!-- Make More Application Button -->
+    @if ($canApply && !$hasAcceptedApplication)
+        <div class="mb-6 flex justify-end">
+            <button wire:click="openForm"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600">
+                <i class="fa fa-plus mr-2"></i>
+                Apply for New Application
+            </button>
+        </div>
+    @endif
+
     <!-- Table Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
         <div class="overflow-x-auto table-container">
@@ -519,19 +567,21 @@
                                             @endif
 
                                             <!-- View/Edit Actions -->
-                                            @if ($application->committeeStatus === 'Pending' && $application->coordinatorStatus === 'Pending')
-                                                <!-- Edit button - only when both are pending -->
+                                            @if ($application->studentAcceptance !== 'Accepted' &&
+                                                 $application->committeeStatus === 'Pending' &&
+                                                 $application->coordinatorStatus === 'Pending')
+                                                <!-- Edit button - only when not accepted and BOTH statuses are pending -->
                                                 <button wire:click="edit({{ $application->applicationID }})"
-                                                    class="text-blue-600 hover:text-blue-900"
+                                                    class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-md dark:bg-blue-900/20 dark:text-blue-400 dark:hover:text-blue-300"
                                                     title="Edit application">
-                                                    ✏️ Edit
+                                                    <i class="fa fa-edit mr-1"></i> Edit
                                                 </button>
                                             @else
-                                                <!-- View button - when any approval has been made -->
+                                                <!-- View button - when accepted or either committee/coordinator has reviewed -->
                                                 <button wire:click="view({{ $application->applicationID }})"
-                                                    class="text-gray-600 hover:text-gray-900"
+                                                    class="inline-flex items-center px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-md dark:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
                                                     title="View details (read-only)">
-                                                    👁️ View
+                                                    <i class="fa fa-eye mr-1"></i> View
                                                 </button>
                                             @endif
 
@@ -720,6 +770,8 @@
                                             </div>
                                             <input type="text" wire:model="companyName"
                                                 placeholder="e.g., Tech Solutions Sdn Bhd"
+                                                maxlength="50"
+                                                required
                                                 class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                         </div>
                                     @endif
@@ -733,6 +785,8 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Company Email *</label>
                                 <input type="email" wire:model="companyEmail" placeholder="e.g., hr@company.com"
+                                    maxlength="50"
+                                    required
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('companyEmail')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -749,6 +803,8 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
                                 <input type="text" wire:model="companyAddressLine"
                                     placeholder="e.g., No. 123, Jalan Technology Park 2, Bukit Jalil"
+                                    maxlength="255"
+                                    required
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('companyAddressLine')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -756,9 +812,11 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
                                 <input type="text" wire:model="companyCity"
                                     placeholder="e.g., Kuala Lumpur, Johor Bahru"
+                                    maxlength="20"
+                                    required
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('companyCity')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -766,17 +824,24 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Postcode *</label>
                                 <input type="text" wire:model="companyPostcode" placeholder="e.g., 50400"
+                                    pattern="[0-9]{1,10}"
+                                    maxlength="10"
+                                    required
+                                    inputmode="numeric"
+                                    onkeypress="return /[0-9]/i.test(event.key)"
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('companyPostcode')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
+                                <p class="text-xs text-gray-500 mt-1">Numbers only, maximum 10 digits</p>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
                                 <select wire:model="companyState"
+                                    required
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                     <option value="">Select State</option>
                                     <option value="Johor">Johor</option>
@@ -795,6 +860,7 @@
                                     <option value="Sarawak">Sarawak</option>
                                     <option value="Selangor">Selangor</option>
                                     <option value="Terengganu">Terengganu</option>
+                                    <option value="Outside Malaysia">Outside Malaysia</option>
                                 </select>
                                 @error('companyState')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -886,24 +952,35 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Company Phone *</label>
                                 <input type="text" wire:model="companyNumber"
-                                    placeholder="e.g., +603-1234 5678 or 011-1234 5678"
+                                    placeholder="e.g., 60312345678 or 01112345678"
+                                    pattern="[0-9]{1,15}"
+                                    maxlength="15"
+                                    required
+                                    inputmode="numeric"
+                                    onkeypress="return /[0-9]/i.test(event.key)"
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('companyNumber')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
+                                <p class="text-xs text-gray-500 mt-1">Numbers only, maximum 15 digits</p>
                             </div>
 
                             <!-- Monthly Allowance -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Allowance
-                                    (RM)</label>
-                                <input type="number" wire:model="allowance" step="0.01" min="0"
-                                    placeholder="e.g., 800.00"
+                                    (RM) *</label>
+                                <input type="text" wire:model="allowance"
+                                    placeholder="e.g., 800"
+                                    pattern="[0-9]{1,5}"
+                                    maxlength="5"
+                                    required
+                                    inputmode="numeric"
+                                    onkeypress="return /[0-9]/i.test(event.key)"
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('allowance')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Leave blank if no allowance provided</p>
+                                <p class="text-xs text-gray-500 mt-1">Numbers only, maximum 5 digits</p>
                             </div>
 
                             <!-- Industry Supervisor Information Section -->
@@ -917,6 +994,8 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Name *</label>
                                 <input type="text" wire:model="industrySupervisorName"
                                     placeholder="e.g., Dr. Ahmad bin Abdullah"
+                                    maxlength="50"
+                                    required
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('industrySupervisorName')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -928,11 +1007,17 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Contact Number
                                     *</label>
                                 <input type="text" wire:model="industrySupervisorContact"
-                                    placeholder="e.g., +603-1234 5678 or 011-1234 5678"
+                                    placeholder="e.g., 60312345678 or 01112345678"
+                                    pattern="[0-9]{1,15}"
+                                    maxlength="15"
+                                    required
+                                    inputmode="numeric"
+                                    onkeypress="return /[0-9]/i.test(event.key)"
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('industrySupervisorContact')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
+                                <p class="text-xs text-gray-500 mt-1">Numbers only, maximum 15 digits</p>
                             </div>
 
                             <!-- Industry Supervisor Email -->
@@ -940,6 +1025,8 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Email *</label>
                                 <input type="email" wire:model="industrySupervisorEmail"
                                     placeholder="e.g., ahmad.abdullah@company.com"
+                                    maxlength="50"
+                                    required
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('industrySupervisorEmail')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -956,6 +1043,8 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Position *</label>
                                 <input type="text" wire:model="position"
                                     placeholder="e.g., Software Developer Intern, Marketing Intern"
+                                    maxlength="50"
+                                    required
                                     class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                                 @error('position')
                                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -1051,12 +1140,25 @@
                                             <ul class="list-disc list-inside mt-1 space-y-0.5">
                                                 <li>Offer Letter from the company</li>
                                                 <li>Reply Form</li>
-                                                <li>Student Application Letter (SAL)</li>
                                             </ul>
                                             <p class="mt-2 text-gray-500">Accepted formats: PDF, DOC, DOCX, JPG, JPEG,
-                                                PNG • Max: 10MB per file</p>
+                                                PNG • Max: 5MB per file</p>
                                         </div>
                                     </div>
+                                    @error('applicationFiles')
+                                        <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                                            <p class="text-red-800 text-sm font-medium mb-1">File Upload Error:</p>
+                                            @if (is_array($message))
+                                                <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                                                    @foreach ($message as $error)
+                                                        <li>{{ $error }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                <p class="text-red-700 text-sm">{{ $message }}</p>
+                                            @endif
+                                        </div>
+                                    @enderror
                                     @error('applicationFiles.*')
                                         <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
                                     @enderror
@@ -1374,7 +1476,7 @@
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm @error('changeRequestFiles.*') border-red-500 @enderror"
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                             <p class="text-xs text-gray-500 mt-1">Upload documents supporting your change request (PDF,
-                                DOC, DOCX, JPG, PNG). Max 10MB each.</p>
+                                DOC, DOCX, JPG, PNG). Max 5MB each.</p>
                             @error('changeRequestFiles.*')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror

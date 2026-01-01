@@ -88,24 +88,24 @@ class PlacementApplicationTable extends Component
     protected function getPlacementApplicationRules()
     {
         return [
-            'companyName' => 'required|string|max:255',
-            'companyAddressLine' => 'required|string',
-            'companyCity' => 'nullable|string',
-            'companyPostcode' => 'nullable|string',
-            'companyState' => 'nullable|string',
+            'companyName' => 'required|string|max:50',
+            'companyAddressLine' => 'required|string|max:255',
+            'companyCity' => 'required|string|max:20',
+            'companyPostcode' => 'required|regex:/^\d{1,10}$/|max:10',
+            'companyState' => 'required|string',
             'companyCountry' => 'nullable|string',
-            'companyEmail' => 'required|email|max:255',
-            'companyNumber' => 'required|string|max:20',
-            'industrySupervisorName' => 'required|string|max:255',
-            'industrySupervisorContact' => 'required|string|max:20',
-            'industrySupervisorEmail' => 'required|email|max:255',
-            'allowance' => 'nullable|numeric|min:0',
-            'position' => 'required|string|max:255',
+            'companyEmail' => 'required|email|max:50',
+            'companyNumber' => 'required|regex:/^\d{1,15}$/|max:15',
+            'industrySupervisorName' => 'required|string|max:50',
+            'industrySupervisorContact' => 'required|regex:/^\d{1,15}$/|max:15',
+            'industrySupervisorEmail' => 'required|email|max:50',
+            'allowance' => 'required|regex:/^\d{1,5}$/|max:5',
+            'position' => 'required|string|max:50',
             'jobscope' => 'required|string',
             'methodOfWork' => 'required|in:WFO,WOS,WOC,WFH,WFO & WFH',
             'startDate' => 'required|date',
             'endDate' => 'required|date|after:startDate',
-            'applicationFiles.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB max per file
+            'applicationFiles.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120', // 5MB max per file
         ];
     }
 
@@ -113,21 +113,40 @@ class PlacementApplicationTable extends Component
     {
         return [
             'changeRequestReason' => 'required|string|min:20|max:1000',
-            'changeRequestFiles.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+            'changeRequestFiles.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
         ];
     }
 
     protected $messages = [
         'companyName.required' => 'Company name is required.',
-        'companyAddressLine.required' => 'Company address line is required.',
+        'companyName.max' => 'Company name must not exceed 50 characters.',
+        'companyAddressLine.required' => 'Company address is required.',
+        'companyAddressLine.max' => 'Company address must not exceed 255 characters.',
+        'companyCity.required' => 'City is required.',
+        'companyCity.max' => 'City must not exceed 20 characters.',
+        'companyPostcode.required' => 'Postcode is required.',
+        'companyPostcode.regex' => 'Postcode must contain only numbers (maximum 10 digits).',
+        'companyPostcode.max' => 'Postcode must not exceed 10 digits.',
+        'companyState.required' => 'State is required.',
         'companyEmail.required' => 'Company email is required.',
         'companyEmail.email' => 'Please provide a valid email address.',
-        'companyNumber.required' => 'Company contact number is required.',
-        'industrySupervisorName.required' => 'Industry supervisor name is required.',
-        'industrySupervisorContact.required' => 'Industry supervisor contact number is required.',
-        'industrySupervisorEmail.required' => 'Industry supervisor email is required.',
-        'industrySupervisorEmail.email' => 'Please provide a valid email address for the industry supervisor.',
+        'companyEmail.max' => 'Company email must not exceed 50 characters.',
+        'companyNumber.required' => 'Company phone number is required.',
+        'companyNumber.regex' => 'Company phone number must contain only numbers (maximum 15 digits).',
+        'companyNumber.max' => 'Company phone number must not exceed 15 digits.',
+        'industrySupervisorName.required' => 'Supervisor name is required.',
+        'industrySupervisorName.max' => 'Supervisor name must not exceed 50 characters.',
+        'industrySupervisorContact.required' => 'Supervisor contact number is required.',
+        'industrySupervisorContact.regex' => 'Supervisor phone number must contain only numbers (maximum 15 digits).',
+        'industrySupervisorContact.max' => 'Supervisor phone number must not exceed 15 digits.',
+        'industrySupervisorEmail.required' => 'Supervisor email is required.',
+        'industrySupervisorEmail.email' => 'Please provide a valid email address for the supervisor.',
+        'industrySupervisorEmail.max' => 'Supervisor email must not exceed 50 characters.',
+        'allowance.required' => 'Monthly allowance is required.',
+        'allowance.regex' => 'Monthly allowance must contain only numbers (maximum 5 digits).',
+        'allowance.max' => 'Monthly allowance must not exceed 5 digits.',
         'position.required' => 'Position is required.',
+        'position.max' => 'Position must not exceed 50 characters.',
         'jobscope.required' => 'Job scope is required.',
         'methodOfWork.required' => 'Method of work is required.',
         'startDate.required' => 'Start date is required.',
@@ -136,12 +155,12 @@ class PlacementApplicationTable extends Component
         'endDate.after' => 'End date must be after start date.',
         'applicationFiles.*.file' => 'Each uploaded item must be a file.',
         'applicationFiles.*.mimes' => 'Files must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',
-        'applicationFiles.*.max' => 'Each file cannot exceed 10MB.',
+        'applicationFiles.*.max' => 'Each file cannot exceed 5MB.',
         'changeRequestReason.required' => 'Please provide a reason for the change request.',
         'changeRequestReason.min' => 'Reason must be at least 20 characters.',
         'changeRequestReason.max' => 'Reason must not exceed 1000 characters.',
         'changeRequestFiles.*.mimes' => 'Supporting files must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',
-        'changeRequestFiles.*.max' => 'Each file must be less than 10MB.',
+        'changeRequestFiles.*.max' => 'Each file must be less than 5MB.',
     ];
 
     public function boot()
@@ -279,6 +298,19 @@ class PlacementApplicationTable extends Component
         }
     }
 
+    public function updatedAllowance($value)
+    {
+
+        if ($value) {
+            // Remove any non-numeric characters except digits
+            $value = preg_replace('/[^0-9]/', '', $value);
+            // Convert to integer and back to string to remove any decimals
+            $this->allowance = $value ? (string)(int)$value : '';
+        } else {
+            $this->allowance = '';
+        }
+    }
+
     public function getExistingCompanies()
     {
         // Get unique company names from all placement applications
@@ -329,9 +361,15 @@ class PlacementApplicationTable extends Component
             return;
         }
 
-        // Only allow editing if both committee and coordinator status are pending
+        // Only allow editing if application is not accepted and BOTH statuses are still pending
+        if ($application->studentAcceptance === 'Accepted') {
+            session()->flash('error', 'You cannot edit an application that has been accepted.');
+            return;
+        }
+
+        // Prevent editing if either committee or coordinator has approved
         if ($application->committeeStatus !== 'Pending' || $application->coordinatorStatus !== 'Pending') {
-            session()->flash('error', 'You can only edit applications that are still pending review by both committee and coordinator.');
+            session()->flash('error', 'You cannot edit an application once it has been reviewed by the committee or coordinator.');
             return;
         }
 
@@ -361,7 +399,8 @@ class PlacementApplicationTable extends Component
         $this->industrySupervisorName = $application->industrySupervisorName ?? '';
         $this->industrySupervisorContact = $application->industrySupervisorContact ?? '';
         $this->industrySupervisorEmail = $application->industrySupervisorEmail ?? '';
-        $this->allowance = $application->allowance;
+        // Remove decimal formatting from allowance (e.g., 100.00 becomes 100)
+        $this->allowance = $application->allowance ? (string)(int)$application->allowance : '';
         $this->position = $application->position;
         $this->jobscope = $application->jobscope;
         $this->methodOfWork = $application->methodOfWork;
@@ -374,32 +413,43 @@ class PlacementApplicationTable extends Component
 
     public function submit()
     {
-        // Debug logging
-        \Log::info('Submit method called', [
-            'user_id' => Auth::id(),
-            'company_name' => $this->companyName,
-            'editing_id' => $this->editingId,
-            'all_form_data' => [
-                'companyName' => $this->companyName,
-                'companyEmail' => $this->companyEmail,
-                'companyAddressLine' => $this->companyAddressLine,
-                'companyCity' => $this->companyCity,
-                'companyPostcode' => $this->companyPostcode,
-                'companyState' => $this->companyState,
-                'companyCountry' => $this->companyCountry,
-                'companyLatitude' => $this->companyLatitude,
-                'companyLongitude' => $this->companyLongitude,
-                'industrySupervisorName' => $this->industrySupervisorName,
-                'industrySupervisorContact' => $this->industrySupervisorContact,
-                'industrySupervisorEmail' => $this->industrySupervisorEmail,
-                'position' => $this->position,
-                'startDate' => $this->startDate,
-                'endDate' => $this->endDate
-            ]
-        ]);
+        // Validate file sizes first - this must pass before any other validation
+        try {
+            $this->validateFileSizes();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-throw immediately to prevent any further processing
+            throw $e;
+        }
 
         try {
+            // Validate all rules
             $this->validate($this->getPlacementApplicationRules());
+
+            // Debug logging
+            \Log::info('Submit method called', [
+                'user_id' => Auth::id(),
+                'company_name' => $this->companyName,
+                'editing_id' => $this->editingId,
+                'file_count' => count($this->applicationFiles ?? []),
+                'all_form_data' => [
+                    'companyName' => $this->companyName,
+                    'companyEmail' => $this->companyEmail,
+                    'companyAddressLine' => $this->companyAddressLine,
+                    'companyCity' => $this->companyCity,
+                    'companyPostcode' => $this->companyPostcode,
+                    'companyState' => $this->companyState,
+                    'companyCountry' => $this->companyCountry,
+                    'companyLatitude' => $this->companyLatitude,
+                    'companyLongitude' => $this->companyLongitude,
+                    'industrySupervisorName' => $this->industrySupervisorName,
+                    'industrySupervisorContact' => $this->industrySupervisorContact,
+                    'industrySupervisorEmail' => $this->industrySupervisorEmail,
+                    'position' => $this->position,
+                    'startDate' => $this->startDate,
+                    'endDate' => $this->endDate
+                ]
+            ]);
+
             \Log::info('Validation passed');
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation failed', [
@@ -461,7 +511,7 @@ class PlacementApplicationTable extends Component
                 'industrySupervisorName' => $this->industrySupervisorName,
                 'industrySupervisorContact' => $this->industrySupervisorContact,
                 'industrySupervisorEmail' => $this->industrySupervisorEmail,
-                'allowance' => $this->allowance ?: null,
+                'allowance' => $this->allowance ? (int)$this->allowance : null,
                 'position' => $this->position,
                 'jobscope' => $this->jobscope,
                 'methodOfWork' => $this->methodOfWork,
@@ -482,18 +532,39 @@ class PlacementApplicationTable extends Component
 
                 $application->update($applicationData);
 
-                // Handle file updates
+                // Handle file updates - files are already validated at this point
                 if (!empty($this->applicationFiles)) {
                     // Delete old files
                     $application->files()->delete();
 
-                    // Upload new files
+                    // Upload new files (validation already passed)
                     $this->uploadFiles($application);
                 }
 
                 session()->flash('message', 'Placement application updated successfully!');
             } else {
-                // Create new application
+                // Double-check file sizes before creating application (safety check)
+                // This should never trigger if validateFileSizes() worked correctly
+                if (!empty($this->applicationFiles)) {
+                    $maxSizeBytes = 5120 * 1024; // 5MB in bytes
+                    foreach ($this->applicationFiles as $file) {
+                        if (!$file) {
+                            continue;
+                        }
+                        $fileSizeBytes = $file->getSize();
+                        if ($fileSizeBytes > $maxSizeBytes) {
+                            $fileSizeMB = round($fileSizeBytes / 1024 / 1024, 2);
+                            $fileName = $file->getClientOriginalName();
+                            \Log::error('File size validation failed in safety check', [
+                                'file_name' => $fileName,
+                                'file_size_mb' => $fileSizeMB
+                            ]);
+                            throw new \Exception("File '{$fileName}' ({$fileSizeMB}MB) exceeds the maximum allowed size of 5MB. Please fix the file before submitting.");
+                        }
+                    }
+                }
+
+                // Create new application - only if all validations passed
                 // Get current apply count for this student
                 $lastApplication = PlacementApplication::where('studentID', $student->studentID)
                     ->orderBy('applyCount', 'desc')
@@ -502,10 +573,31 @@ class PlacementApplicationTable extends Component
                 $applicationData['applyCount'] = $lastApplication ? $lastApplication->applyCount + 1 : 1;
 
                 \Log::info('Creating new application with data', $applicationData);
+
+                // Final file validation check before creating application
+                if (!empty($this->applicationFiles)) {
+                    $maxSizeBytes = 5120 * 1024; // 5MB in bytes
+                    foreach ($this->applicationFiles as $file) {
+                        if (!$file) {
+                            continue;
+                        }
+                        $fileSizeBytes = $file->getSize();
+                        if ($fileSizeBytes > $maxSizeBytes) {
+                            $fileSizeMB = round($fileSizeBytes / 1024 / 1024, 2);
+                            $fileName = $file->getClientOriginalName();
+                            \Log::error('CRITICAL: File validation failed right before application creation', [
+                                'file_name' => $fileName,
+                                'file_size_mb' => $fileSizeMB
+                            ]);
+                            throw new \Exception("Cannot create application: File '{$fileName}' ({$fileSizeMB}MB) exceeds the maximum allowed size of 5MB.");
+                        }
+                    }
+                }
+
                 $application = PlacementApplication::create($applicationData);
                 \Log::info('Application created successfully', ['application_id' => $application->applicationID]);
 
-                // Upload files
+                // Upload files - only if application was created successfully
                 if (!empty($this->applicationFiles)) {
                     \Log::info('Uploading files', ['file_count' => count($this->applicationFiles)]);
                     $this->uploadFiles($application);
@@ -515,6 +607,9 @@ class PlacementApplicationTable extends Component
             }
 
             $this->closeForm();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-throw validation exceptions so Livewire can handle them properly
+            throw $e;
         } catch (\Exception $e) {
             \Log::error('Submit method exception', [
                 'error' => $e->getMessage(),
@@ -524,9 +619,72 @@ class PlacementApplicationTable extends Component
         }
     }
 
+    protected function validateFileSizes()
+    {
+        if (empty($this->applicationFiles)) {
+            return; // No files to validate
+        }
+
+        $maxSizeKB = 5120; // 5MB in kilobytes
+        $maxSizeBytes = $maxSizeKB * 1024; // Convert to bytes
+        $errors = [];
+
+        // Check each file individually
+        foreach ($this->applicationFiles as $index => $file) {
+            if (!$file) {
+                continue; // Skip null files
+            }
+
+            $fileSizeBytes = $file->getSize();
+            $fileSizeKB = $fileSizeBytes / 1024; // Convert bytes to KB
+            $fileSizeMB = round($fileSizeKB / 1024, 2);
+            $fileName = $file->getClientOriginalName();
+
+            \Log::info('Validating file', [
+                'file_name' => $fileName,
+                'file_size_bytes' => $fileSizeBytes,
+                'file_size_kb' => $fileSizeKB,
+                'file_size_mb' => $fileSizeMB,
+                'max_size_kb' => $maxSizeKB,
+                'max_size_bytes' => $maxSizeBytes
+            ]);
+
+            if ($fileSizeBytes > $maxSizeBytes) {
+                $errors[] = "File '{$fileName}' is {$fileSizeMB}MB, which exceeds the maximum allowed size of 5MB.";
+            }
+        }
+
+        if (!empty($errors)) {
+            \Log::error('File validation failed', [
+                'errors' => $errors,
+                'file_count' => count($this->applicationFiles)
+            ]);
+
+            // Throw validation exception to prevent form submission
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'applicationFiles' => $errors
+            ]);
+        }
+
+        \Log::info('All files validated successfully', [
+            'file_count' => count($this->applicationFiles)
+        ]);
+    }
+
     private function uploadFiles($application)
     {
         foreach ($this->applicationFiles as $file) {
+            // Double-check file size before uploading
+            $fileSizeKB = $file->getSize() / 1024;
+            if ($fileSizeKB > 5120) {
+                \Log::error('File size validation failed during upload', [
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_size_kb' => $fileSizeKB,
+                    'max_size_kb' => 5120
+                ]);
+                throw new \Exception("File '{$file->getClientOriginalName()}' exceeds the maximum allowed size of 5MB.");
+            }
+
             $filePath = $file->store('placement-application-files', 'public');
 
             $application->files()->create([
@@ -622,9 +780,8 @@ class PlacementApplicationTable extends Component
         }
 
         // Check if student has an accepted placement application
+        // Only allow more applications if they have NOT accepted any application
         $acceptedApplication = PlacementApplication::where('studentID', $student->studentID)
-            ->where('committeeStatus', 'Approved')
-            ->where('coordinatorStatus', 'Approved')
             ->where('studentAcceptance', 'Accepted')
             ->first();
 
@@ -633,36 +790,8 @@ class PlacementApplicationTable extends Component
             return true;
         }
 
-        // Student has an accepted application - check if they can still apply
-        // They can only apply if they have an approved change request AND haven't accepted a new application yet
-
-        // Check if they have an approved change request
-        $approvedChangeRequest = RequestJustification::whereHas('placementApplication', function ($query) use ($student) {
-            $query->where('studentID', $student->studentID);
-        })
-            ->where('committeeStatus', 'Approved')
-            ->where('coordinatorStatus', 'Approved')
-            ->orderBy('updated_at', 'desc')
-            ->first();
-
-        if (!$approvedChangeRequest) {
-            // No approved change request, cannot apply (they have an accepted application)
-            return false;
-        }
-
-        // They have an approved change request
-        // Check if the accepted application was created AFTER the change request was approved
-        // If yes, it means they already accepted a new application, so they cannot apply again
-        // If no, it means the accepted application is the old one, so they can apply for a new one
-        $acceptedApplicationIsNew = $acceptedApplication->created_at > $approvedChangeRequest->updated_at;
-
-        if ($acceptedApplicationIsNew) {
-            // They already accepted a new application after the change request, cannot apply again
-            return false;
-        }
-
-        // The accepted application is the old one (before change request), they can apply for a new one
-        return true;
+        // Student has an accepted application - they cannot make more applications
+        return false;
     }
 
     private function setCannotApplyErrorMessage()

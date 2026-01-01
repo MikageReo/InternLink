@@ -7,7 +7,7 @@
 
     <div class="py-12">
         <div class="w-full px-4 sm:px-6 lg:px-8">
-            @livewire('lecturer.request-defer-table')
+                    @livewire('lecturer.request-defer-table')
         </div>
     </div>
 </x-app-layout>
