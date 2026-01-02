@@ -14,69 +14,69 @@
     </style>
 
     <!-- Statistics Cards -->
-    @if ($analytics)
+            @if ($analytics)
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <div class="flex items-center">
+                        <div class="flex items-center">
                     <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
                         <i class="fa fa-file text-blue-600 dark:text-blue-400 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
+                            </div>
+                            <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Requests</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $analytics['total_requests'] }}</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <div class="flex items-center">
+                        <div class="flex items-center">
                     <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900">
                         <i class="fa fa-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
+                            </div>
+                            <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Review</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $analytics['pending_requests'] }}</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <div class="flex items-center">
+                        <div class="flex items-center">
                     <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
                         <i class="fa fa-check text-green-600 dark:text-green-400 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
+                            </div>
+                            <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Approved</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $analytics['approved_requests'] }}</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <div class="flex items-center">
+                        <div class="flex items-center">
                     <div class="p-3 rounded-full bg-red-100 dark:bg-red-900">
                         <i class="fa fa-times text-red-600 dark:text-red-400 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
+                            </div>
+                            <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Rejected</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $analytics['rejected_requests'] }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    @endif
+            @endif
 
     <!-- Flash Messages -->
     @if (session()->has('message'))
         <div class="bg-green-100 border border-green-400 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 px-4 py-3 rounded mb-4" role="alert">
             <span class="block sm:inline">{{ session('message') }}</span>
-        </div>
+                    </div>
     @endif
 
     @if (session()->has('error'))
         <div class="bg-red-100 border border-red-400 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300 px-4 py-3 rounded mb-4" role="alert">
             <span class="block sm:inline">{{ session('error') }}</span>
-        </div>
+                </div>
     @endif
 
     <!-- Advanced Filters -->
@@ -187,72 +187,72 @@
                     </div>
                 @endif
 
-            <!-- Search -->
-            <div class="lg:col-span-2">
-                <input type="text" wire:model.live.debounce.300ms="search"
+                        <!-- Search -->
+                        <div class="lg:col-span-2">
+                            <input type="text" wire:model.live.debounce.300ms="search"
                     class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200"
-                    placeholder="Search requests, students, companies...">
-            </div>
+                                   placeholder="Search requests, students, companies...">
+                        </div>
 
-            <!-- Program Filter -->
-            <div>
+                        <!-- Program Filter -->
+                        <div>
                 <select wire:model.live="program" class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
-                    <option value="">All Programs</option>
-                    <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
-                    <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
-                    <option value="BCM">Bachelor of Computer Science (Multimedia Software) with Honours</option>
-                    <option value="BCY">Bachelor of Computer Science (Cyber Security) with Honours</option>
-                    <option value="DRC">Diploma in Computer Science</option>
-                </select>
-            </div>
+                                <option value="">All Programs</option>
+                                <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
+                                <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
+                                <option value="BCM">Bachelor of Computer Science (Multimedia Software) with Honours</option>
+                                <option value="BCY">Bachelor of Computer Science (Cyber Security) with Honours</option>
+                                <option value="DRC">Diploma in Computer Science</option>
+                            </select>
+                        </div>
 
-            <!-- Semester Filter -->
-            <div>
+                        <!-- Semester Filter -->
+                        <div>
                 <select wire:model.live="semester" class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
-                    <option value="">All Semesters</option>
-                    <option value="1">Semester 1</option>
-                    <option value="2">Semester 2</option>
-                </select>
-            </div>
+                                <option value="">All Semesters</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                        </div>
 
-            <!-- Year Filter -->
-            <div>
+                        <!-- Year Filter -->
+                        <div>
                 <select wire:model.live="year" class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
-                    <option value="">All Years</option>
-                    @for($y = date('Y'); $y >= 2020; $y--)
-                        <option value="{{ $y }}">{{ $y }}</option>
-                    @endfor
-                </select>
-            </div>
+                                <option value="">All Years</option>
+                                @for($y = date('Y'); $y >= 2020; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </div>
 
-            <!-- Status Filter -->
-            <div>
+                        <!-- Status Filter -->
+                        <div>
                 <select wire:model.live="statusFilter" class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
-                    <option value="">All Status</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
-                </select>
-            </div>
+                                <option value="">All Status</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
 
-            <!-- Role Filter -->
-            <div>
+                        <!-- Role Filter -->
+                        <div>
                 <select wire:model.live="roleFilter" class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
-                    <option value="">All Requests</option>
-                    <option value="committee_pending">Committee Pending</option>
-                    <option value="coordinator_pending">Coordinator Pending</option>
-                </select>
-            </div>
+                                <option value="">All Requests</option>
+                                <option value="committee_pending">Committee Pending</option>
+                                <option value="coordinator_pending">Coordinator Pending</option>
+                            </select>
+                        </div>
 
             <!-- Clear Filters -->
-            <div>
+                        <div>
                 <button wire:click="clearFilters"
                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     Clear Filters
                 </button>
             </div>
-        </div>
-    </div>
+                        </div>
+                    </div>
 
     <!-- Table Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
@@ -292,7 +292,7 @@
                             </tr>
                         </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse ($requests as $request)
+                            @forelse ($requests as $request)
                                 @php
                                     $isSelected = in_array($request->justificationID, $selectedRequests);
                                     $canSelect = false;
@@ -455,25 +455,25 @@
                                         </div>
                                     </td>
                                 </tr>
-                    @empty
-                        <tr>
+                            @empty
+                                <tr>
                             <td colspan="8" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                 <div class="flex flex-col items-center">
                                     <i class="fa fa-file text-4xl text-gray-300 dark:text-gray-600 mb-4"></i>
-                                    <p class="text-lg font-medium mb-2">No change requests found</p>
-                                    <p class="text-sm">No change requests match your current filters.</p>
+                                        <p class="text-lg font-medium mb-2">No change requests found</p>
+                                        <p class="text-sm">No change requests match your current filters.</p>
                                 </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
         </div>
-    </div>
+                </div>
 
-    <!-- Pagination -->
+                <!-- Pagination -->
     <div class="px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6 bg-white dark:bg-gray-800 rounded-b-lg">
-        {{ $requests->links() }}
+                        {{ $requests->links() }}
     </div>
 
     <!-- Include the detail modal -->

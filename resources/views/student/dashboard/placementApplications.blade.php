@@ -6,7 +6,7 @@
     </x-slot>
     <div class="py-12">
         <div class="w-full px-4 sm:px-6 lg:px-8">
-            @livewire('student.placement-application-table')
+                    @livewire('student.placement-application-table')
         </div>
     </div>
 

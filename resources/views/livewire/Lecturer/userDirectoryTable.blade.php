@@ -425,8 +425,8 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span
                                             class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                            {{ ($user->student->status ?? 'inactive') === 'active' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' }}">
-                                            {{ ucfirst($user->student->status ?? 'inactive') }}
+                                            {{ ($user->student->status ?? 'In-Active') === 'Active' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : (in_array($user->student->status ?? '', ['Barred', 'Terminate', 'Pass Away', 'In-Active']) ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : ($user->student->status === 'Graduated' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200')) }}">
+                                            {{ $user->student->status ?? 'In-Active' }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 min-w-[200px]">
@@ -531,7 +531,23 @@
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Special Roles</th>
-                                    <!-- Special Roles -->
+                                <!-- Status -->
+                                <th wire:click="sortBy('status')"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
+                                    <div class="flex items-center space-x-1">
+                                        <span>Status</span>
+                                        @if ($sortField === 'status')
+                                            @if ($sortDirection === 'asc')
+                                                <i class="fas fa-sort-up text-indigo-500 sort-icon"></i>
+                                            @else
+                                                <i class="fas fa-sort-down text-indigo-500 sort-icon"></i>
+                                            @endif
+                                        @else
+                                            <i class="fas fa-sort text-gray-400 opacity-50 sort-icon"></i>
+                                        @endif
+                                    </div>
+                                </th>
+                                <!-- Actions -->
                                 <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Actions</th>
@@ -606,6 +622,13 @@
                                                     Special Roles</span>
                                             @endif
                                         </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            {{ ($user->lecturer->status ?? 'In-Active') === 'Active' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : (in_array($user->lecturer->status ?? '', ['Resigned', 'Pass Away', 'In-Active']) ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200') }}">
+                                            {{ $user->lecturer->status ?? 'In-Active' }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <button wire:click="editLecturer({{ $user->id }})"
@@ -1051,7 +1074,7 @@
                                         <option value="">Select Academic Advisor</option>
                                         @php
                                             $academicAdvisors = \App\Models\Lecturer::where('isAcademicAdvisor', true)
-                                                ->where('status', 'active')
+                                                ->where('status', 'Active')
                                                 ->with('user')
                                                 ->get();
                                         @endphp
@@ -1802,7 +1825,7 @@
                                         <option value="">Select Academic Advisor</option>
                                         @php
                                             $academicAdvisors = \App\Models\Lecturer::where('isAcademicAdvisor', true)
-                                                ->where('status', 'active')
+                                                ->where('status', 'Active')
                                                 ->with('user')
                                                 ->get();
                                         @endphp
@@ -1814,6 +1837,25 @@
                                         @endforeach
                                     </select>
                                     @error('studentAcademicAdvisorID')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Status *
+                                    </label>
+                                    <select wire:model="studentStatus"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                                        <option value="">Select Status</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Deferred">Deferred</option>
+                                        <option value="Barred">Barred</option>
+                                        <option value="Terminate">Terminate</option>
+                                        <option value="In-Active">In-Active</option>
+                                        <option value="Pass Away">Pass Away</option>
+                                        <option value="Graduated">Graduated</option>
+                                    </select>
+                                    @error('studentStatus')
                                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -2195,6 +2237,27 @@
                                         oninput="this.value=this.value.replace(/[^0-9]/g,'')"
                                         class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
                                     @error('lecturerSupervisorQuota')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Status *
+                                    </label>
+                                    <select wire:model="lecturerStatus"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                                        <option value="">Select Status</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Sabatical Leave">Sabatical Leave</option>
+                                        <option value="Maternity Leave">Maternity Leave</option>
+                                        <option value="Pligrimage Leave">Pligrimage Leave</option>
+                                        <option value="Transfered">Transfered</option>
+                                        <option value="Resigned">Resigned</option>
+                                        <option value="In-Active">In-Active</option>
+                                        <option value="Medical Leave">Medical Leave</option>
+                                        <option value="Pass Away">Pass Away</option>
+                                    </select>
+                                    @error('lecturerStatus')
                                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>

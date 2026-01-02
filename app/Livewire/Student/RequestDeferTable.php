@@ -13,6 +13,7 @@ use App\Models\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class RequestDeferTable extends Component
 {
@@ -53,7 +54,8 @@ class RequestDeferTable extends Component
         'reason' => 'required|string|min:10',
         'startDate' => 'required|date|after:today',
         'endDate' => 'required|date|after:startDate',
-        'applicationFiles.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB max
+        'applicationFiles' => 'required|array|min:1',
+        'applicationFiles.*' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120', // 5MB max
     ];
 
     protected $messages = [
@@ -63,8 +65,11 @@ class RequestDeferTable extends Component
         'startDate.after' => 'Start date must be after today.',
         'endDate.required' => 'End date is required.',
         'endDate.after' => 'End date must be after start date.',
+        'applicationFiles.required' => 'At least one supporting document is required.',
+        'applicationFiles.min' => 'At least one supporting document is required.',
+        'applicationFiles.*.required' => 'Each file is required.',
         'applicationFiles.*.mimes' => 'Files must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',
-        'applicationFiles.*.max' => 'Each file must be less than 10MB.',
+        'applicationFiles.*.max' => 'Each file must be less than 5MB.',
     ];
 
     public function mount()
@@ -119,6 +124,18 @@ class RequestDeferTable extends Component
 
         // Show warning modal first
         $this->showWarningModal = true;
+    }
+
+    public function openFormDirectly()
+    {
+        if (!$this->canStudentMakeRequest()) {
+            session()->flash('error', 'You cannot make defer requests without approved course verification.');
+            return;
+        }
+
+        // Open form directly without warning modal
+        $this->showForm = true;
+        $this->resetForm();
     }
 
     public function proceedWithRequest()
@@ -184,9 +201,9 @@ class RequestDeferTable extends Component
             return;
         }
 
-        // Only allow editing if both committee and coordinator status are pending
+        // Prevent editing if either committee or coordinator has approved/rejected
         if ($request->committeeStatus !== 'Pending' || $request->coordinatorStatus !== 'Pending') {
-            session()->flash('error', 'You can only edit requests that are still pending review by both committee and coordinator.');
+            session()->flash('error', 'You cannot edit a request once it has been reviewed by the committee or coordinator.');
             return;
         }
 
@@ -203,6 +220,14 @@ class RequestDeferTable extends Component
 
     public function submit()
     {
+        // Validate file sizes first before any other validation
+        try {
+            $this->validateFileSizes();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-throw immediately to prevent any further processing
+            throw $e;
+        }
+
         $this->validate();
 
         try {
@@ -255,9 +280,51 @@ class RequestDeferTable extends Component
         }
     }
 
+    protected function validateFileSizes()
+    {
+        if (empty($this->applicationFiles)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'applicationFiles' => ['At least one supporting document is required.']
+            ]);
+        }
+
+        $maxSizeKB = 5120; // 5MB in kilobytes
+        $maxSizeBytes = $maxSizeKB * 1024; // Convert to bytes
+        $errors = [];
+
+        // Check each file individually
+        foreach ($this->applicationFiles as $index => $file) {
+            if (!$file) {
+                continue; // Skip null files
+            }
+
+            $fileSizeBytes = $file->getSize();
+            $fileSizeKB = $fileSizeBytes / 1024; // Convert bytes to KB
+            $fileSizeMB = round($fileSizeKB / 1024, 2);
+            $fileName = $file->getClientOriginalName();
+
+            if ($fileSizeBytes > $maxSizeBytes) {
+                $errors[] = "File '{$fileName}' is {$fileSizeMB}MB, which exceeds the maximum allowed size of 5MB.";
+            }
+        }
+
+        if (!empty($errors)) {
+            // Throw validation exception to prevent form submission
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'applicationFiles' => $errors
+            ]);
+        }
+    }
+
     private function uploadFiles($request)
     {
         foreach ($this->applicationFiles as $file) {
+            // Double-check file size before uploading
+            $fileSizeKB = $file->getSize() / 1024;
+            if ($fileSizeKB > 5120) {
+                throw new \Exception("File '{$file->getClientOriginalName()}' exceeds the maximum allowed size of 5MB.");
+            }
+
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('defer_requests', $filename, 'public');
 

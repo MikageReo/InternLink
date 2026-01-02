@@ -315,6 +315,11 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        /* Prevent body scroll when modal is open */
+        body.modal-open {
+            overflow: hidden;
+        }
+
         @media (max-width: 1024px) {
             .table-container table {
                 min-width: 1000px;
@@ -567,21 +572,26 @@
                                             @endif
 
                                             <!-- View/Edit Actions -->
-                                            @if ($application->studentAcceptance !== 'Accepted' &&
+                                            @if (!$hasAcceptedApplication &&
+                                                 $application->studentAcceptance !== 'Accepted' &&
                                                  $application->committeeStatus === 'Pending' &&
                                                  $application->coordinatorStatus === 'Pending')
-                                                <!-- Edit button - only when not accepted and BOTH statuses are pending -->
+                                                <!-- Edit button - only when no application has been accepted, this one is not accepted, and BOTH statuses are pending -->
                                                 <button wire:click="edit({{ $application->applicationID }})"
                                                     class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-md dark:bg-blue-900/20 dark:text-blue-400 dark:hover:text-blue-300"
                                                     title="Edit application">
                                                     <i class="fa fa-edit mr-1"></i> Edit
                                                 </button>
                                             @else
-                                                <!-- View button - when accepted or either committee/coordinator has reviewed -->
+                                                <!-- View button - when any application has been accepted, or this one is accepted, or either committee/coordinator has reviewed -->
                                                 <button wire:click="view({{ $application->applicationID }})"
-                                                    class="inline-flex items-center px-3 py-1 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-md dark:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                                     title="View details (read-only)">
-                                                    <i class="fa fa-eye mr-1"></i> View
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                    </svg>
+                                                    <span>View</span>
                                                 </button>
                                             @endif
 
@@ -605,21 +615,12 @@
                                                             ->count() > 0;
                                                 @endphp
 
-                                                @if (!$hasPendingChangeRequest && !$hasApprovedChangeRequest)
+                                                @if (!$hasPendingChangeRequest && !$hasApprovedChangeRequest && $isStudentActive)
                                                     <button
                                                         wire:click="openChangeRequestForm({{ $application->applicationID }})"
                                                         class="inline-flex items-center px-2 py-1 text-xs rounded bg-orange-100 text-orange-700 hover:bg-orange-200"
                                                         title="Request changes to this application">
                                                         🔄 Request Change
-                                                    </button>
-                                                @endif
-
-                                                @if ($hasChangeRequests)
-                                                    <button
-                                                        wire:click="viewChangeRequests({{ $application->applicationID }})"
-                                                        class="inline-flex items-center px-2 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
-                                                        title="View change request history">
-                                                        📋 View Changes
                                                     </button>
                                                 @endif
                                             @endif
@@ -1418,16 +1419,21 @@
 
     <!-- Change Request Form Modal -->
     @if ($showChangeRequestForm)
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
-            wire:click="closeChangeRequestForm"></div>
-        <div
-            style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
-                <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">
-                        Request Application Change
-                    </h3>
+        <div>
+            <script>
+                document.body.classList.add('modal-open');
+            </script>
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
+                wire:click="closeChangeRequestForm"
+                onclick="document.body.classList.remove('modal-open');"></div>
+            <div
+                style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51;">
+                <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+                    <!-- Modal Header -->
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            Request Application Change
+                        </h3>
                     <p class="text-sm text-gray-600 mt-1">
                         Application #{{ $changeRequestApplicationID }} -
                         {{ $selectedApplicationForChange?->companyName ?? '' }}
@@ -1470,13 +1476,27 @@
                         </div>
 
                         <!-- Supporting Documents -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Supporting Documents</label>
+                        <div class="mb-4"></div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Supporting Documents *</label>
                             <input type="file" wire:model="changeRequestFiles" multiple
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm @error('changeRequestFiles.*') border-red-500 @enderror"
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
                             <p class="text-xs text-gray-500 mt-1">Upload documents supporting your change request (PDF,
                                 DOC, DOCX, JPG, PNG). Max 5MB each.</p>
+                            @error('changeRequestFiles')
+                                <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                                    <p class="text-red-800 text-sm font-medium mb-1">File Upload Error:</p>
+                                    @if (is_array($message))
+                                        <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                                            @foreach ($message as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <p class="text-red-700 text-sm">{{ $message }}</p>
+                                    @endif
+                                </div>
+                            @enderror
                             @error('changeRequestFiles.*')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -1522,6 +1542,7 @@
                 <!-- Modal Footer -->
                 <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-2">
                     <button wire:click="closeChangeRequestForm" type="button"
+                        onclick="document.body.classList.remove('modal-open');"
                         class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Cancel
                     </button>

@@ -1,20 +1,20 @@
 <div>
     <div class="py-12">
         <div class="w-full px-4 sm:px-6 lg:px-8">
-    <!-- Flash Messages -->
-    @if (session()->has('message'))
-        <div class="bg-green-100 border border-green-400 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 px-4 py-3 rounded mb-4" role="alert">
-            <span class="block sm:inline">{{ session('message') }}</span>
-        </div>
-    @endif
+            <!-- Flash Messages -->
+            @if (session()->has('message'))
+                <div class="bg-green-100 border border-green-400 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 px-4 py-3 rounded mb-4" role="alert">
+                    <span class="block sm:inline">{{ session('message') }}</span>
+                </div>
+            @endif
 
-    @if (session()->has('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300 px-4 py-3 rounded mb-4" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
-        </div>
-    @endif
+            @if (session()->has('error'))
+                <div class="bg-red-100 border border-red-400 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300 px-4 py-3 rounded mb-4" role="alert">
+                    <span class="block sm:inline">{{ session('error') }}</span>
+                </div>
+            @endif
 
-    <!-- Custom Styles for Responsive Table -->
+            <!-- Custom Styles for Responsive Table -->
     <style>
         .table-container {
             overflow-x: auto;
@@ -28,8 +28,8 @@
         }
     </style>
 
-    <!-- Statistics Cards -->
-    @if ($analytics)
+            <!-- Statistics Cards -->
+            @if ($analytics)
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                 <div class="flex items-center">
@@ -78,10 +78,10 @@
                     </div>
                 </div>
             </div>
-        </div>
-    @endif
+            </div>
+            @endif
 
-    <!-- Advanced Filters -->
+            <!-- Advanced Filters -->
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg mb-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <!-- Search -->
@@ -114,7 +114,7 @@
         </div>
     </div>
 
-    <!-- Table Section -->
+            <!-- Table Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
         <div class="overflow-x-auto table-container">
             <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="min-width: 1000px;">
@@ -215,30 +215,16 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex items-center space-x-2">
-                                    <!-- View Details -->
+                                    <!-- View Actions -->
                                     <button wire:click="viewRequest({{ $request->justificationID }})"
-                                        class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200" title="View details">
-                                        👁️ View
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                        title="View details">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                        </svg>
+                                        <span>View</span>
                                     </button>
-
-                                    <!-- Files Dropdown -->
-                                    @if($request->files->count() > 0)
-                                        <div class="relative group">
-                                            <button class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200" title="{{ $request->files->count() }} file(s)">
-                                                📎 {{ $request->files->count() }}
-                                            </button>
-                                            <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                                                <div class="py-1">
-                                                    @foreach($request->files as $file)
-                                                        <button wire:click="downloadFile({{ $file->id }})"
-                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                                            📄 {{ $file->original_name }}
-                                                        </button>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -261,16 +247,14 @@
             </table>
         </div>
 
+        <!-- Pagination -->
+        <div class="px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6 bg-white dark:bg-gray-800 rounded-b-lg">
+            {{ $requests->links() }}
         </div>
     </div>
 
-    <!-- Pagination -->
-    <div class="px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6 bg-white dark:bg-gray-800 rounded-b-lg">
-        {{ $requests->links() }}
-    </div>
-
-    <!-- Change Request Detail Modal -->
-    @if ($showDetailModal && $selectedRequest)
+            <!-- Change Request Detail Modal -->
+            @if ($showDetailModal && $selectedRequest)
         <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" wire:click="closeDetailModal">
             <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white" wire:click.stop>
                 <div class="flex justify-between items-center mb-4">
@@ -469,8 +453,8 @@
                     </button>
                 </div>
             </div>
-        </div>
-    @endif
+            </div>
+            @endif
         </div>
     </div>
 </div>

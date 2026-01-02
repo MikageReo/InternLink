@@ -4,14 +4,17 @@ namespace App\Livewire\Student;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Models\RequestJustification;
 use App\Models\PlacementApplication;
+use App\Models\File;
 use Carbon\Carbon;
 
 class ChangeRequestHistory extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     // Search and filter properties
     public $search = '';
@@ -23,6 +26,13 @@ class ChangeRequestHistory extends Component
     // Modal properties
     public $showDetailModal = false;
     public $selectedRequest = null;
+    
+    // Edit form properties
+    public $showEditForm = false;
+    public $editingId = null;
+    public $changeRequestReason = '';
+    public $changeRequestFiles = [];
+    public $existingFiles = [];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -30,6 +40,36 @@ class ChangeRequestHistory extends Component
         'sortField' => ['except' => 'requestDate'],
         'sortDirection' => ['except' => 'desc'],
         'perPage' => ['except' => 10],
+    ];
+
+    protected function rules()
+    {
+        $rules = [
+            'changeRequestReason' => 'required|string|min:20|max:1000',
+        ];
+
+        // If editing and has existing files, new files are optional
+        // Otherwise, files are required
+        if ($this->editingId && !empty($this->existingFiles)) {
+            $rules['changeRequestFiles'] = 'nullable|array';
+            $rules['changeRequestFiles.*'] = 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120';
+        } else {
+            $rules['changeRequestFiles'] = 'required|array|min:1';
+            $rules['changeRequestFiles.*'] = 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120';
+        }
+
+        return $rules;
+    }
+
+    protected $messages = [
+        'changeRequestReason.required' => 'Please provide a reason for the change request.',
+        'changeRequestReason.min' => 'Reason must be at least 20 characters.',
+        'changeRequestReason.max' => 'Reason must not exceed 1000 characters.',
+        'changeRequestFiles.required' => 'At least one supporting document is required.',
+        'changeRequestFiles.min' => 'At least one supporting document is required.',
+        'changeRequestFiles.*.required' => 'Each file is required.',
+        'changeRequestFiles.*.mimes' => 'Supporting files must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',
+        'changeRequestFiles.*.max' => 'Each file must be less than 5MB.',
     ];
 
     public function mount()
@@ -140,6 +180,161 @@ class ChangeRequestHistory extends Component
             \Illuminate\Support\Facades\Storage::disk('public')->path($file->file_path),
             $file->original_name
         );
+    }
+
+    public function edit($id)
+    {
+        $request = RequestJustification::with(['files', 'placementApplication'])->findOrFail($id);
+
+        // Check if this request belongs to the current student
+        if ($request->placementApplication->studentID !== Auth::user()->student->studentID) {
+            session()->flash('error', 'You can only edit your own change requests.');
+            return;
+        }
+
+        // Prevent editing if either committee or coordinator has approved/rejected
+        if ($request->committeeStatus !== 'Pending' || $request->coordinatorStatus !== 'Pending') {
+            session()->flash('error', 'You cannot edit a change request once it has been reviewed by the committee or coordinator.');
+            return;
+        }
+
+        $this->editingId = $id;
+        $this->changeRequestReason = $request->reason;
+        
+        // Load existing files for display
+        $this->existingFiles = $request->files->toArray();
+
+        $this->showEditForm = true;
+    }
+
+    public function editFromView($id)
+    {
+        // Close the detail modal first
+        $this->closeDetailModal();
+        
+        // Then open the edit form
+        $this->edit($id);
+    }
+
+    public function closeEditForm()
+    {
+        $this->showEditForm = false;
+        $this->resetEditForm();
+    }
+
+    private function resetEditForm()
+    {
+        $this->reset(['editingId', 'changeRequestReason', 'changeRequestFiles', 'existingFiles']);
+        $this->resetErrorBag();
+    }
+
+    protected function validateChangeRequestFileSizes()
+    {
+        // If editing and has existing files, new files are optional
+        if ($this->editingId && !empty($this->existingFiles) && empty($this->changeRequestFiles)) {
+            return; // No validation needed if keeping existing files
+        }
+
+        if (empty($this->changeRequestFiles)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'changeRequestFiles' => ['At least one supporting document is required.']
+            ]);
+        }
+
+        $errors = [];
+        $maxSizeBytes = 5120 * 1024; // 5MB in bytes
+
+        foreach ($this->changeRequestFiles as $index => $file) {
+            if (!$file) {
+                continue; // Skip null files
+            }
+
+            $fileSizeBytes = $file->getSize();
+            $fileSizeMB = round($fileSizeBytes / (1024 * 1024), 2);
+
+            if ($fileSizeBytes > $maxSizeBytes) {
+                $errors["changeRequestFiles.{$index}"] = "File '{$file->getClientOriginalName()}' ({$fileSizeMB}MB) exceeds the maximum allowed size of 5MB.";
+            }
+        }
+
+        if (!empty($errors)) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
+        }
+    }
+
+    public function updateChangeRequest()
+    {
+        // Validate file sizes first before any other validation
+        try {
+            $this->validateChangeRequestFileSizes();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        }
+
+        $this->validate($this->rules());
+
+        try {
+            $request = RequestJustification::findOrFail($this->editingId);
+
+            // Double-check that request can still be edited
+            if ($request->committeeStatus !== 'Pending' || $request->coordinatorStatus !== 'Pending') {
+                session()->flash('error', 'You cannot edit a change request once it has been reviewed by the committee or coordinator.');
+                $this->closeEditForm();
+                return;
+            }
+
+            // Update the change request
+            $request->update([
+                'reason' => $this->changeRequestReason,
+            ]);
+
+            // Delete old files and upload new ones if new files are provided
+            if (!empty($this->changeRequestFiles)) {
+                // Delete old files
+                foreach ($request->files as $file) {
+                    if (Storage::disk('public')->exists($file->file_path)) {
+                        Storage::disk('public')->delete($file->file_path);
+                    }
+                    $file->delete();
+                }
+                
+                // Upload new files
+                $this->uploadChangeRequestFiles($request);
+            }
+            // If no new files uploaded, keep existing files
+
+            session()->flash('message', 'Change request updated successfully!');
+            $this->closeEditForm();
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred: ' . $e->getMessage());
+        }
+    }
+
+    protected function uploadChangeRequestFiles($changeRequest)
+    {
+        $maxSizeBytes = 5120 * 1024; // 5MB in bytes
+        foreach ($this->changeRequestFiles as $file) {
+            // Double-check file size before uploading
+            $fileSizeKB = $file->getSize() / 1024;
+            if ($fileSizeKB > 5120) {
+                throw new \Exception("File '{$file->getClientOriginalName()}' exceeds the maximum allowed size of 5MB.");
+            }
+
+            $path = $file->store('change-requests', 'public');
+            $originalName = $file->getClientOriginalName();
+            $mimeType = $file->getMimeType();
+            $fileSize = $file->getSize();
+
+            File::create([
+                'fileable_type' => RequestJustification::class,
+                'fileable_id' => $changeRequest->justificationID,
+                'file_path' => $path,
+                'original_name' => $originalName,
+                'mime_type' => $mimeType,
+                'file_size' => $fileSize,
+            ]);
+        }
     }
 
     private function getFilteredRequests()

@@ -46,6 +46,11 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        /* Prevent body scroll when modal is open */
+        body.modal-open {
+            overflow: hidden;
+        }
+
         @media (max-width: 1024px) {
             .table-container table {
                 min-width: 1000px;
@@ -139,6 +144,17 @@
         </div>
     </div>
 
+    <!-- Make More Request Button -->
+    @if ($canMakeRequest)
+        <div class="mb-6 flex justify-end">
+            <button type="button"
+                onclick="document.getElementById('warning-modal').style.display = 'block';"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600">
+                <i class="fa fa-plus mr-2"></i>
+                Make New Defer Request
+            </button>
+        </div>
+    @endif
     <!-- Table Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
         <div class="overflow-x-auto table-container">
@@ -237,7 +253,7 @@
                                         <div class="flex items-center space-x-2">
                                             <!-- View/Edit Actions -->
                                             @if ($request->committeeStatus === 'Pending' && $request->coordinatorStatus === 'Pending')
-                                                <!-- Edit button - only when both are pending -->
+                                                <!-- Edit button - only when BOTH are pending -->
                                                 <button wire:click="edit({{ $request->deferID }})"
                                                     class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
                                                     title="Edit request">
@@ -269,7 +285,8 @@
                                             <p class="text-lg font-medium mb-2">No defer requests found</p>
                                             <p class="text-sm">You haven't submitted any defer requests yet.</p>
                                         @if ($canMakeRequest)
-                                            <button wire:click="openForm"
+                                            <button type="button"
+                                                onclick="document.getElementById('warning-modal').style.display = 'block';"
                                                 class="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
                                                 Submit Your First Request
                                             </button>
@@ -281,23 +298,25 @@
                     </table>
                 </div>
 
-                </div>
             </div>
 
     <!-- Pagination -->
     <div class="px-4 py-4 border-t border-gray-200 dark:border-gray-700 sm:px-6 bg-white dark:bg-gray-800 rounded-b-lg">
         {{ $requests->links() }}
     </div>
-        </div>
+    </div>
     </div>
 
-    <!-- Warning Modal -->
-    @if ($showWarningModal)
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
-            wire:click="cancelRequest"></div>
-        <div
-            style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+    <!-- Modals Container -->
+    <div>
+        <!-- Warning Modal -->
+        <div id="warning-modal" style="display: none;">
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 9999;"
+                onclick="document.getElementById('warning-modal').style.display = 'none';"></div>
+            <div
+                style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; max-height: 90vh; overflow-y: auto;"
+                onclick="event.stopPropagation();">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4">
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200 bg-red-50">
                     <div class="flex items-center">
@@ -386,11 +405,14 @@
                             status
                         </div>
                         <div class="flex space-x-3">
-                            <button wire:click="cancelRequest" type="button"
+                            <button type="button"
+                                onclick="document.getElementById('warning-modal').style.display = 'none';"
                                 class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                 Cancel
                             </button>
-                            <button wire:click="proceedWithRequest" type="button"
+                            <button type="button"
+                                wire:click="proceedWithRequest"
+                                onclick="document.getElementById('warning-modal').style.display = 'none';"
                                 class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
                                 I Understand, Proceed
                             </button>
@@ -398,16 +420,21 @@
                     </div>
                 </div>
             </div>
+            </div>
         </div>
-    @endif
 
     <!-- Defer Request Form Modal -->
     @if ($showForm)
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
-            wire:click="closeForm"></div>
-        <div
-            style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+        <div>
+            <script>
+                document.body.classList.add('modal-open');
+            </script>
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
+                wire:click="closeForm"></div>
+            <div
+                style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51;"
+                wire:click.stop>
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4" wire:click.stop>
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900">
@@ -451,12 +478,26 @@
 
                         <!-- File Upload -->
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Supporting Documents</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Supporting Documents *</label>
                             <input type="file" wire:model="applicationFiles" multiple
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm @error('applicationFiles.*') border-red-500 @enderror"
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
                             <p class="text-xs text-gray-500 mt-1">Upload supporting documents (PDF, DOC, DOCX, JPG,
-                                PNG). Max 10MB each.</p>
+                                PNG). Max 5MB each.</p>
+                            @error('applicationFiles')
+                                <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                                    <p class="text-red-800 text-sm font-medium mb-1">File Upload Error:</p>
+                                    @if (is_array($message))
+                                        <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                                            @foreach ($message as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <p class="text-red-700 text-sm">{{ $message }}</p>
+                                    @endif
+                                </div>
+                            @enderror
                             @error('applicationFiles.*')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -502,6 +543,7 @@
                 <!-- Modal Footer -->
                 <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-2">
                     <button wire:click="closeForm" type="button"
+                        onclick="document.body.classList.remove('modal-open');"
                         class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Cancel
                     </button>
@@ -520,14 +562,16 @@
                 </div>
             </div>
         </div>
+        </div>
     @endif
 
     <!-- View Request Details Modal -->
     @if ($showViewModal && $viewingRequest)
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
-            wire:click="closeViewModal"></div>
-        <div
-            style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
+        <div>
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50;"
+                wire:click="closeViewModal"></div>
+            <div
+                style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
             <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-gray-200">
@@ -675,5 +719,8 @@
                 </div>
             </div>
         </div>
+        </div>
     @endif
+    </div>
+    <!-- End Modals Container -->
 </div>

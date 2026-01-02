@@ -116,7 +116,7 @@ class UserDirectoryTable extends Component
             $advisor = Lecturer::with('user')
                 ->where('lecturerID', $advisorValue)
                 ->where('isAcademicAdvisor', true)
-                ->where('status', 'active')
+                ->where('status', 'Active')
                 ->first();
 
             if ($advisor) {
@@ -136,7 +136,7 @@ class UserDirectoryTable extends Component
                     $query->where('email', $advisorValue);
                 })
                 ->where('isAcademicAdvisor', true)
-                ->where('status', 'active')
+                ->where('status', 'Active')
                 ->first();
 
             if ($advisor) {
@@ -249,6 +249,7 @@ class UserDirectoryTable extends Component
     public $studentSemester = '';
     public $studentYear = '';
     public $studentAcademicAdvisorID = '';
+    public $studentStatus = '';
 
     // Individual Lecturer Registration properties
     public $lecturerName = '';
@@ -275,6 +276,7 @@ class UserDirectoryTable extends Component
     public $lecturerIsCommittee = false;
     public $lecturerIsCoordinator = false;
     public $lecturerIsAdmin = false;
+    public $lecturerStatus = '';
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -647,7 +649,7 @@ class UserDirectoryTable extends Component
                 $query->join('students', 'users.id', '=', 'students.user_id')
                     ->orderBy('students.' . $this->sortField, $this->sortDirection)
                     ->select('users.*');
-            } elseif ($this->role === 'lecturer' && in_array($this->sortField, ['lecturerID', 'supervisor_quota'])) {
+            } elseif ($this->role === 'lecturer' && in_array($this->sortField, ['lecturerID', 'supervisor_quota', 'status'])) {
                 $query->join('lecturers', 'users.id', '=', 'lecturers.user_id')
                     ->orderBy('lecturers.' . $this->sortField, $this->sortDirection)
                     ->select('users.*');
@@ -978,6 +980,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->studentSemester = '';
         $this->studentYear = date('Y');
         $this->studentAcademicAdvisorID = '';
+        $this->studentStatus = '';
     }
 
     public function resetLecturerForm()
@@ -1006,6 +1009,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->lecturerIsCommittee = false;
         $this->lecturerIsCoordinator = false;
         $this->lecturerIsAdmin = false;
+        $this->lecturerStatus = '';
     }
 
     // Bulk registration from CSV
@@ -1162,7 +1166,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'semester' => $this->bulkSemester,
                 'year' => $this->bulkYear,
                 'academicAdvisorID' => $academicAdvisorID,
-                'status' => 'active',
+                'status' => 'Active',
             ]);
 
             DB::commit();
@@ -1241,7 +1245,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'isCoordinator' => isset($data['isCoordinator']) && strtolower($data['isCoordinator']) === 'true',
                 'isAdmin' => isset($data['isAdmin']) && strtolower($data['isAdmin']) === 'true',
                 'supervisor_quota' => isset($data['supervisor_quota']) ? (int)$data['supervisor_quota'] : (isset($data['studentQuota']) ? (int)$data['studentQuota'] : 0),
-                'status' => 'active',
+                'status' => 'Active',
             ]);
 
             DB::commit();
@@ -1327,7 +1331,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'semester' => $this->studentSemester,
                 'year' => $this->studentYear,
                 'academicAdvisorID' => $this->studentAcademicAdvisorID ?: null,
-                'status' => 'active',
+                'status' => 'Active',
             ]);
 
             DB::commit();
@@ -1443,7 +1447,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'isCommittee' => $this->lecturerIsCommittee,
                 'isCoordinator' => $this->lecturerIsCoordinator,
                 'isAdmin' => $this->lecturerIsAdmin,
-                'status' => 'active',
+                'status' => 'Active',
             ]);
 
             DB::commit();
@@ -1493,6 +1497,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->studentSemester = $user->student->semester ?? '';
         $this->studentYear = $user->student->year ?? date('Y');
         $this->studentAcademicAdvisorID = $user->student->academicAdvisorID ?? '';
+        $this->studentStatus = $user->student->status ?? 'Active';
 
         $this->showEditStudent = true;
     }
@@ -1531,6 +1536,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->lecturerIsCommittee = $user->lecturer->isCommittee ?? false;
         $this->lecturerIsCoordinator = $user->lecturer->isCoordinator ?? false;
         $this->lecturerIsAdmin = $user->lecturer->isAdmin ?? false;
+        $this->lecturerStatus = $user->lecturer->status ?? 'Active';
 
         $this->showEditLecturer = true;
     }
@@ -1554,6 +1560,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
             'studentSemester' => 'required|in:1,2',
             'studentYear' => 'required|integer|digits:4|min:2020|max:2040',
             'studentAcademicAdvisorID' => 'required|string|exists:lecturers,lecturerID',
+            'studentStatus' => 'required|in:Active,Deferred,Barred,Terminate,In-Active,Pass Away,Graduated',
         ]);
 
         try {
@@ -1598,6 +1605,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'semester' => $this->studentSemester,
                 'year' => $this->studentYear,
                 'academicAdvisorID' => $this->studentAcademicAdvisorID ?: null,
+                'status' => $this->studentStatus,
             ]);
 
             DB::commit();
@@ -1641,6 +1649,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
             'lecturerSemester' => 'required|in:1,2',
             'lecturerYear' => 'required|integer|digits:4|min:2020|max:2040',
             'lecturerSupervisorQuota' => 'required|integer|min:1|max:99',
+            'lecturerStatus' => 'required|in:Active,Sabatical Leave,Maternity Leave,Pligrimage Leave,Transfered,Resigned,In-Active,Medical Leave,Pass Away',
         ], [
             'lecturerSupervisorQuota.required' => 'The supervisor quota field is required.',
             'lecturerSupervisorQuota.min' => 'The supervisor quota must be at least 1.',
@@ -1702,6 +1711,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'isCommittee' => $this->lecturerIsCommittee,
                 'isCoordinator' => $this->lecturerIsCoordinator,
                 'isAdmin' => $this->lecturerIsAdmin,
+                'status' => $this->lecturerStatus,
             ]);
 
             DB::commit();

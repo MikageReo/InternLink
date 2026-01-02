@@ -113,7 +113,8 @@ class PlacementApplicationTable extends Component
     {
         return [
             'changeRequestReason' => 'required|string|min:20|max:1000',
-            'changeRequestFiles.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'changeRequestFiles' => 'required|array|min:1',
+            'changeRequestFiles.*' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
         ];
     }
 
@@ -159,6 +160,9 @@ class PlacementApplicationTable extends Component
         'changeRequestReason.required' => 'Please provide a reason for the change request.',
         'changeRequestReason.min' => 'Reason must be at least 20 characters.',
         'changeRequestReason.max' => 'Reason must not exceed 1000 characters.',
+        'changeRequestFiles.required' => 'At least one supporting document is required.',
+        'changeRequestFiles.min' => 'At least one supporting document is required.',
+        'changeRequestFiles.*.required' => 'Each file is required.',
         'changeRequestFiles.*.mimes' => 'Supporting files must be PDF, DOC, DOCX, JPG, JPEG, or PNG.',
         'changeRequestFiles.*.max' => 'Each file must be less than 5MB.',
     ];
@@ -358,6 +362,16 @@ class PlacementApplicationTable extends Component
         // Check if this application belongs to the current student
         if ($application->studentID !== Auth::user()->student->studentID) {
             session()->flash('error', 'You can only edit your own applications.');
+            return;
+        }
+
+        // Check if student has accepted any application - if so, they cannot edit any remaining applications
+        $hasAcceptedApplication = PlacementApplication::where('studentID', Auth::user()->student->studentID)
+            ->where('studentAcceptance', 'Accepted')
+            ->exists();
+
+        if ($hasAcceptedApplication) {
+            session()->flash('error', 'You cannot edit any applications after accepting one. You can only view them.');
             return;
         }
 
@@ -770,6 +784,11 @@ class PlacementApplicationTable extends Component
             return false;
         }
 
+        // Check if student status is Active (only active students can apply)
+        if ($student->status !== 'Active') {
+            return false;
+        }
+
         // Check if student has approved course verification
         $approvedVerification = CourseVerification::where('studentID', $student->studentID)
             ->where('status', 'approved')
@@ -803,7 +822,18 @@ class PlacementApplicationTable extends Component
             return;
         }
 
-        // Check course verification first
+        // Check student status first (only active students can apply)
+        if ($student->status !== 'Active') {
+            $statusMessage = match($student->status) {
+                'Deferred' => 'You cannot make internship applications while your status is Deferred. Please contact the administration once your defer period ends.',
+                'Graduated' => 'You cannot make internship applications as your status is Graduated.',
+                default => 'You cannot make internship applications with your current status (' . $student->status . '). Only active students can apply.',
+            };
+            session()->flash('error', $statusMessage);
+            return;
+        }
+
+        // Check course verification
         $approvedVerification = CourseVerification::where('studentID', $student->studentID)
             ->where('status', 'approved')
             ->exists();
@@ -898,11 +928,29 @@ class PlacementApplicationTable extends Component
     // Change Request Methods
     public function openChangeRequestForm($applicationID)
     {
+        $student = Auth::user()->student;
+
+        if (!$student) {
+            session()->flash('error', 'Student profile not found.');
+            return;
+        }
+
+        // Check if student status is Active (only active students can make change requests)
+        if ($student->status !== 'Active') {
+            $statusMessage = match($student->status) {
+                'Deferred' => 'You cannot make change requests while your status is Deferred. Please contact the administration once your defer period ends.',
+                'Graduated' => 'You cannot make change requests as your status is Graduated.',
+                default => 'You cannot make change requests with your current status (' . $student->status . '). Only active students can make change requests.',
+            };
+            session()->flash('error', $statusMessage);
+            return;
+        }
+
         $application = PlacementApplication::with(['student', 'changeRequests'])
             ->findOrFail($applicationID);
 
         // Check if this application belongs to the current student
-        if ($application->studentID !== Auth::user()->student->studentID) {
+        if ($application->studentID !== $student->studentID) {
             session()->flash('error', 'You can only request changes for your own applications.');
             return;
         }
@@ -946,6 +994,14 @@ class PlacementApplicationTable extends Component
 
     public function submitChangeRequest()
     {
+        // Validate file sizes first before any other validation
+        try {
+            $this->validateChangeRequestFileSizes();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-throw immediately to prevent any further processing
+            throw $e;
+        }
+
         $this->validate($this->getChangeRequestRules());
 
         try {
@@ -953,6 +1009,17 @@ class PlacementApplicationTable extends Component
 
             if (!$student) {
                 session()->flash('error', 'Student profile not found.');
+                return;
+            }
+
+            // Check if student status is Active (only active students can make change requests)
+            if ($student->status !== 'Active') {
+                $statusMessage = match($student->status) {
+                    'Deferred' => 'You cannot make change requests while your status is Deferred. Please contact the administration once your defer period ends.',
+                    'Graduated' => 'You cannot make change requests as your status is Graduated.',
+                    default => 'You cannot make change requests with your current status (' . $student->status . '). Only active students can make change requests.',
+                };
+                session()->flash('error', $statusMessage);
                 return;
             }
 
@@ -998,6 +1065,42 @@ class PlacementApplicationTable extends Component
         }
     }
 
+    protected function validateChangeRequestFileSizes()
+    {
+        if (empty($this->changeRequestFiles)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'changeRequestFiles' => ['At least one supporting document is required.']
+            ]);
+        }
+
+        $maxSizeKB = 5120; // 5MB in kilobytes
+        $maxSizeBytes = $maxSizeKB * 1024; // Convert to bytes
+        $errors = [];
+
+        // Check each file individually
+        foreach ($this->changeRequestFiles as $index => $file) {
+            if (!$file) {
+                continue; // Skip null files
+            }
+
+            $fileSizeBytes = $file->getSize();
+            $fileSizeKB = $fileSizeBytes / 1024; // Convert bytes to KB
+            $fileSizeMB = round($fileSizeKB / 1024, 2);
+            $fileName = $file->getClientOriginalName();
+
+            if ($fileSizeBytes > $maxSizeBytes) {
+                $errors[] = "File '{$fileName}' is {$fileSizeMB}MB, which exceeds the maximum allowed size of 5MB.";
+            }
+        }
+
+        if (!empty($errors)) {
+            // Throw validation exception to prevent form submission
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'changeRequestFiles' => $errors
+            ]);
+        }
+    }
+
     private function uploadChangeRequestFiles($changeRequest)
     {
         \Log::info('Uploading change request files', [
@@ -1006,6 +1109,12 @@ class PlacementApplicationTable extends Component
         ]);
 
         foreach ($this->changeRequestFiles as $file) {
+            // Double-check file size before uploading
+            $fileSizeKB = $file->getSize() / 1024;
+            if ($fileSizeKB > 5120) {
+                throw new \Exception("File '{$file->getClientOriginalName()}' exceeds the maximum allowed size of 5MB.");
+            }
+
             try {
                 $filename = time() . '_' . $file->getClientOriginalName();
                 $path = $file->storeAs('change_requests', $filename, 'public');
@@ -1134,6 +1243,10 @@ class PlacementApplicationTable extends Component
         $canApply = $this->canStudentApply();
         $analytics = $this->getAnalyticsData();
 
+        // Check if student is active (for change requests)
+        $student = Auth::user()->student;
+        $isStudentActive = $student && $student->status === 'Active';
+
         // Check if student has any accepted application
         $hasAcceptedApplication = false;
         if (Auth::user()->student) {
@@ -1166,6 +1279,7 @@ class PlacementApplicationTable extends Component
         return view('livewire.student.placementApplicationTable', [
             'applications' => $applications,
             'canApply' => $canApply,
+            'isStudentActive' => $isStudentActive,
             'hasAcceptedApplication' => $hasAcceptedApplication,
             'hasApprovedChangeRequest' => $hasApprovedChangeRequest,
             'hasCourseVerification' => $hasCourseVerification,

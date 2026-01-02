@@ -212,6 +212,17 @@ class RequestDeferTable extends Component
             }
 
             $request->update($updateData);
+            
+            // Refresh the request to get updated statuses
+            $request->refresh();
+
+            // If both committee and coordinator have approved, update student status to Deferred
+            if ($request->committeeStatus === 'Approved' && $request->coordinatorStatus === 'Approved') {
+                $student = $request->student;
+                if ($student) {
+                    $student->update(['status' => 'Deferred']);
+                }
+            }
 
             // Refresh the selected request
             if ($this->selectedRequest) {
@@ -407,6 +418,17 @@ class RequestDeferTable extends Component
                 }
 
                 $request->update($updateData);
+                
+                // Refresh the request to get updated statuses
+                $request->refresh();
+                
+                // If both committee and coordinator have approved, update student status to Deferred
+                if ($request->committeeStatus === 'Approved' && $request->coordinatorStatus === 'Approved') {
+                    $student = $request->student;
+                    if ($student) {
+                        $student->update(['status' => 'Deferred']);
+                    }
+                }
                 
                 // Send email notification
                 $this->sendStatusNotification($request);
