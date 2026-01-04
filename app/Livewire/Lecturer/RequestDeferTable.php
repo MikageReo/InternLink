@@ -64,7 +64,7 @@ class RequestDeferTable extends Component
         if (!$user->lecturer) {
             abort(403, 'Access denied. Lecturer profile required.');
         }
-        
+
         // Clear any flash messages from previous components
         session()->forget(['message', 'error', 'warning']);
     }
@@ -212,7 +212,7 @@ class RequestDeferTable extends Component
             }
 
             $request->update($updateData);
-            
+
             // Refresh the request to get updated statuses
             $request->refresh();
 
@@ -272,7 +272,7 @@ class RequestDeferTable extends Component
             // Select all requests on current filtered results (only pending ones for the user's role)
             $lecturer = Auth::user()->lecturer;
             $query = $this->getFilteredRequests();
-            
+
             if ($lecturer->isCommittee && !$lecturer->isCoordinator) {
                 // Committee members can only select requests pending committee review
                 $query->where('committeeStatus', 'Pending');
@@ -290,7 +290,7 @@ class RequestDeferTable extends Component
                       });
                 });
             }
-            
+
             $this->selectedRequests = $query->pluck('deferID')->toArray();
         } else {
             $this->selectedRequests = [];
@@ -383,7 +383,7 @@ class RequestDeferTable extends Component
 
             foreach ($this->selectedRequests as $id) {
                 $request = RequestDefer::find($id);
-                
+
                 if (!$request) {
                     continue;
                 }
@@ -407,7 +407,7 @@ class RequestDeferTable extends Component
                 if ($role === 'committee') {
                     $updateData['committeeID'] = $lecturer->lecturerID;
                     $updateData['committeeStatus'] = $status;
-                    
+
                     // If committee rejects, also set coordinator to rejected
                     if ($status === 'Rejected') {
                         $updateData['coordinatorStatus'] = 'Rejected';
@@ -418,10 +418,10 @@ class RequestDeferTable extends Component
                 }
 
                 $request->update($updateData);
-                
+
                 // Refresh the request to get updated statuses
                 $request->refresh();
-                
+
                 // If both committee and coordinator have approved, update student status to Deferred
                 if ($request->committeeStatus === 'Approved' && $request->coordinatorStatus === 'Approved') {
                     $student = $request->student;
@@ -429,10 +429,10 @@ class RequestDeferTable extends Component
                         $student->update(['status' => 'Deferred']);
                     }
                 }
-                
+
                 // Send email notification
                 $this->sendStatusNotification($request);
-                
+
                 $count++;
             }
 
@@ -449,7 +449,7 @@ class RequestDeferTable extends Component
             $this->selectAll = false;
             $this->bulkRemarks = '';
             $this->resetPage();
-            
+
         } catch (\Exception $e) {
             session()->flash('error', 'An error occurred during bulk processing: ' . $e->getMessage());
             Log::error('Bulk approval error: ' . $e->getMessage());
@@ -487,7 +487,7 @@ class RequestDeferTable extends Component
                 foreach ($requests as $request) {
                     // Create a folder for each request
                     $folderName = 'Defer_' . $request->deferID . '_' . $request->student->studentID;
-                    
+
                     foreach ($request->files as $file) {
                         $filePath = storage_path('app/public/' . $file->file_path);
                         if (file_exists($filePath)) {
