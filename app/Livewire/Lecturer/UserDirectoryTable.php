@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use App\Notifications\UserRegistrationNotification;
 use App\Services\GeocodingService;
 // Removed Excel import temporarily due to missing GD extension
@@ -68,6 +69,17 @@ class UserDirectoryTable extends Component
     }
 
     /**
+     * Convert year (YYYY) to session format (YY/YY+1)
+     */
+    private function convertYearToSession($year): string
+    {
+        $yearStr = (string)$year;
+        $currentYear = substr($yearStr, 2, 2);
+        $nextYear = str_pad((int)$currentYear + 1, 2, '0', STR_PAD_LEFT);
+        return $currentYear . '/' . $nextYear;
+    }
+
+    /**
      * Generate filter information text for exports
      */
     private function getFilterInfo(): array
@@ -83,7 +95,7 @@ class UserDirectoryTable extends Component
         }
 
         if ($this->year) {
-            $filters['Year'] = $this->year;
+            $filters['Session'] = $this->year; // Year filter maps to session for both students and lecturers
         }
 
         if ($this->program) {
@@ -230,7 +242,10 @@ class UserDirectoryTable extends Component
     // CSV Upload properties
     public $csvFile;
     public $bulkSemester = '';
-    public $bulkYear = '';
+    public $bulkSession = '';
+    public $bulkCourseCode = '';
+    public $bulkInternshipStartDate = '';
+    public $bulkInternshipEndDate = '';
 
     // Individual Student Registration properties
     public $studentName = '';
@@ -272,7 +287,7 @@ class UserDirectoryTable extends Component
     public $lecturerDepartment = '';
     public $lecturerProgram = '';
     public $lecturerSemester = '';
-    public $lecturerYear = '';
+    public $lecturerSession = '';
     public $lecturerSupervisorQuota = 0;
     public $lecturerIsAcademicAdvisor = false;
     public $lecturerIsSupervisorFaculty = false;
@@ -300,12 +315,12 @@ class UserDirectoryTable extends Component
     public function mount()
     {
         $this->year = date('Y');
-        $this->bulkYear = date('Y');
         // Set default session format (e.g., 24/25 for 2024)
         $currentYear = date('y');
         $nextYear = str_pad((int)$currentYear + 1, 2, '0', STR_PAD_LEFT);
+        $this->bulkSession = $currentYear . '/' . $nextYear;
         $this->studentSession = $currentYear . '/' . $nextYear;
-        $this->lecturerYear = date('Y');
+        $this->lecturerSession = $currentYear . '/' . $nextYear;
     }
 
     public function updatingSearch()
@@ -475,13 +490,14 @@ class UserDirectoryTable extends Component
                 'Email',
                 'Name',
                 'Program',
+                'Course Code',
                 'Academic Advisor',
                 'Phone',
                 'Status',
                 'Address',
                 'Nationality',
                 'Semester',
-                'Year'
+                'Session'
             ];
 
             $output .= '"' . implode('","', $headers) . '"' . "\n";
@@ -497,13 +513,14 @@ class UserDirectoryTable extends Component
                     $user->email,
                     $user->name,
                     $user->student->program ?? 'N/A',
+                    $user->student->courseCode ?? 'N/A',
                     $academicAdvisorName,
                     $user->student->phone ?? 'N/A',
                     $user->student->status ?? 'N/A',
                     $user->student->address ?? 'N/A',
                     $user->student->nationality ?? 'N/A',
                     $user->student->semester ?? 'N/A',
-                    $user->student->year ?? 'N/A'
+                    $user->student->session ?? 'N/A'
                 ];
 
                 // Escape quotes and wrap in quotes
@@ -528,7 +545,7 @@ class UserDirectoryTable extends Component
                 'Student Quota',
                 'Special Roles',
                 'Semester',
-                'Year'
+                'Session'
             ];
 
             $output .= '"' . implode('","', $headers) . '"' . "\n";
@@ -554,7 +571,7 @@ class UserDirectoryTable extends Component
                     $user->lecturer->supervisor_quota ?? 'N/A',
                     implode(', ', $specialRoles) ?: 'None',
                     $user->lecturer->semester ?? 'N/A',
-                    $user->lecturer->year ?? 'N/A'
+                    $user->lecturer->session ?? 'N/A'
                 ];
 
                 // Escape quotes and wrap in quotes
@@ -586,7 +603,10 @@ class UserDirectoryTable extends Component
                             $q->where('semester', $this->semester);
                         }
                         if ($this->year) {
-                            $q->where('year', $this->year);
+                            // Convert year filter to session format for students
+                            $yearStr = (string)$this->year;
+                            $sessionFormat = substr($yearStr, 2, 2) . '/' . str_pad((int)substr($yearStr, 2, 2) + 1, 2, '0', STR_PAD_LEFT);
+                            $q->where('session', $sessionFormat);
                         }
                         if ($this->program) {
                             // Convert program code to full name for filtering
@@ -606,7 +626,10 @@ class UserDirectoryTable extends Component
                             $q->where('semester', $this->semester);
                         }
                         if ($this->year) {
-                            $q->where('year', $this->year);
+                            // Convert year filter to session format for lecturers
+                            $yearStr = (string)$this->year;
+                            $sessionFormat = substr($yearStr, 2, 2) . '/' . str_pad((int)substr($yearStr, 2, 2) + 1, 2, '0', STR_PAD_LEFT);
+                            $q->where('session', $sessionFormat);
                         }
                         if ($this->program) {
                             // Convert program code to full name for filtering
@@ -728,13 +751,14 @@ class UserDirectoryTable extends Component
                     <th>Email</th>
                     <th>Name</th>
                     <th>Program</th>
+                    <th>Course Code</th>
                     <th>Academic Advisor</th>
                     <th>Phone</th>
                     <th>Status</th>
                     <th>Address</th>
                     <th>Nationality</th>
                     <th>Semester</th>
-                    <th>Year</th>
+                    <th>Session</th>
                 </tr>
             </thead>
             <tbody>';
@@ -750,13 +774,14 @@ class UserDirectoryTable extends Component
                     <td>' . $user->email . '</td>
                     <td>' . $user->name . '</td>
                     <td>' . ($user->student->program ?? 'N/A') . '</td>
+                    <td>' . ($user->student->courseCode ?? 'N/A') . '</td>
                     <td>' . $academicAdvisorName . '</td>
                     <td>' . ($user->student->phone ?? 'N/A') . '</td>
                     <td>' . ($user->student->status ?? 'N/A') . '</td>
                     <td>' . ($user->student->address ?? 'N/A') . '</td>
                     <td>' . ($user->student->nationality ?? 'N/A') . '</td>
                     <td>' . ($user->student->semester ?? 'N/A') . '</td>
-                    <td>' . ($user->student->year ?? 'N/A') . '</td>
+                    <td>' . ($user->student->session ?? 'N/A') . '</td>
                 </tr>';
             }
         } else if ($this->role === 'lecturer') {
@@ -774,7 +799,7 @@ class UserDirectoryTable extends Component
                     <th>Student Quota</th>
                     <th>Special Roles</th>
                     <th>Semester</th>
-                    <th>Year</th>
+                    <th>Session</th>
                 </tr>
             </thead>
             <tbody>';
@@ -800,7 +825,7 @@ class UserDirectoryTable extends Component
                     <td>' . ($user->lecturer->supervisor_quota ?? 'N/A') . '</td>
                     <td>' . (implode(', ', $specialRoles) ?: 'None') . '</td>
                     <td>' . ($user->lecturer->semester ?? 'N/A') . '</td>
-                    <td>' . ($user->lecturer->year ?? 'N/A') . '</td>
+                    <td>' . ($user->lecturer->session ?? 'N/A') . '</td>
                 </tr>';
             }
         }
@@ -869,13 +894,14 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     <th>Email</th>
                     <th>Name</th>
                     <th>Program</th>
+                    <th>Course Code</th>
                     <th>Academic Advisor</th>
                     <th>Phone</th>
                     <th>Status</th>
                     <th>Address</th>
                     <th>Nationality</th>
                     <th>Semester</th>
-                    <th>Year</th>
+                    <th>Session</th>
                 </tr>
             </thead>
             <tbody>';
@@ -886,13 +912,14 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     <td>' . $user->email . '</td>
                     <td>' . $user->name . '</td>
                     <td>' . ($user->student->program ?? 'N/A') . '</td>
+                    <td>' . ($user->student->courseCode ?? 'N/A') . '</td>
                     <td>' . (($user->student->academicAdvisorID && isset($user->student->academicAdvisor)) ? ($user->student->academicAdvisor->user->name ?? $user->student->academicAdvisorID) : 'Not Assigned') . '</td>
                     <td>' . ($user->student->phone ?? 'N/A') . '</td>
                     <td>' . ($user->student->status ?? 'N/A') . '</td>
                     <td>' . ($user->student->address ?? 'N/A') . '</td>
                     <td>' . ($user->student->nationality ?? 'N/A') . '</td>
                     <td>' . ($user->student->semester ?? 'N/A') . '</td>
-                    <td>' . ($user->student->year ?? 'N/A') . '</td>
+                    <td>' . ($user->student->session ?? 'N/A') . '</td>
                 </tr>';
             }
         } else if ($this->role === 'lecturer') {
@@ -910,7 +937,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     <th>Student Quota</th>
                     <th>Special Roles</th>
                     <th>Semester</th>
-                    <th>Year</th>
+                    <th>Session</th>
                 </tr>
             </thead>
             <tbody>';
@@ -936,7 +963,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     <td>' . ($user->lecturer->supervisor_quota ?? 'N/A') . '</td>
                     <td>' . (implode(', ', $specialRoles) ?: 'None') . '</td>
                     <td>' . ($user->lecturer->semester ?? 'N/A') . '</td>
-                    <td>' . ($user->lecturer->year ?? 'N/A') . '</td>
+                    <td>' . ($user->lecturer->session ?? 'N/A') . '</td>
                 </tr>';
             }
         }
@@ -953,6 +980,17 @@ xmlns="http://www.w3.org/TR/REC-html40">
     public function toggleBulkRegistration()
     {
         $this->showBulkRegistration = !$this->showBulkRegistration;
+        if (!$this->showBulkRegistration) {
+            // Reset form when closing
+            $this->csvFile = null;
+            $this->bulkSemester = '';
+            $currentYear = date('y');
+            $nextYear = str_pad((int)$currentYear + 1, 2, '0', STR_PAD_LEFT);
+            $this->bulkSession = $currentYear . '/' . $nextYear;
+            $this->bulkCourseCode = '';
+            $this->bulkInternshipStartDate = '';
+            $this->bulkInternshipEndDate = '';
+        }
     }
 
     public function toggleStudentRegistration()
@@ -983,8 +1021,13 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->studentLongitude = null;
         $this->studentNationality = '';
         $this->studentProgram = '';
+        $this->studentCourseCode = '';
         $this->studentSemester = '';
-        $this->studentYear = date('Y');
+        $currentYear = date('y');
+        $nextYear = str_pad((int)$currentYear + 1, 2, '0', STR_PAD_LEFT);
+        $this->studentSession = $currentYear . '/' . $nextYear;
+        $this->studentInternshipStartDate = '';
+        $this->studentInternshipEndDate = '';
         $this->studentAcademicAdvisorID = '';
         $this->studentStatus = '';
     }
@@ -1008,7 +1051,9 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->lecturerDepartment = '';
         $this->lecturerProgram = '';
         $this->lecturerSemester = '';
-        $this->lecturerYear = date('Y');
+        $currentYear = date('y');
+        $nextYear = str_pad((int)$currentYear + 1, 2, '0', STR_PAD_LEFT);
+        $this->lecturerSession = $currentYear . '/' . $nextYear;
         $this->lecturerSupervisorQuota = 0;
         $this->lecturerIsAcademicAdvisor = false;
         $this->lecturerIsSupervisorFaculty = false;
@@ -1021,10 +1066,11 @@ xmlns="http://www.w3.org/TR/REC-html40">
     // Bulk registration from CSV
     public function registerUsersFromCSV()
     {
+        // First validate common fields
         $this->validate([
             'csvFile' => 'required|file|mimes:csv,txt|max:2048',
             'bulkSemester' => 'required|in:1,2',
-            'bulkYear' => 'required|integer|min:2020|max:2040',
+            'bulkSession' => 'required|string|regex:/^[0-9]{2}\/[0-9]{2}$/',
         ]);
 
         try {
@@ -1041,6 +1087,12 @@ xmlns="http://www.w3.org/TR/REC-html40">
             // Auto-detect file type by header
             if (in_array('studentID', $header)) {
                 $roleType = 'student';
+                // Validate student-specific fields
+                $this->validate([
+                    'bulkCourseCode' => 'nullable|string|max:8',
+                    'bulkInternshipStartDate' => 'required|date',
+                    'bulkInternshipEndDate' => 'required|date|after:bulkInternshipStartDate',
+                ]);
             } elseif (in_array('lecturerID', $header)) {
                 $roleType = 'lecturer';
             } else {
@@ -1105,6 +1157,11 @@ xmlns="http://www.w3.org/TR/REC-html40">
 
             $this->showBulkRegistration = false;
             $this->csvFile = null;
+            $this->bulkSemester = '';
+            $this->bulkSession = '';
+            $this->bulkCourseCode = '';
+            $this->bulkInternshipStartDate = '';
+            $this->bulkInternshipEndDate = '';
         } catch (\Exception $e) {
             session()->flash('error', 'Error processing CSV file: ' . $e->getMessage());
         }
@@ -1156,6 +1213,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 $academicAdvisorID = $result['advisorID'];
             }
 
+            // Use form values for session, courseCode, and internship dates (not from CSV)
             Student::create([
                 'studentID' => $data['studentID'] ?? '',
                 'user_id' => $user->id,
@@ -1169,8 +1227,11 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'longitude' => $longitude,
                 'nationality' => $data['nationality'] ?? null,
                 'program' => $this->convertProgramToFullName($data['program'] ?? null),
+                'courseCode' => !empty($this->bulkCourseCode) ? substr($this->bulkCourseCode, 0, 8) : null,
                 'semester' => $this->bulkSemester,
-                'year' => $this->bulkYear,
+                'session' => $this->bulkSession,
+                'internship_start_date' => $this->bulkInternshipStartDate,
+                'internship_end_date' => $this->bulkInternshipEndDate,
                 'academicAdvisorID' => $academicAdvisorID,
                 'status' => 'Active',
             ]);
@@ -1244,7 +1305,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                     ? strtolower($data['travel_preference'])
                     : 'local',
                 'semester' => $this->bulkSemester,
-                'year' => $this->bulkYear,
+                'session' => $this->bulkSession,
                 'isAcademicAdvisor' => isset($data['isAcademicAdvisor']) && strtolower($data['isAcademicAdvisor']) === 'true',
                 'isSupervisorFaculty' => isset($data['isSupervisorFaculty']) && strtolower($data['isSupervisorFaculty']) === 'true',
                 'isCommittee' => isset($data['isCommittee']) && strtolower($data['isCommittee']) === 'true',
@@ -1286,8 +1347,11 @@ xmlns="http://www.w3.org/TR/REC-html40">
             'studentCountry' => 'required|string',
             'studentNationality' => 'required|string|max:15',
             'studentProgram' => 'required|in:BCS,BCN,BCM,BCY,DRC',
+            'studentCourseCode' => 'nullable|string|max:8',
             'studentSemester' => 'required|in:1,2',
-            'studentYear' => 'required|integer|digits:4|min:2020|max:2040',
+            'studentSession' => 'required|string|regex:/^[0-9]{2}\/[0-9]{2}$/',
+            'studentInternshipStartDate' => 'required|date',
+            'studentInternshipEndDate' => 'required|date|after:studentInternshipStartDate',
             'studentAcademicAdvisorID' => 'required|string|exists:lecturers,lecturerID',
         ]);
 
@@ -1334,8 +1398,11 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'longitude' => $longitude,
                 'nationality' => $this->studentNationality,
                 'program' => $this->convertProgramToFullName($this->studentProgram),
+                'courseCode' => $this->studentCourseCode,
                 'semester' => $this->studentSemester,
-                'year' => $this->studentYear,
+                'session' => $this->studentSession,
+                'internship_start_date' => $this->studentInternshipStartDate,
+                'internship_end_date' => $this->studentInternshipEndDate,
                 'academicAdvisorID' => $this->studentAcademicAdvisorID ?: null,
                 'status' => 'Active',
             ]);
@@ -1386,7 +1453,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
             'lecturerDepartment' => 'required|string',
             'lecturerProgram' => 'required|in:BCS,BCN,BCM,BCY,DRC',
             'lecturerSemester' => 'required|in:1,2',
-            'lecturerYear' => 'required|integer|digits:4|min:2020|max:2040',
+            'lecturerSession' => 'required|string|regex:/^[0-9]{2}\/[0-9]{2}$/',
             'lecturerSupervisorQuota' => 'required|integer|min:1|max:99',
         ], [
             'lecturerSupervisorQuota.required' => 'The supervisor quota field is required.',
@@ -1446,7 +1513,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'department' => $this->lecturerDepartment,
                 'program' => $this->getProgramFullName($this->lecturerProgram),
                 'semester' => $this->lecturerSemester,
-                'year' => $this->lecturerYear,
+                'session' => $this->lecturerSession,
                 'supervisor_quota' => $this->lecturerSupervisorQuota,
                 'isAcademicAdvisor' => $this->lecturerIsAcademicAdvisor,
                 'isSupervisorFaculty' => $this->lecturerIsSupervisorFaculty,
@@ -1500,8 +1567,43 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->studentLongitude = $user->student->longitude;
         $this->studentNationality = $user->student->nationality ?? '';
         $this->studentProgram = $this->convertFullNameToProgramCode($user->student->program ?? '');
+        $this->studentCourseCode = $user->student->courseCode ?? '';
         $this->studentSemester = $user->student->semester ?? '';
-        $this->studentYear = $user->student->year ?? date('Y');
+        $currentYear = date('y');
+        $nextYear = str_pad((int)$currentYear + 1, 2, '0', STR_PAD_LEFT);
+        $this->studentSession = $user->student->session ?? ($currentYear . '/' . $nextYear);
+
+        // Handle internship dates - safely parse dates whether they're strings or Carbon instances
+        if ($user->student->internship_start_date) {
+            try {
+                $date = is_string($user->student->internship_start_date)
+                    ? Carbon::parse($user->student->internship_start_date)
+                    : $user->student->internship_start_date;
+                $this->studentInternshipStartDate = $date instanceof Carbon ? $date->format('Y-m-d') : (string)$date;
+            } catch (\Exception $e) {
+                $this->studentInternshipStartDate = is_string($user->student->internship_start_date)
+                    ? $user->student->internship_start_date
+                    : '';
+            }
+        } else {
+            $this->studentInternshipStartDate = '';
+        }
+
+        if ($user->student->internship_end_date) {
+            try {
+                $date = is_string($user->student->internship_end_date)
+                    ? Carbon::parse($user->student->internship_end_date)
+                    : $user->student->internship_end_date;
+                $this->studentInternshipEndDate = $date instanceof Carbon ? $date->format('Y-m-d') : (string)$date;
+            } catch (\Exception $e) {
+                $this->studentInternshipEndDate = is_string($user->student->internship_end_date)
+                    ? $user->student->internship_end_date
+                    : '';
+            }
+        } else {
+            $this->studentInternshipEndDate = '';
+        }
+
         $this->studentAcademicAdvisorID = $user->student->academicAdvisorID ?? '';
         $this->studentStatus = $user->student->status ?? 'Active';
 
@@ -1535,7 +1637,9 @@ xmlns="http://www.w3.org/TR/REC-html40">
         $this->lecturerDepartment = $user->lecturer->department ?? '';
         $this->lecturerProgram = $this->convertFullNameToProgramCode($user->lecturer->program ?? '');
         $this->lecturerSemester = $user->lecturer->semester ?? '';
-        $this->lecturerYear = $user->lecturer->year ?? date('Y');
+        $currentYear = date('y');
+        $nextYear = str_pad((int)$currentYear + 1, 2, '0', STR_PAD_LEFT);
+        $this->lecturerSession = $user->lecturer->session ?? ($currentYear . '/' . $nextYear);
         $this->lecturerSupervisorQuota = $user->lecturer->supervisor_quota ?? 0;
         $this->lecturerIsAcademicAdvisor = $user->lecturer->isAcademicAdvisor ?? false;
         $this->lecturerIsSupervisorFaculty = $user->lecturer->isSupervisorFaculty ?? false;
@@ -1563,8 +1667,11 @@ xmlns="http://www.w3.org/TR/REC-html40">
             'studentCountry' => 'required|string',
             'studentNationality' => 'required|string|max:15',
             'studentProgram' => 'required|in:BCS,BCN,BCM,BCY,DRC',
+            'studentCourseCode' => 'nullable|string|max:8',
             'studentSemester' => 'required|in:1,2',
-            'studentYear' => 'required|integer|digits:4|min:2020|max:2040',
+            'studentSession' => 'required|string|regex:/^[0-9]{2}\/[0-9]{2}$/',
+            'studentInternshipStartDate' => 'required|date',
+            'studentInternshipEndDate' => 'required|date|after:studentInternshipStartDate',
             'studentAcademicAdvisorID' => 'required|string|exists:lecturers,lecturerID',
             'studentStatus' => 'required|in:Active,Deferred,Barred,Terminate,In-Active,Pass Away,Graduated',
         ]);
@@ -1608,8 +1715,11 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'longitude' => $longitude,
                 'nationality' => $this->studentNationality,
                 'program' => $this->convertProgramToFullName($this->studentProgram),
+                'courseCode' => $this->studentCourseCode,
                 'semester' => $this->studentSemester,
-                'year' => $this->studentYear,
+                'session' => $this->studentSession,
+                'internship_start_date' => $this->studentInternshipStartDate,
+                'internship_end_date' => $this->studentInternshipEndDate,
                 'academicAdvisorID' => $this->studentAcademicAdvisorID ?: null,
                 'status' => $this->studentStatus,
             ]);
@@ -1653,7 +1763,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
             'lecturerDepartment' => 'required|string',
             'lecturerProgram' => 'required|in:BCS,BCN,BCM,BCY,DRC',
             'lecturerSemester' => 'required|in:1,2',
-            'lecturerYear' => 'required|integer|digits:4|min:2020|max:2040',
+            'lecturerSession' => 'required|string|regex:/^[0-9]{2}\/[0-9]{2}$/',
             'lecturerSupervisorQuota' => 'required|integer|min:1|max:99',
             'lecturerStatus' => 'required|in:Active,Sabatical Leave,Maternity Leave,Pligrimage Leave,Transfered,Resigned,In-Active,Medical Leave,Pass Away',
         ], [
@@ -1710,7 +1820,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'department' => $this->lecturerDepartment,
                 'program' => $this->getProgramFullName($this->lecturerProgram),
                 'semester' => $this->lecturerSemester,
-                'year' => $this->lecturerYear,
+                'session' => $this->lecturerSession,
                 'supervisor_quota' => $this->lecturerSupervisorQuota,
                 'isAcademicAdvisor' => $this->lecturerIsAcademicAdvisor,
                 'isSupervisorFaculty' => $this->lecturerIsSupervisorFaculty,

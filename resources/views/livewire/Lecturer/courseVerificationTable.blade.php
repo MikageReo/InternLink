@@ -163,20 +163,30 @@
         </div>
     @endif
 
+    <!-- Settings Button (Only for Coordinators) -->
+    @if(Auth::user()->lecturer && (Auth::user()->lecturer->isCoordinator || Auth::user()->lecturer->isCommittee))
+        <div class="mb-4 flex justify-end">
+            <button wire:click="openSettingsModal"
+                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fa fa-cog mr-2"></i>Edit Credit Hour Requirements
+            </button>
+        </div>
+    @endif
+
     <!-- Advanced Filters -->
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
                     <!-- Search -->
                     <div class="lg:col-span-2">
                         <input type="text" wire:model.live.debounce.300ms="search"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200"
                             placeholder="Search by ID, student name, email...">
                     </div>
 
                     <!-- Program Filter -->
                     <div>
                         <select wire:model.live="program"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
                             <option value="">All Programs</option>
                             <option value="BCS">Bachelor of Computer Science (Software Engineering) with Honours</option>
                             <option value="BCN">Bachelor of Computer Science (Computer Systems & Networking) with Honours</option>
@@ -189,7 +199,7 @@
                     <!-- Semester Filter -->
                     <div>
                         <select wire:model.live="semester"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
                             <option value="">All Semesters</option>
                             <option value="1">Semester 1</option>
                             <option value="2">Semester 2</option>
@@ -199,7 +209,7 @@
                     <!-- Year Filter -->
                     <div>
                         <select wire:model.live="year"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
                             <option value="">All Years</option>
                             @for($y = date('Y'); $y >= 2023; $y--)
                                 <option value="{{ $y }}">{{ $y }}</option>
@@ -210,7 +220,7 @@
                     <!-- Status Filter -->
                     <div>
                         <select wire:model.live="statusFilter"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm dark:text-gray-600">
+                            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
                             <option value="">All Status</option>
                             <option value="pending">
                                 @if($isAcademicAdvisor)
@@ -239,7 +249,7 @@
                     <!-- Clear Filters -->
                     <div>
                         <button wire:click="clearFilters"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Clear Filters
                         </button>
                     </div>
@@ -315,6 +325,9 @@
     @endif
 
     <!-- Table Section -->
+    @php
+        $creditSettings = \App\Models\CourseVerificationSetting::getSettings();
+    @endphp
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
         <div class="overflow-x-auto table-container">
             <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="min-width: 1200px;">
@@ -467,7 +480,7 @@
                                         {{ $application->student->user->name ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        {{ $application->currentCredit }} / 130
+                                        {{ $application->currentCredit }} / {{ $creditSettings->maximum_credit_hour }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if($isAcademicAdvisor)
@@ -565,15 +578,18 @@
 
     <!-- Application Detail Modal -->
     @if ($showDetailModal && $selectedApplication)
+        @php
+            $modalCreditSettings = \App\Models\CourseVerificationSetting::getSettings();
+        @endphp
         <div class="modal-overlay">
-            <div class="modal-content bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
-                <div class="px-6 py-4 border-b border-gray-200">
+            <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                             Application Details - ID: {{ $selectedApplication->courseVerificationID }}
                         </h3>
                         <button type="button" wire:click="closeDetailModal"
-                            class="text-gray-400 hover:text-gray-600">
+                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                             <i class="fa fa-times text-xl"></i>
                         </button>
                     </div>
@@ -581,25 +597,25 @@
 
                 <div class="px-6 py-4 space-y-6">
                     <!-- Student Information -->
-                    <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                         <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Student Information</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <p class="text-sm font-medium text-gray-600">Student ID</p>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Student ID</p>
                                 <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->studentID }}</p>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-600">Name</p>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Name</p>
                                 <p class="text-sm text-gray-900 dark:text-gray-100">
                                     {{ $selectedApplication->student->user->name ?? 'N/A' }}</p>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-600">Email</p>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Email</p>
                                 <p class="text-sm text-gray-900 dark:text-gray-100">
                                     {{ $selectedApplication->student->user->email ?? 'N/A' }}</p>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-600">Program</p>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Program</p>
                                 <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->student->program ?? 'N/A' }}
                                 </p>
                             </div>
@@ -607,46 +623,46 @@
                     </div>
 
                     <!-- Application Information -->
-                    <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                         <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Application Information</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <p class="text-sm font-medium text-gray-600">Current Credit</p>
-                                <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->currentCredit }} / 130</p>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Current Credit</p>
+                                <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->currentCredit }} / {{ $modalCreditSettings->maximum_credit_hour }}</p>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-600">Status</p>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Status</p>
                                 @php
                                     $statusClasses = [
-                                        'pending' => 'bg-yellow-100 text-yellow-800',
-                                        'approved' => 'bg-green-100 text-green-800',
-                                        'rejected' => 'bg-red-100 text-red-800',
+                                        'pending' => 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+                                        'approved' => 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+                                        'rejected' => 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
                                     ];
                                 @endphp
                                 <span
-                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$selectedApplication->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$selectedApplication->status] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300' }}">
                                     {{ ucfirst($selectedApplication->status) }}
                                 </span>
                                 @if($selectedApplication->academicAdvisorStatus)
-                                    <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$selectedApplication->academicAdvisorStatus] ?? 'bg-gray-100 text-gray-800' }}" title="Academic Advisor Status">
+                                    <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusClasses[$selectedApplication->academicAdvisorStatus] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300' }}" title="Academic Advisor Status">
                                         Academic Advisor: {{ ucfirst($selectedApplication->academicAdvisorStatus) }}
                                     </span>
                                 @endif
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-600">Application Date</p>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Application Date</p>
                                 <p class="text-sm text-gray-900 dark:text-gray-100">
                                     {{ $selectedApplication->applicationDate->format('F d, Y') }}</p>
                             </div>
                             @if ($selectedApplication->academicAdvisorID && $selectedApplication->academicAdvisor)
                                 <div>
-                                    <p class="text-sm font-medium text-gray-600">Academic Advisor</p>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Academic Advisor</p>
                                     <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</p>
                                 </div>
                             @endif
                             @if ($selectedApplication->lecturerID && $selectedApplication->lecturer)
                                 <div>
-                                    <p class="text-sm font-medium text-gray-600">Reviewed By Coordinator</p>
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Reviewed By Coordinator</p>
                                     <p class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}</p>
                                 </div>
                             @endif
@@ -655,14 +671,14 @@
 
                     <!-- Submitted File -->
                     @if ($selectedApplication->files->count() > 0)
-                        <div class="bg-green-50 rounded-lg p-4">
+                        <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                             <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Submitted Document</h4>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
-                                    <i class="fa fa-file text-green-600 text-xl mr-3"></i>
+                                    <i class="fa fa-file text-green-600 dark:text-green-400 text-xl mr-3"></i>
                                     <div>
                                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $selectedApplication->files->first()->original_name ?? 'Course Documentation' }}</p>
-                                        <p class="text-xs text-gray-600">{{ $selectedApplication->files->first()->mime_type }} - {{ number_format($selectedApplication->files->first()->file_size / 1024, 1) }} KB</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">{{ $selectedApplication->files->first()->mime_type }} - {{ number_format($selectedApplication->files->first()->file_size / 1024, 1) }} KB</p>
                                     </div>
                                 </div>
                                 <button wire:click="downloadFile({{ $selectedApplication->files->first()->id }})"
@@ -687,45 +703,45 @@
                     <!-- Academic Advisor Review Section -->
                     @if($isAcademicAdvisor)
                         @if($selectedApplication->academicAdvisorStatus === null)
-                            <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border-2 border-blue-200 dark:border-blue-800">
                                 <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">Academic Advisor Review</h4>
-                                <p class="text-sm text-gray-700 mb-3">Please review this application and determine if it is eligible for coordinator approval.</p>
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">Please review this application and determine if it is eligible for coordinator approval.</p>
                             </div>
                         @else
-                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                                 <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">Your Review History</h4>
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-gray-700">Review Status:</span>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Review Status:</span>
                                         @if($selectedApplication->academicAdvisorStatus === 'approved')
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                                                 <i class="fa fa-check mr-1"></i>Marked as Eligible
                                             </span>
                                         @else
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                                                 <i class="fa fa-times mr-1"></i>Marked as Ineligible
                                             </span>
                                         @endif
                                     </div>
                                     @if($selectedApplication->academicAdvisor)
                                         <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-700">Reviewed By:</span>
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Reviewed By:</span>
                                             <span class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</span>
                                         </div>
                                     @endif
                                     @if($selectedApplication->academicAdvisorStatus === 'approved' && $selectedApplication->status)
                                         <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-700">Coordinator Status:</span>
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Coordinator Status:</span>
                                             @if($selectedApplication->status === 'approved')
-                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                                                     Approved
                                                 </span>
                                             @elseif($selectedApplication->status === 'rejected')
-                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                                                     Rejected
                                                 </span>
                                             @else
-                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                                                     Pending Review
                                                 </span>
                                             @endif
@@ -739,37 +755,37 @@
                     <!-- Coordinator Review Section -->
                     @if($isCoordinator)
                         @if($selectedApplication->status === 'pending' && $selectedApplication->academicAdvisorStatus === 'approved')
-                            <div class="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border-2 border-blue-200 dark:border-blue-800">
                                 <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">Coordinator Review</h4>
-                                <p class="text-sm text-gray-700 mb-3">This application has been approved by the academic advisor. Please review and make a final decision.</p>
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">This application has been approved by the academic advisor. Please review and make a final decision.</p>
                             </div>
                         @elseif($selectedApplication->status !== 'pending' && $selectedApplication->academicAdvisorStatus === 'approved')
-                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                                 <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">Your Review History</h4>
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-gray-700">Review Status:</span>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Review Status:</span>
                                         @if($selectedApplication->status === 'approved')
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                                                 <i class="fa fa-check mr-1"></i>Approved
                                             </span>
                                         @else
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                                                 <i class="fa fa-times mr-1"></i>Rejected
                                             </span>
                                         @endif
                                     </div>
                                     @if($selectedApplication->lecturer)
                                         <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-700">Reviewed By:</span>
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Reviewed By:</span>
                                             <span class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->lecturer->user->name ?? $selectedApplication->lecturerID }}</span>
                                         </div>
                                     @endif
                                     @if($selectedApplication->academicAdvisor)
                                         <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-700">Academic Advisor:</span>
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Academic Advisor:</span>
                                             <span class="text-sm text-gray-900 dark:text-gray-100">{{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}</span>
-                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 ml-2">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 ml-2">
                                                 Approved
                                             </span>
                                         </div>
@@ -781,10 +797,10 @@
 
                     <!-- Remarks Section -->
                     @if (($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus === null) || ($isCoordinator && $selectedApplication->status === 'pending' && $selectedApplication->academicAdvisorStatus === 'approved'))
-                        <div class="bg-yellow-50 rounded-lg p-4">
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
                             <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Review Remarks</h4>
                             <div>
-                                <label for="remarks" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="remarks" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     @if($isAcademicAdvisor)
                                         Add remarks for eligibility review {{ $selectedApplication->academicAdvisorStatus === null ? '(required for rejection)' : '(optional)' }}:
                                     @else
@@ -792,9 +808,9 @@
                                     @endif
                                 </label>
                                 <textarea wire:model="remarks" id="remarks" rows="4"
-                                    class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Enter your comments, feedback, or reasons for your decision..."></textarea>
-                                <p class="text-xs text-gray-500 mt-1">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     @if($isAcademicAdvisor)
                                         These remarks will be visible to the coordinator and student.
                                     @else
@@ -804,7 +820,7 @@
                             </div>
                         </div>
                     @elseif ($selectedApplication->remarks)
-                        <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                             <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">
                                 @if($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus)
                                     Your Remarks
@@ -814,10 +830,10 @@
                                     Lecturer Remarks
                                 @endif
                             </h4>
-                            <div class="bg-white border rounded-md p-3">
+                            <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md p-3">
                                 <p class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{{ $selectedApplication->remarks }}</p>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 @if($isAcademicAdvisor && $selectedApplication->academicAdvisorStatus)
                                     Reviewed by: {{ $selectedApplication->academicAdvisor->user->name ?? $selectedApplication->academicAdvisorID }}
                                 @elseif($isCoordinator && $selectedApplication->status !== 'pending')
@@ -900,13 +916,67 @@
                         </button>
                     </div>
                 @else
-                    <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
                         <button type="button" wire:click="closeDetailModal"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Close
                         </button>
                     </div>
                 @endif
+            </div>
+        </div>
+    @endif
+
+    <!-- Settings Modal -->
+    @if($showSettingsModal)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border border-gray-300 dark:border-gray-700 w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                        Edit Credit Hour Requirements
+                    </h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Minimum Credit Hour *
+                            </label>
+                            <input type="number" wire:model="minimumCreditHour" min="100" max="150"
+                                class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                            @error('minimumCreditHour')
+                                <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Maximum Credit Hour *
+                            </label>
+                            <input type="number" wire:model="maximumCreditHour" min="100" max="150"
+                                class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                            @error('maximumCreditHour')
+                                <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                            <p class="text-xs text-blue-700 dark:text-blue-300">
+                                <strong>Note:</strong> Students will need to enter a credit value between the minimum and maximum credit hours when submitting their course verification.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-2 mt-6">
+                        <button wire:click="closeSettingsModal"
+                            class="px-4 py-2 bg-gray-500 dark:bg-gray-600 text-white rounded-md hover:bg-gray-600 dark:hover:bg-gray-700">
+                            Cancel
+                        </button>
+                        <button wire:click="updateSettings"
+                            class="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-800">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     @endif

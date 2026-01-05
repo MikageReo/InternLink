@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\RequestDeferStatusNotification;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class RequestDeferTable extends Component
 {
@@ -30,7 +32,8 @@ class RequestDeferTable extends Component
     public $roleFilter = ''; // coordinator or committee
     public $program = '';
     public $semester = '';
-    public $year = '';
+    public $session = '';
+    public $exportFormat = 'csv';
 
     // Modal properties
     public $showDetailModal = false;
@@ -53,7 +56,7 @@ class RequestDeferTable extends Component
         'studentFilter' => ['except' => ''],
         'program' => ['except' => ''],
         'semester' => ['except' => ''],
-        'year' => ['except' => ''],
+        'session' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -94,7 +97,7 @@ class RequestDeferTable extends Component
         $this->resetPage();
     }
 
-    public function updatingYear()
+    public function updatingSession()
     {
         $this->resetPage();
     }
@@ -542,7 +545,7 @@ class RequestDeferTable extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'statusFilter', 'studentFilter', 'dateFrom', 'dateTo', 'roleFilter', 'program', 'semester', 'year']);
+        $this->reset(['search', 'statusFilter', 'studentFilter', 'dateFrom', 'dateTo', 'roleFilter', 'program', 'semester', 'session']);
         $this->resetPage();
     }
 
@@ -628,10 +631,10 @@ class RequestDeferTable extends Component
             });
         }
 
-        // Year filter
-        if ($this->year) {
+        // Session filter
+        if ($this->session) {
             $query->whereHas('student', function ($q) {
-                $q->where('year', $this->year);
+                $q->where('session', $this->session);
             });
         }
 
@@ -664,6 +667,232 @@ class RequestDeferTable extends Component
         ];
 
         return $programs[$code] ?? null;
+    }
+
+    public function exportData()
+    {
+        // Get all filtered requests (not paginated)
+        $requests = $this->getFilteredRequests()->get();
+
+        if ($requests->isEmpty()) {
+            session()->flash('error', 'No data to export. Please apply filters to select requests.');
+            return;
+        }
+
+        // Route to appropriate export method based on format
+        switch ($this->exportFormat) {
+            case 'csv':
+                return $this->exportCSV($requests);
+            case 'pdf':
+                return $this->exportPDF($requests);
+            default:
+                return $this->exportCSV($requests);
+        }
+    }
+
+    private function exportCSV($requests)
+    {
+        // Create descriptive filename
+        $statusText = $this->statusFilter ? '_' . strtolower($this->statusFilter) : '';
+        $sessionText = $this->session ? '_' . str_replace('/', '-', $this->session) : '';
+        $semesterText = $this->semester ? '_sem' . $this->semester : '';
+        $searchText = $this->search ? '_filtered' : '';
+
+        $filename = 'defer_requests' . $statusText . $sessionText . $semesterText . $searchText . '_' . now()->format('Y-m-d_H-i-s') . '.csv';
+
+        // Generate CSV content
+        $csvData = $this->generateCSV($requests);
+
+        // Flash success message
+        session()->flash('message', 'CSV file exported successfully! Downloaded ' . $requests->count() . ' records.');
+
+        return response()->streamDownload(function () use ($csvData) {
+            echo $csvData;
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function exportPDF($requests)
+    {
+        // Create descriptive filename
+        $statusText = $this->statusFilter ? '_' . strtolower($this->statusFilter) : '';
+        $sessionText = $this->session ? '_' . str_replace('/', '-', $this->session) : '';
+        $semesterText = $this->semester ? '_sem' . $this->semester : '';
+        $searchText = $this->search ? '_filtered' : '';
+
+        $filename = 'defer_requests' . $statusText . $sessionText . $semesterText . $searchText . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+        // Generate PDF content
+        $htmlData = $this->generatePDF($requests);
+
+        // Setup DomPDF
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($htmlData);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        // Flash success message
+        session()->flash('message', 'PDF file exported successfully! Downloaded ' . $requests->count() . ' records.');
+
+        return response()->streamDownload(function () use ($dompdf) {
+            echo $dompdf->output();
+        }, $filename, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function generateCSV($requests)
+    {
+        $output = '';
+
+        // Add filter information at the top
+        $filters = [];
+        if ($this->statusFilter) $filters['Status'] = $this->statusFilter;
+        if ($this->program) $filters['Program'] = $this->program;
+        if ($this->semester) $filters['Semester'] = $this->semester;
+        if ($this->session) $filters['Session'] = $this->session;
+        if ($this->studentFilter) $filters['Student'] = $this->studentFilter;
+        if ($this->dateFrom) $filters['Date From'] = $this->dateFrom;
+        if ($this->dateTo) $filters['Date To'] = $this->dateTo;
+
+        if (!empty($filters)) {
+            $output .= '"Applied Filters:"' . "\n";
+            foreach ($filters as $key => $value) {
+                $output .= '"' . $key . ': ' . $value . '"' . "\n";
+            }
+            $output .= "\n";
+        }
+
+        // Headers
+        $headers = [
+            'Defer ID',
+            'Student ID',
+            'Student Name',
+            'Reason',
+            'Application Date',
+            'Start Date',
+            'End Date',
+            'Committee Status',
+            'Coordinator Status',
+            'Program',
+            'Semester',
+            'Session',
+        ];
+
+        $output .= '"' . implode('","', $headers) . '"' . "\n";
+
+        // Data rows
+        foreach ($requests as $request) {
+            $row = [
+                $request->deferID ?? '',
+                $request->student->studentID ?? '',
+                $request->student->user->name ?? '',
+                $request->reason ?? '',
+                $request->applicationDate ? \Carbon\Carbon::parse($request->applicationDate)->format('Y-m-d') : '',
+                $request->startDate ? \Carbon\Carbon::parse($request->startDate)->format('Y-m-d') : '',
+                $request->endDate ? \Carbon\Carbon::parse($request->endDate)->format('Y-m-d') : '',
+                $request->committeeStatus ?? '',
+                $request->coordinatorStatus ?? '',
+                $request->student->program ?? '',
+                $request->student->semester ?? '',
+                $request->student->session ?? '',
+            ];
+
+            $output .= '"' . implode('","', array_map(function ($field) {
+                return str_replace('"', '""', $field);
+            }, $row)) . '"' . "\n";
+        }
+
+        return $output;
+    }
+
+    private function generatePDF($requests)
+    {
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Defer Requests Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .filters { margin-bottom: 20px; }
+        .filters p { margin: 2px 0; }
+    </style>
+</head>
+<body>
+    <h1>Defer Requests Report</h1>
+    <div class="filters">
+        <p><strong>Generated:</strong> ' . now()->format('Y-m-d H:i:s') . '</p>
+        <p><strong>Total Records:</strong> ' . $requests->count() . '</p>';
+
+        $filters = [];
+        if ($this->statusFilter) $filters['Status'] = $this->statusFilter;
+        if ($this->program) $filters['Program'] = $this->program;
+        if ($this->semester) $filters['Semester'] = $this->semester;
+        if ($this->session) $filters['Session'] = $this->session;
+        if ($this->studentFilter) $filters['Student'] = $this->studentFilter;
+        if ($this->dateFrom) $filters['Date From'] = $this->dateFrom;
+        if ($this->dateTo) $filters['Date To'] = $this->dateTo;
+
+        if (!empty($filters)) {
+            $html .= '<p><strong>Applied Filters:</strong></p>';
+            foreach ($filters as $key => $value) {
+                $html .= '<p>' . $key . ': ' . $value . '</p>';
+            }
+        }
+
+        $html .= '</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Defer ID</th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Reason</th>
+                <th>Application Date</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Committee Status</th>
+                <th>Coordinator Status</th>
+                <th>Program</th>
+                <th>Semester</th>
+                <th>Session</th>
+            </tr>
+        </thead>
+        <tbody>';
+
+        foreach ($requests as $request) {
+            $html .= '<tr>
+                <td>' . ($request->deferID ?? '') . '</td>
+                <td>' . ($request->student->studentID ?? '') . '</td>
+                <td>' . ($request->student->user->name ?? '') . '</td>
+                <td>' . ($request->reason ?? '') . '</td>
+                <td>' . ($request->applicationDate ? \Carbon\Carbon::parse($request->applicationDate)->format('Y-m-d') : '') . '</td>
+                <td>' . ($request->startDate ? \Carbon\Carbon::parse($request->startDate)->format('Y-m-d') : '') . '</td>
+                <td>' . ($request->endDate ? \Carbon\Carbon::parse($request->endDate)->format('Y-m-d') : '') . '</td>
+                <td>' . ($request->committeeStatus ?? '') . '</td>
+                <td>' . ($request->coordinatorStatus ?? '') . '</td>
+                <td>' . ($request->student->program ?? '') . '</td>
+                <td>' . ($request->student->semester ?? '') . '</td>
+                <td>' . ($request->student->session ?? '') . '</td>
+            </tr>';
+        }
+
+        $html .= '</tbody>
+    </table>
+</body>
+</html>';
+
+        return $html;
     }
 
     public function getAnalyticsData()

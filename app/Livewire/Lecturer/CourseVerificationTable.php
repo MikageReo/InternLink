@@ -8,6 +8,7 @@ use App\Models\CourseVerification;
 use App\Models\Student;
 use App\Models\Lecturer;
 use App\Models\File;
+use App\Models\CourseVerificationSetting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -36,6 +37,11 @@ class CourseVerificationTable extends Component
     // Bulk selection properties
     public $selectedApplications = [];
     public $selectAll = false;
+
+    // Settings properties
+    public $showSettingsModal = false;
+    public $minimumCreditHour = 118;
+    public $maximumCreditHour = 130;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -76,6 +82,53 @@ class CourseVerificationTable extends Component
     public function updatingPerPage()
     {
         $this->resetPage();
+    }
+
+    public function mount()
+    {
+        // Load current settings
+        $settings = CourseVerificationSetting::getSettings();
+        $this->minimumCreditHour = $settings->minimum_credit_hour;
+        $this->maximumCreditHour = $settings->maximum_credit_hour;
+    }
+
+    public function openSettingsModal()
+    {
+        $settings = CourseVerificationSetting::getSettings();
+        $this->minimumCreditHour = $settings->minimum_credit_hour;
+        $this->maximumCreditHour = $settings->maximum_credit_hour;
+        $this->showSettingsModal = true;
+    }
+
+    public function closeSettingsModal()
+    {
+        $this->showSettingsModal = false;
+    }
+
+    public function updateSettings()
+    {
+        $this->validate([
+            'minimumCreditHour' => 'required|integer|min:100|max:150',
+            'maximumCreditHour' => 'required|integer|min:100|max:150|gte:minimumCreditHour',
+        ], [
+            'minimumCreditHour.required' => 'Minimum credit hour is required.',
+            'minimumCreditHour.integer' => 'Minimum credit hour must be a number.',
+            'minimumCreditHour.min' => 'Minimum credit hour must be at least 100.',
+            'minimumCreditHour.max' => 'Minimum credit hour cannot exceed 150.',
+            'maximumCreditHour.required' => 'Maximum credit hour is required.',
+            'maximumCreditHour.integer' => 'Maximum credit hour must be a number.',
+            'maximumCreditHour.min' => 'Maximum credit hour must be at least 100.',
+            'maximumCreditHour.max' => 'Maximum credit hour cannot exceed 150.',
+            'maximumCreditHour.gte' => 'Maximum credit hour must be greater than or equal to minimum credit hour.',
+        ]);
+
+        try {
+            CourseVerificationSetting::updateSettings($this->minimumCreditHour, $this->maximumCreditHour);
+            session()->flash('message', 'Credit hour settings updated successfully!');
+            $this->showSettingsModal = false;
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to update settings: ' . $e->getMessage());
+        }
     }
 
     public function sortBy($field)
@@ -122,17 +175,17 @@ class CourseVerificationTable extends Component
             $hasCoordinatorAndAcademicAdvisor = $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
             $hasCommitteeAndAcademicAdvisor = $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
             $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
-            
+
             if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
-                // If lecturer has Academic Advisor combined with Coordinator/Committee, 
+                // If lecturer has Academic Advisor combined with Coordinator/Committee,
                 // check which role they're acting as based on application status
                 $application = CourseVerification::findOrFail($id);
-                
+
                 // If academic advisor hasn't reviewed yet, act as academic advisor
-                if ($application->academicAdvisorStatus === null && 
+                if ($application->academicAdvisorStatus === null &&
                     $application->student->academicAdvisorID === $lecturer->lecturerID) {
                     $this->approveAsAcademicAdvisor($id, $lecturer);
-                } 
+                }
                 // If academic advisor has approved, act as coordinator
                 elseif ($application->academicAdvisorStatus === 'approved') {
                     $this->approveAsCoordinator($id, $lecturer);
@@ -265,17 +318,17 @@ class CourseVerificationTable extends Component
             $hasCoordinatorAndAcademicAdvisor = $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
             $hasCommitteeAndAcademicAdvisor = $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
             $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
-            
+
             if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
-                // If lecturer has Academic Advisor combined with Coordinator/Committee, 
+                // If lecturer has Academic Advisor combined with Coordinator/Committee,
                 // check which role they're acting as based on application status
                 $application = CourseVerification::findOrFail($id);
-                
+
                 // If academic advisor hasn't reviewed yet, act as academic advisor
-                if ($application->academicAdvisorStatus === null && 
+                if ($application->academicAdvisorStatus === null &&
                     $application->student->academicAdvisorID === $lecturer->lecturerID) {
                     $this->rejectAsAcademicAdvisor($id, $lecturer);
-                } 
+                }
                 // If academic advisor has approved, act as coordinator
                 elseif ($application->academicAdvisorStatus === 'approved') {
                     $this->rejectAsCoordinator($id, $lecturer);
@@ -437,7 +490,7 @@ class CourseVerificationTable extends Component
             $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
             $isAcademicAdvisorOnly = $lecturer->isAcademicAdvisor && !$lecturer->isCoordinator && !$lecturer->isCommittee;
             $isCoordinatorOrCommitteeOnly = ($lecturer->isCoordinator || $lecturer->isCommittee) && !$lecturer->isAcademicAdvisor;
-            
+
             if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
                 // If lecturer has Academic Advisor combined with Coordinator/Committee, show both:
                 // 1. Their advisees' applications (as academic advisor)
@@ -482,7 +535,7 @@ class CourseVerificationTable extends Component
             $hasCoordinatorAndAcademicAdvisor = $lecturer && $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
             $hasCommitteeAndAcademicAdvisor = $lecturer && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
             $hasAllThreeRoles = $lecturer && $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
-            
+
             if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
                 // For lecturers with combined roles, allow filtering by both statuses
                 // This is complex, so we'll filter by the most relevant status
@@ -540,7 +593,7 @@ class CourseVerificationTable extends Component
             $hasCoordinatorAndAcademicAdvisor = $lecturer && $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
             $hasCommitteeAndAcademicAdvisor = $lecturer && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
             $hasAllThreeRoles = $lecturer && $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
-            
+
             if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
                 // For combined roles, prioritize by both academic advisor and coordinator status
                 $query->orderByRaw(
@@ -608,7 +661,7 @@ class CourseVerificationTable extends Component
 
         // Use the stored filename (CourseVerification{UserID}.{extension}) instead of original_name
         $downloadName = basename($file->file_path);
-        
+
         return response()->download(Storage::disk('public')->path($file->file_path), $downloadName);
     }
 
@@ -623,7 +676,7 @@ class CourseVerificationTable extends Component
             $hasCoordinatorAndAcademicAdvisor = $lecturer && $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
             $hasCommitteeAndAcademicAdvisor = $lecturer && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
             $hasAllThreeRoles = $lecturer && $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
-            
+
             if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
                 // For combined roles, select both pending academic advisor reviews and pending coordinator reviews
                 $this->selectedApplications = $query->where(function($q) {
@@ -673,7 +726,7 @@ class CourseVerificationTable extends Component
                 $hasCoordinatorAndAcademicAdvisor = $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
                 $hasCommitteeAndAcademicAdvisor = $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
                 $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
-                
+
                 if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
                     // For combined roles, check which role to act as
                     if ($application->academicAdvisorStatus === null &&
@@ -684,7 +737,7 @@ class CourseVerificationTable extends Component
                             'academicAdvisorID' => $lecturer->lecturerID,
                             'remarks' => $this->remarks ?: 'Eligible for coordinator review.',
                         ]);
-                        
+
                         // Send email notification to coordinators (excluding self)
                         try {
                             $coordinators = Lecturer::where(function($q) {
@@ -705,7 +758,7 @@ class CourseVerificationTable extends Component
                         } catch (\Exception $e) {
                             Log::error('Failed to send coordinator notification: ' . $e->getMessage());
                         }
-                        
+
                         $count++;
                     } elseif ($application->academicAdvisorStatus === 'approved' && $application->status === 'pending') {
                         // Act as coordinator
@@ -736,7 +789,7 @@ class CourseVerificationTable extends Component
                             'academicAdvisorID' => $lecturer->lecturerID,
                             'remarks' => $this->remarks ?: 'Eligible for coordinator review.',
                         ]);
-                        
+
                         // Send email notification to coordinators
                         try {
                             $coordinators = Lecturer::where(function($q) {
@@ -756,7 +809,7 @@ class CourseVerificationTable extends Component
                         } catch (\Exception $e) {
                             Log::error('Failed to send coordinator notification: ' . $e->getMessage());
                         }
-                        
+
                         $count++;
                     }
                 } elseif ($lecturer->isCoordinator || $lecturer->isCommittee) {
@@ -822,7 +875,7 @@ class CourseVerificationTable extends Component
                 $hasCoordinatorAndAcademicAdvisor = $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
                 $hasCommitteeAndAcademicAdvisor = $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
                 $hasAllThreeRoles = $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
-                
+
                 if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
                     // For combined roles, check which role to act as
                     if ($application->academicAdvisorStatus === null &&
@@ -985,7 +1038,7 @@ class CourseVerificationTable extends Component
         $hasCoordinatorAndAcademicAdvisor = $lecturer && $lecturer->isCoordinator && $lecturer->isAcademicAdvisor;
         $hasCommitteeAndAcademicAdvisor = $lecturer && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
         $hasAllThreeRoles = $lecturer && $lecturer->isCoordinator && $lecturer->isCommittee && $lecturer->isAcademicAdvisor;
-        
+
         if ($hasCoordinatorAndAcademicAdvisor || $hasCommitteeAndAcademicAdvisor || $hasAllThreeRoles) {
             // For combined roles, show combined statistics
             $totalApplications = CourseVerification::where(function($q) use ($lecturer) {
@@ -993,7 +1046,7 @@ class CourseVerificationTable extends Component
                     $subQ->where('academicAdvisorID', $lecturer->lecturerID);
                 })->orWhere('academicAdvisorStatus', 'approved');
             })->count();
-            
+
             $pendingApplications = CourseVerification::where(function($q) use ($lecturer) {
                 $q->whereHas('student', function ($subQ) use ($lecturer) {
                     $subQ->where('academicAdvisorID', $lecturer->lecturerID);
@@ -1002,7 +1055,7 @@ class CourseVerificationTable extends Component
                 $q->where('academicAdvisorStatus', 'approved')
                   ->where('status', 'pending');
             })->count();
-            
+
             $approvedApplications = CourseVerification::where(function($q) use ($lecturer) {
                 $q->whereHas('student', function ($subQ) use ($lecturer) {
                     $subQ->where('academicAdvisorID', $lecturer->lecturerID);
@@ -1011,7 +1064,7 @@ class CourseVerificationTable extends Component
                 $q->where('academicAdvisorStatus', 'approved')
                   ->where('status', 'approved');
             })->count();
-            
+
             $rejectedApplications = CourseVerification::where(function($q) use ($lecturer) {
                 $q->whereHas('student', function ($subQ) use ($lecturer) {
                     $subQ->where('academicAdvisorID', $lecturer->lecturerID);

@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\ChangeRequestStatusNotification;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class ChangeRequestTable extends Component
 {
@@ -32,7 +34,8 @@ class ChangeRequestTable extends Component
     public $roleFilter = ''; // coordinator or committee
     public $program = '';
     public $semester = '';
-    public $year = '';
+    public $session = '';
+    public $exportFormat = 'csv';
 
     // Modal properties
     public $showDetailModal = false;
@@ -55,7 +58,7 @@ class ChangeRequestTable extends Component
         'studentFilter' => ['except' => ''],
         'program' => ['except' => ''],
         'semester' => ['except' => ''],
-        'year' => ['except' => ''],
+        'session' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -66,7 +69,7 @@ class ChangeRequestTable extends Component
         if (!$user->lecturer) {
             abort(403, 'Access denied. Lecturer profile required.');
         }
-        
+
         // Clear any flash messages from previous components
         session()->forget(['message', 'error', 'warning']);
     }
@@ -96,7 +99,7 @@ class ChangeRequestTable extends Component
         $this->resetPage();
     }
 
-    public function updatingYear()
+    public function updatingSession()
     {
         $this->resetPage();
     }
@@ -309,7 +312,7 @@ class ChangeRequestTable extends Component
             // Select all requests on current filtered results (only pending ones for the user's role)
             $lecturer = Auth::user()->lecturer;
             $query = $this->getFilteredRequests();
-            
+
             if ($lecturer->isCommittee && !$lecturer->isCoordinator) {
                 // Committee members can only select requests pending committee review
                 $query->where('committeeStatus', 'Pending');
@@ -327,7 +330,7 @@ class ChangeRequestTable extends Component
                       });
                 });
             }
-            
+
             $this->selectedRequests = $query->pluck('justificationID')->toArray();
         } else {
             $this->selectedRequests = [];
@@ -420,7 +423,7 @@ class ChangeRequestTable extends Component
 
             foreach ($this->selectedRequests as $id) {
                 $request = RequestJustification::find($id);
-                
+
                 if (!$request) {
                     continue;
                 }
@@ -444,7 +447,7 @@ class ChangeRequestTable extends Component
                 if ($role === 'committee') {
                     $updateData['committeeID'] = $lecturer->lecturerID;
                     $updateData['committeeStatus'] = $status;
-                    
+
                     // If committee rejects, also set coordinator to rejected
                     if ($status === 'Rejected') {
                         $updateData['coordinatorStatus'] = 'Rejected';
@@ -473,10 +476,10 @@ class ChangeRequestTable extends Component
                         $originalApplication->update(['studentAcceptance' => 'Changed']);
                     }
                 }
-                
+
                 // Send email notification
                 $this->sendStatusNotification($request);
-                
+
                 $count++;
             }
 
@@ -493,7 +496,7 @@ class ChangeRequestTable extends Component
             $this->selectAll = false;
             $this->bulkRemarks = '';
             $this->resetPage();
-            
+
         } catch (\Exception $e) {
             session()->flash('error', 'An error occurred during bulk processing: ' . $e->getMessage());
             Log::error('Bulk approval error: ' . $e->getMessage());
@@ -531,7 +534,7 @@ class ChangeRequestTable extends Component
                 foreach ($requests as $request) {
                     // Create a folder for each request
                     $folderName = 'Change_' . $request->justificationID . '_' . $request->placementApplication->student->studentID;
-                    
+
                     foreach ($request->files as $file) {
                         $filePath = storage_path('app/public/' . $file->file_path);
                         if (file_exists($filePath)) {
@@ -555,7 +558,7 @@ class ChangeRequestTable extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'statusFilter', 'studentFilter', 'companyFilter', 'dateFrom', 'dateTo', 'roleFilter', 'program', 'semester', 'year']);
+        $this->reset(['search', 'statusFilter', 'studentFilter', 'companyFilter', 'dateFrom', 'dateTo', 'roleFilter', 'program', 'semester', 'session']);
         $this->resetPage();
     }
 
@@ -657,10 +660,10 @@ class ChangeRequestTable extends Component
             });
         }
 
-        // Year filter
-        if ($this->year) {
+        // Session filter
+        if ($this->session) {
             $query->whereHas('placementApplication.student', function ($q) {
-                $q->where('year', $this->year);
+                $q->where('session', $this->session);
             });
         }
 
@@ -694,6 +697,234 @@ class ChangeRequestTable extends Component
         ];
 
         return $programs[$code] ?? null;
+    }
+
+    public function exportData()
+    {
+        // Get all filtered requests (not paginated)
+        $requests = $this->getFilteredRequests()->get();
+
+        if ($requests->isEmpty()) {
+            session()->flash('error', 'No data to export. Please apply filters to select requests.');
+            return;
+        }
+
+        // Route to appropriate export method based on format
+        switch ($this->exportFormat) {
+            case 'csv':
+                return $this->exportCSV($requests);
+            case 'pdf':
+                return $this->exportPDF($requests);
+            default:
+                return $this->exportCSV($requests);
+        }
+    }
+
+    private function exportCSV($requests)
+    {
+        // Create descriptive filename
+        $statusText = $this->statusFilter ? '_' . strtolower($this->statusFilter) : '';
+        $sessionText = $this->session ? '_' . str_replace('/', '-', $this->session) : '';
+        $semesterText = $this->semester ? '_sem' . $this->semester : '';
+        $searchText = $this->search ? '_filtered' : '';
+
+        $filename = 'change_requests' . $statusText . $sessionText . $semesterText . $searchText . '_' . now()->format('Y-m-d_H-i-s') . '.csv';
+
+        // Generate CSV content
+        $csvData = $this->generateCSV($requests);
+
+        // Flash success message
+        session()->flash('message', 'CSV file exported successfully! Downloaded ' . $requests->count() . ' records.');
+
+        return response()->streamDownload(function () use ($csvData) {
+            echo $csvData;
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function exportPDF($requests)
+    {
+        // Create descriptive filename
+        $statusText = $this->statusFilter ? '_' . strtolower($this->statusFilter) : '';
+        $sessionText = $this->session ? '_' . str_replace('/', '-', $this->session) : '';
+        $semesterText = $this->semester ? '_sem' . $this->semester : '';
+        $searchText = $this->search ? '_filtered' : '';
+
+        $filename = 'change_requests' . $statusText . $sessionText . $semesterText . $searchText . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+        // Generate PDF content
+        $htmlData = $this->generatePDF($requests);
+
+        // Setup DomPDF
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($htmlData);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        // Flash success message
+        session()->flash('message', 'PDF file exported successfully! Downloaded ' . $requests->count() . ' records.');
+
+        return response()->streamDownload(function () use ($dompdf) {
+            echo $dompdf->output();
+        }, $filename, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function generateCSV($requests)
+    {
+        $output = '';
+
+        // Add filter information at the top
+        $filters = [];
+        if ($this->statusFilter) $filters['Status'] = $this->statusFilter;
+        if ($this->program) $filters['Program'] = $this->program;
+        if ($this->semester) $filters['Semester'] = $this->semester;
+        if ($this->session) $filters['Session'] = $this->session;
+        if ($this->studentFilter) $filters['Student'] = $this->studentFilter;
+        if ($this->companyFilter) $filters['Company'] = $this->companyFilter;
+        if ($this->dateFrom) $filters['Date From'] = $this->dateFrom;
+        if ($this->dateTo) $filters['Date To'] = $this->dateTo;
+
+        if (!empty($filters)) {
+            $output .= '"Applied Filters:"' . "\n";
+            foreach ($filters as $key => $value) {
+                $output .= '"' . $key . ': ' . $value . '"' . "\n";
+            }
+            $output .= "\n";
+        }
+
+        // Headers
+        $headers = [
+            'Justification ID',
+            'Application ID',
+            'Student ID',
+            'Student Name',
+            'Company Name',
+            'Reason',
+            'Request Date',
+            'Committee Status',
+            'Coordinator Status',
+            'Program',
+            'Semester',
+            'Session',
+        ];
+
+        $output .= '"' . implode('","', $headers) . '"' . "\n";
+
+        // Data rows
+        foreach ($requests as $request) {
+            $row = [
+                $request->justificationID ?? '',
+                $request->placementApplication->applicationID ?? '',
+                $request->placementApplication->student->studentID ?? '',
+                $request->placementApplication->student->user->name ?? '',
+                $request->placementApplication->companyName ?? '',
+                $request->reason ?? '',
+                $request->requestDate ? \Carbon\Carbon::parse($request->requestDate)->format('Y-m-d') : '',
+                $request->committeeStatus ?? '',
+                $request->coordinatorStatus ?? '',
+                $request->placementApplication->student->program ?? '',
+                $request->placementApplication->student->semester ?? '',
+                $request->placementApplication->student->session ?? '',
+            ];
+
+            $output .= '"' . implode('","', array_map(function ($field) {
+                return str_replace('"', '""', $field);
+            }, $row)) . '"' . "\n";
+        }
+
+        return $output;
+    }
+
+    private function generatePDF($requests)
+    {
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Change Requests Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .filters { margin-bottom: 20px; }
+        .filters p { margin: 2px 0; }
+    </style>
+</head>
+<body>
+    <h1>Change Requests Report</h1>
+    <div class="filters">
+        <p><strong>Generated:</strong> ' . now()->format('Y-m-d H:i:s') . '</p>
+        <p><strong>Total Records:</strong> ' . $requests->count() . '</p>';
+
+        $filters = [];
+        if ($this->statusFilter) $filters['Status'] = $this->statusFilter;
+        if ($this->program) $filters['Program'] = $this->program;
+        if ($this->semester) $filters['Semester'] = $this->semester;
+        if ($this->session) $filters['Session'] = $this->session;
+        if ($this->studentFilter) $filters['Student'] = $this->studentFilter;
+        if ($this->companyFilter) $filters['Company'] = $this->companyFilter;
+        if ($this->dateFrom) $filters['Date From'] = $this->dateFrom;
+        if ($this->dateTo) $filters['Date To'] = $this->dateTo;
+
+        if (!empty($filters)) {
+            $html .= '<p><strong>Applied Filters:</strong></p>';
+            foreach ($filters as $key => $value) {
+                $html .= '<p>' . $key . ': ' . $value . '</p>';
+            }
+        }
+
+        $html .= '</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Justification ID</th>
+                <th>Application ID</th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Company Name</th>
+                <th>Reason</th>
+                <th>Request Date</th>
+                <th>Committee Status</th>
+                <th>Coordinator Status</th>
+                <th>Program</th>
+                <th>Semester</th>
+                <th>Session</th>
+            </tr>
+        </thead>
+        <tbody>';
+
+        foreach ($requests as $request) {
+            $html .= '<tr>
+                <td>' . ($request->justificationID ?? '') . '</td>
+                <td>' . ($request->placementApplication->applicationID ?? '') . '</td>
+                <td>' . ($request->placementApplication->student->studentID ?? '') . '</td>
+                <td>' . ($request->placementApplication->student->user->name ?? '') . '</td>
+                <td>' . ($request->placementApplication->companyName ?? '') . '</td>
+                <td>' . ($request->reason ?? '') . '</td>
+                <td>' . ($request->requestDate ? \Carbon\Carbon::parse($request->requestDate)->format('Y-m-d') : '') . '</td>
+                <td>' . ($request->committeeStatus ?? '') . '</td>
+                <td>' . ($request->coordinatorStatus ?? '') . '</td>
+                <td>' . ($request->placementApplication->student->program ?? '') . '</td>
+                <td>' . ($request->placementApplication->student->semester ?? '') . '</td>
+                <td>' . ($request->placementApplication->student->session ?? '') . '</td>
+            </tr>';
+        }
+
+        $html .= '</tbody>
+    </table>
+</body>
+</html>';
+
+        return $html;
     }
 
     public function getAnalyticsData()

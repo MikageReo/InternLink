@@ -11,6 +11,7 @@ use App\Models\Student;
 use App\Models\Lecturer;
 use App\Models\File;
 use App\Models\RequestJustification;
+use App\Models\Company;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -68,6 +69,12 @@ class PlacementApplicationTable extends Component
     public $changeRequestReason = '';
     public $changeRequestFiles = [];
     public $viewingChangeRequests = false;
+
+    // Company status warning properties
+    public $showCompanyWarningModal = false;
+    public $warningCompanyName = '';
+    public $warningCompanyStatus = '';
+    public $confirmedCompanyWarning = false;
     public $selectedApplicationForChange = null;
 
     // Guide visibility
@@ -266,7 +273,11 @@ class PlacementApplicationTable extends Component
             'applicationFiles',
             'existingFiles',
             'selectedCompanyId',
-            'isNewCompany'
+            'isNewCompany',
+            'confirmedCompanyWarning',
+            'showCompanyWarningModal',
+            'warningCompanyName',
+            'warningCompanyStatus'
         ]);
 
         // Reset coordinates manually
@@ -281,6 +292,9 @@ class PlacementApplicationTable extends Component
     public function updatedSelectedCompanyId($value)
     {
         $this->isNewCompany = false;
+        $this->confirmedCompanyWarning = false;
+        $this->showCompanyWarningModal = false;
+
         if ($value) {
             // Get company name from existing application
             $application = PlacementApplication::where('applicationID', $value)
@@ -288,10 +302,71 @@ class PlacementApplicationTable extends Component
                 ->first();
             if ($application) {
                 $this->companyName = $application->companyName;
+                // Check company status immediately
+                $this->checkCompanyStatus($this->companyName);
             }
         } else {
             $this->companyName = '';
         }
+    }
+
+    public function updatedCompanyName($value)
+    {
+        // Reset warning confirmation when company name changes
+        $this->confirmedCompanyWarning = false;
+
+        // Check company status when company name is entered (for both new and existing companies)
+        // This allows checking if a manually entered company name matches an existing company with problematic status
+        if ($value && strlen(trim($value)) >= 2) {
+            $this->checkCompanyStatus(trim($value));
+        }
+    }
+
+    private function checkCompanyStatus($companyName)
+    {
+        if (empty($companyName)) {
+            return;
+        }
+
+        // Find company by name (case-insensitive, trim whitespace)
+        $companyName = trim($companyName);
+
+        // Try exact match first
+        $company = Company::where('companyName', $companyName)->first();
+
+        // If not found, try case-insensitive match
+        if (!$company) {
+            $company = Company::whereRaw('LOWER(TRIM(companyName)) = LOWER(?)', [$companyName])->first();
+        }
+
+        if ($company) {
+            $problematicStatuses = ['Blacklisted', 'Closed Down', 'Downsize', 'Illegal'];
+
+            if (in_array($company->status, $problematicStatuses)) {
+                $this->warningCompanyName = $company->companyName;
+                $this->warningCompanyStatus = $company->status;
+                $this->showCompanyWarningModal = true;
+                // Force Livewire to update the view
+                $this->dispatch('$refresh');
+            }
+        }
+    }
+
+    public function proceedWithCompanyWarning()
+    {
+        $this->confirmedCompanyWarning = true;
+        $this->showCompanyWarningModal = false;
+    }
+
+    public function cancelCompanyWarning()
+    {
+        // Clear the company selection/name
+        $this->companyName = '';
+        $this->selectedCompanyId = null;
+        $this->confirmedCompanyWarning = false;
+        $this->showCompanyWarningModal = false;
+        $this->warningCompanyName = '';
+        $this->warningCompanyStatus = '';
     }
 
     public function updatedIsNewCompany($value)
@@ -427,6 +502,32 @@ class PlacementApplicationTable extends Component
 
     public function submit()
     {
+        // Check if company has problematic status and warning hasn't been confirmed
+        if (!empty($this->companyName) && !$this->confirmedCompanyWarning) {
+            // Find company by name (case-insensitive, trim whitespace)
+            $companyName = trim($this->companyName);
+
+            // Try exact match first
+            $company = Company::where('companyName', $companyName)->first();
+
+            // If not found, try case-insensitive match
+            if (!$company) {
+                $company = Company::whereRaw('LOWER(TRIM(companyName)) = LOWER(?)', [$companyName])->first();
+            }
+
+            if ($company) {
+                $problematicStatuses = ['Blacklisted', 'Closed Down', 'Downsize', 'Illegal'];
+                if (in_array($company->status, $problematicStatuses)) {
+                    $this->warningCompanyName = $company->companyName;
+                    $this->warningCompanyStatus = $company->status;
+                    $this->showCompanyWarningModal = true;
+                    // Force Livewire to update the view
+                    $this->dispatch('$refresh');
+                    return;
+                }
+            }
+        }
+
         // Validate file sizes first - this must pass before any other validation
         try {
             $this->validateFileSizes();

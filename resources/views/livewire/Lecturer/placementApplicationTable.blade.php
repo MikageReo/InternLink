@@ -112,15 +112,13 @@
                             </select>
                         </div>
 
-                        <!-- Year Filter -->
+                        <!-- Session Filter -->
                         <div>
-                            <select wire:model.live="year"
-                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200">
-                                <option value="">All Years</option>
-                                @for($y = date('Y'); $y >= 2020; $y--)
-                                    <option value="{{ $y }}">{{ $y }}</option>
-                                @endfor
-                            </select>
+                            <input type="text" wire:model.live="session" maxlength="5"
+                                pattern="[0-9]{2}/[0-9]{2}"
+                                placeholder="Session (e.g., 24/25)"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-200"
+                                title="Format: YY/YY (e.g., 24/25)">
                         </div>
 
                         <!-- Status Filter -->
@@ -141,6 +139,28 @@
                     Clear Filters
                 </button>
             </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="mt-4 flex items-center justify-end gap-3">
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Export Format:</label>
+                <select wire:model="exportFormat" class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 text-sm dark:bg-gray-700 dark:text-gray-200">
+                    <option value="csv">CSV</option>
+                    <option value="pdf">PDF</option>
+                </select>
+            </div>
+            <button wire:click="exportData"
+                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <span wire:loading.remove wire:target="exportData">Download Report</span>
+                <span wire:loading wire:target="exportData" class="inline-flex items-center gap-2">
+                    <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    Exporting...
+                </span>
+            </button>
         </div>
 
         <!-- Bulk Actions Section -->

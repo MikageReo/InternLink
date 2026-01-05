@@ -85,6 +85,10 @@
         }
 
         function validateCreditInput(input) {
+            // Get min and max values from data attributes
+            const minCredit = parseInt(input.getAttribute('data-min-credit')) || 118;
+            const maxCredit = parseInt(input.getAttribute('data-max-credit')) || 130;
+
             // Remove non-numeric characters
             let value = input.value.replace(/[^0-9]/g, '');
 
@@ -93,14 +97,14 @@
                 value = value.substring(0, 3);
             }
 
-            // Enforce range 118-130
+            // Enforce range dynamically based on settings
             if (value) {
                 const numValue = parseInt(value);
-                if (numValue < 118) {
-                    // If user is typing and value is less than 118, allow typing but will validate on blur/submit
-                    // Don't auto-correct while typing to allow user to type "1" then "18" then "118"
-                } else if (numValue > 130) {
-                    value = '130';
+                if (numValue < minCredit) {
+                    // If user is typing and value is less than minimum, allow typing but will validate on blur/submit
+                    // Don't auto-correct while typing to allow user to type "1" then "18" then "118" (or whatever min is)
+                } else if (numValue > maxCredit) {
+                    value = maxCredit.toString();
                 }
             }
 
@@ -718,8 +722,11 @@
                     <div class="px-6 py-4 space-y-4">
                         <!-- Total Credit Info -->
                         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                            @php
+                                $settings = \App\Models\CourseVerificationSetting::getSettings();
+                            @endphp
                             <p class="text-sm text-blue-700 dark:text-blue-300">
-                                <strong>Total Credits Required:</strong> {{ $totalCreditRequired }} credits
+                                <strong>Credit Requirements:</strong> Minimum {{ $settings->minimum_credit_hour }} - Maximum {{ $settings->maximum_credit_hour }} credits
                             </p>
                         </div>
 
@@ -729,9 +736,11 @@
                                 Total Taken Current Credit <span class="text-red-500">*</span>
                             </label>
                             <input type="text" wire:model="currentCredit" id="currentCredit" maxlength="3"
+                                data-min-credit="{{ $settings->minimum_credit_hour }}"
+                                data-max-credit="{{ $settings->maximum_credit_hour }}"
                                 oninput="validateCreditInput(this)"
                                 class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Enter your current credit count (118-130)">
+                                placeholder="Enter your current credit count ({{ $settings->minimum_credit_hour }}-{{ $settings->maximum_credit_hour }})">
                             @error('currentCredit')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror

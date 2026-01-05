@@ -40,6 +40,8 @@ class Student extends Model
         'isAcademicAdvisor' => 'boolean',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
+        'internship_start_date' => 'date',
+        'internship_end_date' => 'date',
     ];
 
     /**

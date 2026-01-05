@@ -745,10 +745,18 @@
                             @enderror
                         </div>
 
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                <strong>Note:</strong> The system will auto-detect if your CSV contains students or lecturers.
+                                For students, you'll need to provide course code and internship dates.
+                                For lecturers, only semester and session are required.
+                            </p>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Semester
+                                    Semester *
                                 </label>
                                 <select wire:model="bulkSemester"
                                     class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
@@ -762,24 +770,81 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Year
+                                    Session * (e.g., 24/25)
                                 </label>
-                                <input type="number" wire:model="bulkYear" min="2020" max="2040"
+                                <input type="text" wire:model="bulkSession" maxlength="5"
+                                    pattern="[0-9]{2}/[0-9]{2}"
+                                    placeholder="24/25"
                                     class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
-                                @error('bulkYear')
+                                @error('bulkSession')
                                     <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                                 @enderror
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Format: YY/YY (e.g., 24/25 for 2024/2025)</p>
+                            </div>
+                        </div>
+
+                        <!-- Student-specific fields (will be validated if CSV contains students) -->
+                        <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                                Student Registration Fields
+                                <span class="text-xs font-normal text-gray-600 dark:text-gray-400">(Required if CSV contains students)</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Course Code (max 8 characters)
+                                    </label>
+                                    <input type="text" wire:model="bulkCourseCode" maxlength="8"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300"
+                                        placeholder="CS123456">
+                                    @error('bulkCourseCode')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Internship Start Date *
+                                    </label>
+                                    <input type="date" wire:model="bulkInternshipStartDate"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                                    @error('bulkInternshipStartDate')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Internship End Date *
+                                    </label>
+                                    <input type="date" wire:model="bulkInternshipEndDate"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                                    @error('bulkInternshipEndDate')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
 
                         <div class="flex justify-end space-x-2">
                             <button type="button" wire:click="toggleBulkRegistration"
-                                class="px-4 py-2 bg-gray-500 dark:bg-gray-600 text-white rounded-md hover:bg-gray-600 dark:hover:bg-gray-700">
+                                wire:loading.attr="disabled"
+                                wire:target="registerUsersFromCSV"
+                                class="px-4 py-2 bg-gray-500 dark:bg-gray-600 text-white rounded-md hover:bg-gray-600 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
                                 Cancel
                             </button>
                             <button type="submit"
-                                class="px-4 py-2 bg-green-500 dark:bg-green-600 text-white rounded-md hover:bg-green-600 dark:hover:bg-green-700">
-                                Upload & Register
+                                wire:loading.attr="disabled"
+                                wire:target="registerUsersFromCSV"
+                                class="px-4 py-2 bg-green-500 dark:bg-green-600 text-white rounded-md hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[140px]">
+                                <span wire:loading.remove wire:target="registerUsersFromCSV">
+                                    Upload & Register
+                                </span>
+                                <span wire:loading wire:target="registerUsersFromCSV" class="inline-flex items-center gap-2">
+                                    <svg class="w-5 h-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                    <span>Processing...</span>
+                                </span>
                             </button>
                         </div>
                     </form>
@@ -1041,6 +1106,17 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Course Code (max 8 characters)
+                                    </label>
+                                    <input type="text" wire:model="studentCourseCode" maxlength="8"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300"
+                                        placeholder="Enter course code (optional)">
+                                    @error('studentCourseCode')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Semester *
                                     </label>
                                     <select wire:model="studentSemester"
@@ -1055,13 +1131,34 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Year *
+                                        Session * (e.g., 24/25)
                                     </label>
-                                    <input type="number" wire:model="studentYear" min="2020" max="2040"
-                                        maxlength="4" inputmode="numeric" pattern="[0-9]*"
-                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                                    <input type="text" wire:model="studentSession" maxlength="5"
+                                        pattern="[0-9]{2}/[0-9]{2}"
+                                        placeholder="24/25"
                                         class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
-                                    @error('studentYear')
+                                    @error('studentSession')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Format: YY/YY (e.g., 24/25 for 2024/2025)</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Internship Start Date *
+                                    </label>
+                                    <input type="date" wire:model="studentInternshipStartDate"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                                    @error('studentInternshipStartDate')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Internship End Date *
+                                    </label>
+                                    <input type="date" wire:model="studentInternshipEndDate"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                                    @error('studentInternshipEndDate')
                                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -1457,15 +1554,16 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Year *
+                                        Session * (e.g., 24/25)
                                     </label>
-                                    <input type="number" wire:model="lecturerYear" min="2020" max="2040"
-                                        maxlength="4" inputmode="numeric" pattern="[0-9]*"
-                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                                    <input type="text" wire:model="lecturerSession" maxlength="5"
+                                        pattern="[0-9]{2}/[0-9]{2}"
+                                        placeholder="24/25"
                                         class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
-                                    @error('lecturerYear')
+                                    @error('lecturerSession')
                                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                                     @enderror
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Format: YY/YY (e.g., 24/25 for 2024/2025)</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1792,6 +1890,17 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Course Code (max 8 characters)
+                                    </label>
+                                    <input type="text" wire:model="studentCourseCode" maxlength="8"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300"
+                                        placeholder="Enter course code (optional)">
+                                    @error('studentCourseCode')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Semester *
                                     </label>
                                     <select wire:model="studentSemester"
@@ -1806,13 +1915,34 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Year *
+                                        Session * (e.g., 24/25)
                                     </label>
-                                    <input type="number" wire:model="studentYear" min="2020" max="2040"
-                                        maxlength="4" inputmode="numeric" pattern="[0-9]*"
-                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                                    <input type="text" wire:model="studentSession" maxlength="5"
+                                        pattern="[0-9]{2}/[0-9]{2}"
+                                        placeholder="24/25"
                                         class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
-                                    @error('studentYear')
+                                    @error('studentSession')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Format: YY/YY (e.g., 24/25 for 2024/2025)</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Internship Start Date *
+                                    </label>
+                                    <input type="date" wire:model="studentInternshipStartDate"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                                    @error('studentInternshipStartDate')
+                                        <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Internship End Date *
+                                    </label>
+                                    <input type="date" wire:model="studentInternshipEndDate"
+                                        class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
+                                    @error('studentInternshipEndDate')
                                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -2220,14 +2350,16 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Year *
+                                        Session * (e.g., 24/25)
                                     </label>
-                                    <input type="number" wire:model="lecturerYear" min="2020" max="2040" maxlength="4" inputmode="numeric" pattern="[0-9]*"
-                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                                    <input type="text" wire:model="lecturerSession" maxlength="5"
+                                        pattern="[0-9]{2}/[0-9]{2}"
+                                        placeholder="24/25"
                                         class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-300">
-                                    @error('lecturerYear')
+                                    @error('lecturerSession')
                                         <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span>
                                     @enderror
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Format: YY/YY (e.g., 24/25 for 2024/2025)</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

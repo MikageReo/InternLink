@@ -16,17 +16,24 @@ studentID,name,email
 CD220001,Ahmad Ali,ahmad@example.com
 ```
 
-### Recommended (with addresses for supervisor assignment)
+### Recommended (with addresses and session)
 ```csv
-studentID,name,email,phone,address,city,postcode,state,country,program
-CD220001,Ahmad Ali,ahmad@example.com,0123456789,Jalan Utama,Kuantan,26000,Pahang,Malaysia,Bachelor of Computer Science
+studentID,name,email,phone,address,city,postcode,state,country,program,session,internship_start_date,internship_end_date
+CD220001,Ahmad Ali,ahmad@example.com,0123456789,Jalan Utama,Kuantan,26000,Pahang,Malaysia,BCS,24/25,2024-06-01,2024-12-31
 ```
 
 ### All Fields
 ```
 studentID, name, email, phone, address, city, postcode, state, country, 
-nationality, program, latitude, longitude
+nationality, program, academicAdvisorID, latitude, longitude
 ```
+
+### ⚠️ Important: Form Fields (NOT in CSV)
+These fields are entered in the upload form and applied to ALL students:
+- **Session** (YY/YY format, e.g., 24/25)
+- **Course Code** (optional, max 8 characters)
+- **Internship Start Date** (YYYY-MM-DD)
+- **Internship End Date** (YYYY-MM-DD)
 
 ---
 
@@ -40,17 +47,21 @@ LEC001,Dr. Abdullah,abdullah@example.com
 
 ### For Supervisors (Recommended)
 ```csv
-lecturerID,name,email,department,address,city,state,is_supervisor,supervisor_quota
-LEC001,Dr. Abdullah,abdullah@example.com,Computing,Faculty of Computing,Kuantan,Pahang,true,5
+lecturerID,name,email,department,address,city,state,session,is_supervisor,supervisor_quota
+LEC001,Dr. Abdullah,abdullah@example.com,Computing,Faculty of Computing,Kuantan,Pahang,24/25,true,5
 ```
 
 ### All Fields
 ```
 lecturerID, name, email, staffGrade, role, position, address, city, postcode, 
-state, country, researchGroup, department, studentQuota, isAcademicAdvisor, 
-isSupervisorFaculty, isCommittee, isCoordinator, isAdmin, is_supervisor, 
-supervisor_quota, latitude, longitude
+state, country, researchGroup, department, program, studentQuota, 
+isAcademicAdvisor, isSupervisorFaculty, isCommittee, isCoordinator, isAdmin, 
+is_supervisor, supervisor_quota, latitude, longitude
 ```
+
+### ⚠️ Important: Form Fields (NOT in CSV)
+These fields are entered in the upload form and applied to ALL lecturers:
+- **Session** (YY/YY format, e.g., 24/25)
 
 ---
 
@@ -80,7 +91,7 @@ supervisor_quota, latitude, longitude
 
 **Example Supervisor:**
 ```csv
-LEC001,Dr. Ahmad,ahmad@example.com,Computing,true,5,true,8
+LEC001,Dr. Ahmad,ahmad@example.com,Computing,24/25,true,5,true,8
 ```
 ↑ Academic Advisor (quota: 5) + Supervisor (quota: 8)
 
@@ -88,16 +99,12 @@ LEC001,Dr. Ahmad,ahmad@example.com,Computing,true,5,true,8
 
 ## 🎯 Common Programs
 
-**Computer Science:**
-- Bachelor of Computer Science (Software Engineering)
-- Bachelor of Computer Science (Computer Systems & Networking)
-- Bachelor of Computer Science (Graphics & Multimedia)
-- Bachelor of Computer Science (Data Science)
-
-**Engineering:**
-- Bachelor of Electrical Engineering
-- Bachelor of Mechanical Engineering
-- Bachelor of Civil Engineering
+**Program Codes:**
+- **BCS**: Bachelor of Computer Science (Software Engineering) with Honours
+- **BCN**: Bachelor of Computer Science (Computer Systems & Networking) with Honours
+- **BCM**: Bachelor of Computer Science (Multimedia Software) with Honours
+- **BCY**: Bachelor of Computer Science (Cyber Security) with Honours
+- **DRC**: Diploma in Computer Science
 
 ---
 
@@ -109,6 +116,9 @@ LEC001,Dr. Ahmad,ahmad@example.com,Computing,true,5,true,8
 | "Email already exists" | Use unique email for each user |
 | "ID already exists" | Use unique ID for each user |
 | "Invalid email format" | Check @ symbol and domain |
+| "Invalid session format" | Use YY/YY format (e.g., 24/25) |
+| "Course code too long" | Maximum 8 characters |
+| "End date must be after start date" | Check internship dates |
 
 ---
 
@@ -120,6 +130,8 @@ LEC001,Dr. Ahmad,ahmad@example.com,Computing,true,5,true,8
 4. ✅ **Keep Header Row** - Don't delete it
 5. ✅ **No Extra Spaces** - Trim all values
 6. ✅ **Backup Original** - Keep a copy
+7. ✅ **Use Session Format** - YY/YY (e.g., 24/25) instead of year
+8. ✅ **Provide Internship Dates** - Helps with tracking (YYYY-MM-DD format)
 
 ---
 
@@ -132,12 +144,14 @@ To enable distance-based supervisor recommendations:
 studentID,name,email,address,city,postcode,state,country
 CD220001,Ahmad,ahmad@example.com,Jalan Utama,Kuantan,26000,Pahang,Malaysia
 ```
+*Note: Session is entered in the upload form*
 
 **Lecturers:**
 ```csv
 lecturerID,name,email,department,address,city,state,is_supervisor,supervisor_quota
 LEC001,Dr. Ahmad,ahmad@example.com,Computing,Faculty Building,Kuantan,Pahang,true,5
 ```
+*Note: Session is entered in the upload form*
 
 After upload, run:
 ```bash
@@ -152,7 +166,8 @@ php artisan geocode:existing-data
 2. ✅ Random passwords generated
 3. ✅ Emails sent with credentials
 4. ✅ Addresses geocoded (if API configured)
-5. ✅ Users can login immediately
+5. ✅ Session converted from year if needed
+6. ✅ Users can login immediately
 
 ---
 
@@ -172,4 +187,3 @@ php artisan geocode:existing-data
 4. Review error messages carefully
 
 **Ready to go!** 🚀
-

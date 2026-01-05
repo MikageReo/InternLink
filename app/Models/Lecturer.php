@@ -32,7 +32,7 @@ class Lecturer extends Model
         'program',
         'travel_preference',
         'semester',
-        'year',
+        'session',
         'isAcademicAdvisor',
         'isSupervisorFaculty',
         'isCommittee',

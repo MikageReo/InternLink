@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\PlacementApplicationStatusNotification;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class PlacementApplicationTable extends Component
 {
@@ -31,7 +33,8 @@ class PlacementApplicationTable extends Component
     public $roleFilter = ''; // coordinator or committee
     public $program = '';
     public $semester = '';
-    public $year = '';
+    public $session = '';
+    public $exportFormat = 'csv';
 
     // Modal properties
     public $showDetailModal = false;
@@ -55,7 +58,7 @@ class PlacementApplicationTable extends Component
         'companyFilter' => ['except' => ''],
         'program' => ['except' => ''],
         'semester' => ['except' => ''],
-        'year' => ['except' => ''],
+        'session' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -96,7 +99,7 @@ class PlacementApplicationTable extends Component
         $this->resetPage();
     }
 
-    public function updatingYear()
+    public function updatingSession()
     {
         $this->resetPage();
     }
@@ -274,7 +277,7 @@ class PlacementApplicationTable extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'statusFilter', 'studentFilter', 'companyFilter', 'dateFrom', 'dateTo', 'roleFilter', 'program', 'semester', 'year']);
+        $this->reset(['search', 'statusFilter', 'studentFilter', 'companyFilter', 'dateFrom', 'dateTo', 'roleFilter', 'program', 'semester', 'session']);
         $this->resetPage();
     }
 
@@ -586,10 +589,10 @@ class PlacementApplicationTable extends Component
             });
         }
 
-        // Year filter
-        if ($this->year) {
+        // Session filter
+        if ($this->session) {
             $query->whereHas('student', function ($q) {
-                $q->where('year', $this->year);
+                $q->where('session', $this->session);
             });
         }
 
@@ -679,6 +682,246 @@ class PlacementApplicationTable extends Component
         ];
 
         return $analytics;
+    }
+
+    public function exportData()
+    {
+        // Get all filtered applications (not paginated)
+        $applications = $this->getFilteredApplications()->get();
+
+        if ($applications->isEmpty()) {
+            session()->flash('error', 'No data to export. Please apply filters to select applications.');
+            return;
+        }
+
+        // Route to appropriate export method based on format
+        switch ($this->exportFormat) {
+            case 'csv':
+                return $this->exportCSV($applications);
+            case 'pdf':
+                return $this->exportPDF($applications);
+            default:
+                return $this->exportCSV($applications);
+        }
+    }
+
+    private function exportCSV($applications)
+    {
+        // Create descriptive filename
+        $statusText = $this->statusFilter ? '_' . strtolower($this->statusFilter) : '';
+        $sessionText = $this->session ? '_' . str_replace('/', '-', $this->session) : '';
+        $semesterText = $this->semester ? '_sem' . $this->semester : '';
+        $searchText = $this->search ? '_filtered' : '';
+
+        $filename = 'placement_applications' . $statusText . $sessionText . $semesterText . $searchText . '_' . now()->format('Y-m-d_H-i-s') . '.csv';
+
+        // Generate CSV content
+        $csvData = $this->generateCSV($applications);
+
+        // Flash success message
+        session()->flash('message', 'CSV file exported successfully! Downloaded ' . $applications->count() . ' records.');
+
+        return response()->streamDownload(function () use ($csvData) {
+            echo $csvData;
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function exportPDF($applications)
+    {
+        // Create descriptive filename
+        $statusText = $this->statusFilter ? '_' . strtolower($this->statusFilter) : '';
+        $sessionText = $this->session ? '_' . str_replace('/', '-', $this->session) : '';
+        $semesterText = $this->semester ? '_sem' . $this->semester : '';
+        $searchText = $this->search ? '_filtered' : '';
+
+        $filename = 'placement_applications' . $statusText . $sessionText . $semesterText . $searchText . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+        // Generate PDF content
+        $htmlData = $this->generatePDF($applications);
+
+        // Setup DomPDF
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($htmlData);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        // Flash success message
+        session()->flash('message', 'PDF file exported successfully! Downloaded ' . $applications->count() . ' records.');
+
+        return response()->streamDownload(function () use ($dompdf) {
+            echo $dompdf->output();
+        }, $filename, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function generateCSV($applications)
+    {
+        $output = '';
+
+        // Add filter information at the top
+        $filters = [];
+        if ($this->statusFilter) $filters['Status'] = $this->statusFilter;
+        if ($this->program) $filters['Program'] = $this->program;
+        if ($this->semester) $filters['Semester'] = $this->semester;
+        if ($this->session) $filters['Session'] = $this->session;
+        if ($this->studentFilter) $filters['Student'] = $this->studentFilter;
+        if ($this->companyFilter) $filters['Company'] = $this->companyFilter;
+        if ($this->dateFrom) $filters['Date From'] = $this->dateFrom;
+        if ($this->dateTo) $filters['Date To'] = $this->dateTo;
+
+        if (!empty($filters)) {
+            $output .= '"Applied Filters:"' . "\n";
+            foreach ($filters as $key => $value) {
+                $output .= '"' . $key . ': ' . $value . '"' . "\n";
+            }
+            $output .= "\n";
+        }
+
+        // Headers
+        $headers = [
+            'Application ID',
+            'Student ID',
+            'Student Name',
+            'Company Name',
+            'Position',
+            'Application Date',
+            'Start Date',
+            'End Date',
+            'Method of Work',
+            'Allowance',
+            'Committee Status',
+            'Coordinator Status',
+            'Program',
+            'Semester',
+            'Session',
+        ];
+
+        $output .= '"' . implode('","', $headers) . '"' . "\n";
+
+        // Data rows
+        foreach ($applications as $app) {
+            $row = [
+                $app->applicationID ?? '',
+                $app->student->studentID ?? '',
+                $app->student->user->name ?? '',
+                $app->companyName ?? '',
+                $app->position ?? '',
+                $app->applicationDate ? \Carbon\Carbon::parse($app->applicationDate)->format('Y-m-d') : '',
+                $app->startDate ? \Carbon\Carbon::parse($app->startDate)->format('Y-m-d') : '',
+                $app->endDate ? \Carbon\Carbon::parse($app->endDate)->format('Y-m-d') : '',
+                $app->methodOfWork ?? '',
+                $app->allowance ?? '',
+                $app->committeeStatus ?? '',
+                $app->coordinatorStatus ?? '',
+                $app->student->program ?? '',
+                $app->student->semester ?? '',
+                $app->student->session ?? '',
+            ];
+
+            $output .= '"' . implode('","', array_map(function ($field) {
+                return str_replace('"', '""', $field);
+            }, $row)) . '"' . "\n";
+        }
+
+        return $output;
+    }
+
+    private function generatePDF($applications)
+    {
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Placement Applications Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .filters { margin-bottom: 20px; }
+        .filters p { margin: 2px 0; }
+    </style>
+</head>
+<body>
+    <h1>Placement Applications Report</h1>
+    <div class="filters">
+        <p><strong>Generated:</strong> ' . now()->format('Y-m-d H:i:s') . '</p>
+        <p><strong>Total Records:</strong> ' . $applications->count() . '</p>';
+
+        $filters = [];
+        if ($this->statusFilter) $filters['Status'] = $this->statusFilter;
+        if ($this->program) $filters['Program'] = $this->program;
+        if ($this->semester) $filters['Semester'] = $this->semester;
+        if ($this->session) $filters['Session'] = $this->session;
+        if ($this->studentFilter) $filters['Student'] = $this->studentFilter;
+        if ($this->companyFilter) $filters['Company'] = $this->companyFilter;
+        if ($this->dateFrom) $filters['Date From'] = $this->dateFrom;
+        if ($this->dateTo) $filters['Date To'] = $this->dateTo;
+
+        if (!empty($filters)) {
+            $html .= '<p><strong>Applied Filters:</strong></p>';
+            foreach ($filters as $key => $value) {
+                $html .= '<p>' . $key . ': ' . $value . '</p>';
+            }
+        }
+
+        $html .= '</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Application ID</th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Company Name</th>
+                <th>Position</th>
+                <th>Application Date</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Method of Work</th>
+                <th>Allowance</th>
+                <th>Committee Status</th>
+                <th>Coordinator Status</th>
+                <th>Program</th>
+                <th>Semester</th>
+                <th>Session</th>
+            </tr>
+        </thead>
+        <tbody>';
+
+        foreach ($applications as $app) {
+            $html .= '<tr>
+                <td>' . ($app->applicationID ?? '') . '</td>
+                <td>' . ($app->student->studentID ?? '') . '</td>
+                <td>' . ($app->student->user->name ?? '') . '</td>
+                <td>' . ($app->companyName ?? '') . '</td>
+                <td>' . ($app->position ?? '') . '</td>
+                <td>' . ($app->applicationDate ? \Carbon\Carbon::parse($app->applicationDate)->format('Y-m-d') : '') . '</td>
+                <td>' . ($app->startDate ? \Carbon\Carbon::parse($app->startDate)->format('Y-m-d') : '') . '</td>
+                <td>' . ($app->endDate ? \Carbon\Carbon::parse($app->endDate)->format('Y-m-d') : '') . '</td>
+                <td>' . ($app->methodOfWork ?? '') . '</td>
+                <td>' . ($app->allowance ?? '') . '</td>
+                <td>' . ($app->committeeStatus ?? '') . '</td>
+                <td>' . ($app->coordinatorStatus ?? '') . '</td>
+                <td>' . ($app->student->program ?? '') . '</td>
+                <td>' . ($app->student->semester ?? '') . '</td>
+                <td>' . ($app->student->session ?? '') . '</td>
+            </tr>';
+        }
+
+        $html .= '</tbody>
+    </table>
+</body>
+</html>';
+
+        return $html;
     }
 
     public function render()

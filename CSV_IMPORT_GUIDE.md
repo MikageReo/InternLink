@@ -26,9 +26,10 @@ Open the CSV file in Excel, Google Sheets, or any spreadsheet software and:
 1. Login as coordinator/admin
 2. Go to **User Directory**
 3. Click **"Bulk Registration"** button
-4. Select **Semester** and **Year**
-5. Choose your CSV file
-6. Click **Upload**
+4. Choose your CSV file
+5. Select **Semester** and **Session** (e.g., 24/25)
+6. **For Students Only**: Enter **Course Code** (optional, max 8 characters), **Internship Start Date**, and **Internship End Date**
+7. Click **Upload & Register**
 
 ### Step 4: Done! ✅
 - System will create user accounts automatically
@@ -55,15 +56,30 @@ Open the CSV file in Excel, Google Sheets, or any spreadsheet software and:
 | state | State/Province | Pahang |
 | country | Country | Malaysia |
 | nationality | Nationality | Malaysian |
-| program | Degree program | Bachelor of Computer Science (Software Engineering) |
+| program | Degree program code | BCS, BCN, BCM, BCY, DRC |
+| academicAdvisorID | Academic advisor lecturer ID | LEC001 |
 | latitude | GPS latitude (leave empty for auto-geocode) | 3.8077 |
 | longitude | GPS longitude (leave empty for auto-geocode) | 103.3260 |
 
+### Important Notes
+- **Session, Course Code, and Internship Dates** are now entered in the upload form, NOT in the CSV file
+- These values will be applied to ALL students in the CSV file
+- The CSV file should only contain student personal and academic information
+
 ### Student CSV Example
 ```csv
-studentID,name,email,phone,address,city,postcode,state,country,nationality,program,latitude,longitude
-CD220001,Ahmad Bin Ali,ahmad.ali@example.com,0123456789,No 123 Jalan Utama,Kuantan,26000,Pahang,Malaysia,Malaysian,Bachelor of Computer Science (Software Engineering),,
-CD220002,Siti Fatimah,siti.fatimah@example.com,0198765432,No 456 Jalan Permai,Kuala Lumpur,50000,Wilayah Persekutuan,Malaysia,Malaysian,Bachelor of Computer Science (Computer Systems & Networking),,
+studentID,name,email,phone,address,city,postcode,state,country,nationality,program,academicAdvisorID
+CD220001,Ahmad Bin Ali,ahmad.ali@example.com,0123456789,No 123 Jalan Utama,Kuantan,26000,Pahang,Malaysia,Malaysian,BCS,LEC001
+CD220002,Siti Fatimah,siti.fatimah@example.com,0198765432,No 456 Jalan Permai,Kuala Lumpur,50000,Wilayah Persekutuan,Malaysia,Malaysian,BCN,LEC002
+```
+
+**Note**: Course Code, Session, and Internship Dates are entered in the upload form, not in the CSV.
+
+### Minimal Student CSV (Required fields only)
+```csv
+studentID,name,email
+CD220001,Ahmad Bin Ali,ahmad.ali@example.com
+CD220002,Siti Fatimah,siti.fatimah@example.com
 ```
 
 ## 👨‍🏫 Lecturer CSV Format
@@ -111,7 +127,29 @@ LEC002,Prof. Dr. Noor Azlina,noor.azlina@example.com,VK7,Professor,Professor,Fac
 LEC003,Dr. Muhammad Faiz,faiz.muhammad@example.com,DG52,Lecturer,Lecturer,Faculty of Computing,12,true,true,8
 ```
 
+**Note**: Session is entered in the upload form, not in the CSV.
+
+### Minimal Lecturer CSV (Required fields only)
+```csv
+lecturerID,name,email
+LEC001,Dr. Abdullah Rahman,abdullah.rahman@example.com
+LEC002,Prof. Dr. Noor Azlina,noor.azlina@example.com
+```
+
 ## 🔍 Important Notes
+
+### Upload Form Fields
+
+**For All Users (Students & Lecturers):**
+- **Semester**: Select Semester 1 or Semester 2
+- **Session**: Enter in YY/YY format (e.g., 24/25 for 2024/2025)
+
+**For Students Only:**
+- **Course Code**: Optional, maximum 8 characters (e.g., CS123456)
+- **Internship Start Date**: Required, format YYYY-MM-DD (e.g., 2024-06-01)
+- **Internship End Date**: Required, format YYYY-MM-DD, must be after start date (e.g., 2024-12-31)
+
+**Important**: These values are entered in the upload form and will be applied to ALL records in your CSV file. Do NOT include these fields in your CSV file.
 
 ### Boolean Fields (true/false)
 For yes/no fields, use:
@@ -143,17 +181,12 @@ For yes/no fields, use:
 
 ## 📝 Common Programs (for reference)
 
-### Computer Science Programs
-- Bachelor of Computer Science (Software Engineering)
-- Bachelor of Computer Science (Computer Systems & Networking)
-- Bachelor of Computer Science (Graphics & Multimedia)
-- Bachelor of Computer Science (Data Science)
-
-### Engineering Programs
-- Bachelor of Electrical Engineering
-- Bachelor of Mechanical Engineering
-- Bachelor of Civil Engineering
-- Bachelor of Chemical Engineering
+### Program Codes
+- **BCS**: Bachelor of Computer Science (Software Engineering) with Honours
+- **BCN**: Bachelor of Computer Science (Computer Systems & Networking) with Honours
+- **BCM**: Bachelor of Computer Science (Multimedia Software) with Honours
+- **BCY**: Bachelor of Computer Science (Cyber Security) with Honours
+- **DRC**: Diploma in Computer Science
 
 ## ⚠️ Common Mistakes to Avoid
 
@@ -189,6 +222,18 @@ CD220001,Ahmad Bin Ali,ahmad.ali@example.com
 ❌ **Wrong**: `CD220001 ` (space after)
 ✅ **Correct**: `CD220001` (no extra spaces)
 
+### 7. Wrong Session Format
+❌ **Wrong**: `2024/2025`, `24-25`, `2024`
+✅ **Correct**: `24/25` (YY/YY format)
+
+### 8. Course Code Too Long
+❌ **Wrong**: `CS123456789` (9 characters)
+✅ **Correct**: `CS123456` (max 8 characters)
+
+### 9. Invalid Date Format
+❌ **Wrong**: `01/06/2024`, `2024-6-1`
+✅ **Correct**: `2024-06-01` (YYYY-MM-DD format)
+
 ## 🔧 System Behavior
 
 ### Auto-Generated
@@ -196,11 +241,13 @@ CD220001,Ahmad Bin Ali,ahmad.ali@example.com
 - **Password**: Unique random password (sent via email)
 - **User Role**: Set based on file type (student/lecturer)
 - **Status**: Set to 'active' by default
-- **Semester/Year**: Set from upload form
+- **Semester**: Set from upload form
+- **Session**: Converted from Year in upload form, or from CSV if provided
 
 ### Auto-Detection
 - **File Type**: Detected by header (studentID = students, lecturerID = lecturers)
 - **Geocoding**: Attempts to geocode addresses automatically if coordinates not provided
+- **Session Conversion**: Automatically converts year (YYYY) to session (YY/YY) format
 
 ### Validation
 System checks:
@@ -208,6 +255,9 @@ System checks:
 - ✅ Unique email address
 - ✅ Valid email format
 - ✅ Required fields not empty
+- ✅ Course code max 8 characters (if provided)
+- ✅ Session format valid (YY/YY)
+- ✅ Internship end date after start date (if provided)
 
 ## 📊 Upload Results
 
@@ -249,14 +299,19 @@ Errors:
 - Test email delivery
 
 ### 4. Consistent Formatting
-- Use same date format throughout
-- Consistent capitalization
+- Use same date format throughout (YYYY-MM-DD)
+- Consistent session format (YY/YY)
 - Standard abbreviations
 
 ### 5. Complete Addresses
 - More complete = better geocoding
 - Include postcode for accuracy
 - Specify state/province
+
+### 6. Provide Internship Dates
+- Include both start and end dates for students
+- Helps with internship tracking and planning
+- Format: YYYY-MM-DD
 
 ## 🔐 Security
 
@@ -292,6 +347,21 @@ Errors:
 - No spaces in email
 - Valid domain (.com, .edu, etc.)
 
+### "Invalid session format"
+- Use YY/YY format (e.g., 24/25)
+- Not YYYY/YYYY or YYYY format
+- Check for typos
+
+### "Course code too long"
+- Maximum 8 characters
+- Trim extra characters
+- Check for spaces
+
+### "Internship end date must be after start date"
+- Verify end date is later than start date
+- Check date format (YYYY-MM-DD)
+- Ensure both dates are provided
+
 ### No email received
 - Check spam folder
 - Verify email address is correct
@@ -312,37 +382,26 @@ For issues:
 
 ## 🎓 Examples
 
-### Minimal Student CSV (Required fields only)
-```csv
-studentID,name,email
-CD220001,Ahmad Bin Ali,ahmad.ali@example.com
-CD220002,Siti Fatimah,siti.fatimah@example.com
-```
-
 ### Complete Student CSV (All fields)
 ```csv
-studentID,name,email,phone,address,city,postcode,state,country,nationality,program
-CD220001,Ahmad Bin Ali,ahmad.ali@example.com,0123456789,No 123 Jalan Utama,Kuantan,26000,Pahang,Malaysia,Malaysian,Bachelor of Computer Science
+studentID,name,email,phone,address,city,postcode,state,country,nationality,program,academicAdvisorID
+CD220001,Ahmad Bin Ali,ahmad.ali@example.com,0123456789,No 123 Jalan Utama,Kuantan,26000,Pahang,Malaysia,Malaysian,BCS,LEC001
+CD220002,Siti Fatimah,siti.fatimah@example.com,0198765432,No 456 Jalan Permai,Kuala Lumpur,50000,Wilayah Persekutuan,Malaysia,Malaysian,BCN,LEC002
 ```
 
-### Minimal Lecturer CSV (Required fields only)
+**Note**: Course Code, Session, and Internship Dates are entered in the upload form.
+
+### Complete Lecturer CSV (All fields)
 ```csv
-lecturerID,name,email
-LEC001,Dr. Abdullah Rahman,abdullah.rahman@example.com
-LEC002,Prof. Dr. Noor Azlina,noor.azlina@example.com
+lecturerID,name,email,staffGrade,role,position,department,isAcademicAdvisor,is_supervisor,supervisor_quota
+LEC001,Dr. Abdullah Rahman,abdullah.rahman@example.com,DG54,Lecturer,Senior Lecturer,Faculty of Computing,true,true,5
+LEC002,Prof. Dr. Noor Azlina,noor.azlina@example.com,VK7,Professor,Professor,Faculty of Computing,true,true,8
 ```
 
-### Supervisor CSV (With supervisor fields)
-```csv
-lecturerID,name,email,department,is_supervisor,supervisor_quota
-LEC001,Dr. Abdullah Rahman,abdullah.rahman@example.com,Faculty of Computing,true,5
-LEC002,Prof. Dr. Noor Azlina,noor.azlina@example.com,Faculty of Computing,true,8
-LEC003,Dr. Muhammad Faiz,faiz.muhammad@example.com,Faculty of Computing,true,10
-```
+**Note**: Session is entered in the upload form.
 
 ---
 
-**Last Updated**: November 2025
+**Last Updated**: January 2026
 **System**: Internlink - Industrial Training Management System
-**Version**: 1.0
-
+**Version**: 2.0

@@ -5,6 +5,7 @@ namespace App\Livewire\Student;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\CourseVerification;
+use App\Models\CourseVerificationSetting;
 use App\Models\Student;
 use App\Models\Lecturer;
 use App\Models\File;
@@ -41,21 +42,37 @@ class CourseVerificationTable extends Component
         'page' => ['except' => 1],
     ];
 
-    protected $rules = [
-        'currentCredit' => 'required|integer|min:118|max:130',
-        'submittedFile' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:5120', // 5MB max
-    ];
+    // Settings properties
+    public $minimumCreditHour = 118;
+    public $maximumCreditHour = 130;
 
-    protected $messages = [
-        'currentCredit.required' => 'Current credit is required.',
-        'currentCredit.integer' => 'Current credit must be a number.',
-        'currentCredit.min' => 'Current credit must be at least 118.',
-        'currentCredit.max' => 'Current credit cannot exceed 130.',
-        'submittedFile.required' => 'Course file is required.',
-        'submittedFile.file' => 'Please upload a valid file.',
-        'submittedFile.mimes' => 'File must be PDF, DOC, DOCX, JPG, JPEG, PNG, or ZIP.',
-        'submittedFile.max' => 'File size cannot exceed 5MB.',
-    ];
+    protected function rules()
+    {
+        // Load current settings dynamically
+        $settings = CourseVerificationSetting::getSettings();
+
+        return [
+            'currentCredit' => 'required|integer|min:' . $settings->minimum_credit_hour . '|max:' . $settings->maximum_credit_hour,
+            'submittedFile' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:5120', // 5MB max
+        ];
+    }
+
+    protected function messages()
+    {
+        // Load current settings dynamically
+        $settings = CourseVerificationSetting::getSettings();
+
+        return [
+            'currentCredit.required' => 'Current credit is required.',
+            'currentCredit.integer' => 'Current credit must be a number.',
+            'currentCredit.min' => 'Current credit must be at least ' . $settings->minimum_credit_hour . '.',
+            'currentCredit.max' => 'Current credit cannot exceed ' . $settings->maximum_credit_hour . '.',
+            'submittedFile.required' => 'Course file is required.',
+            'submittedFile.file' => 'Please upload a valid file.',
+            'submittedFile.mimes' => 'File must be PDF, DOC, DOCX, JPG, JPEG, PNG, or ZIP.',
+            'submittedFile.max' => 'File size cannot exceed 5MB.',
+        ];
+    }
 
     public function mount()
     {
@@ -70,8 +87,11 @@ class CourseVerificationTable extends Component
             }
         }
 
-        // You can set the total credit required from a config or database
-        $this->totalCreditRequired = 130;
+        // Load credit requirements from settings
+        $settings = CourseVerificationSetting::getSettings();
+        $this->totalCreditRequired = $settings->maximum_credit_hour;
+        $this->minimumCreditHour = $settings->minimum_credit_hour;
+        $this->maximumCreditHour = $settings->maximum_credit_hour;
     }
 
     public function updatingSearch()
@@ -97,6 +117,12 @@ class CourseVerificationTable extends Component
 
     public function openForm()
     {
+        // Reload settings when opening form to get latest values
+        $settings = CourseVerificationSetting::getSettings();
+        $this->minimumCreditHour = $settings->minimum_credit_hour;
+        $this->maximumCreditHour = $settings->maximum_credit_hour;
+        $this->totalCreditRequired = $settings->maximum_credit_hour;
+
         $this->showForm = true;
         $this->resetForm();
     }
@@ -144,7 +170,23 @@ class CourseVerificationTable extends Component
 
     public function submit()
     {
-        $this->validate();
+        // Get current settings for validation
+        $settings = CourseVerificationSetting::getSettings();
+
+        // Validate with dynamic rules
+        $this->validate([
+            'currentCredit' => 'required|integer|min:' . $settings->minimum_credit_hour . '|max:' . $settings->maximum_credit_hour,
+            'submittedFile' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip|max:5120',
+        ], [
+            'currentCredit.required' => 'Current credit is required.',
+            'currentCredit.integer' => 'Current credit must be a number.',
+            'currentCredit.min' => 'Current credit must be at least ' . $settings->minimum_credit_hour . '.',
+            'currentCredit.max' => 'Current credit cannot exceed ' . $settings->maximum_credit_hour . '.',
+            'submittedFile.required' => 'Course file is required.',
+            'submittedFile.file' => 'Please upload a valid file.',
+            'submittedFile.mimes' => 'File must be PDF, DOC, DOCX, JPG, JPEG, PNG, or ZIP.',
+            'submittedFile.max' => 'File size cannot exceed 5MB.',
+        ]);
 
         try {
             $student = Auth::user()->student;
@@ -167,13 +209,13 @@ class CourseVerificationTable extends Component
 
             // Get user ID for file naming
             $userId = Auth::user()->id;
-            
+
             // Get file extension
             $extension = $this->submittedFile->getClientOriginalExtension();
-            
+
             // Generate new filename: CourseVerification{UserID}.{extension}
             $newFileName = 'CourseVerification' . $userId . '.' . $extension;
-            
+
             // Store the uploaded file with custom name
             $filePath = $this->submittedFile->storeAs('course-verification-files', $newFileName, 'public');
 
