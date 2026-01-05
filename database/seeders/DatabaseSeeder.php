@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
         // Call other seeders
         $this->call([
             SupervisorLecturerSeeder::class,
+            EligibleSupervisorSeeder::class, // Creates lecturers who can actually supervise
             PlacementApplicationSeeder::class,
         ]);
     }

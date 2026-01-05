@@ -246,8 +246,11 @@ class UserDirectoryTable extends Component
     public $studentLongitude = '';
     public $studentNationality = '';
     public $studentProgram = '';
+    public $studentCourseCode = '';
     public $studentSemester = '';
-    public $studentYear = '';
+    public $studentSession = '';
+    public $studentInternshipStartDate = '';
+    public $studentInternshipEndDate = '';
     public $studentAcademicAdvisorID = '';
     public $studentStatus = '';
 
@@ -298,7 +301,10 @@ class UserDirectoryTable extends Component
     {
         $this->year = date('Y');
         $this->bulkYear = date('Y');
-        $this->studentYear = date('Y');
+        // Set default session format (e.g., 24/25 for 2024)
+        $currentYear = date('y');
+        $nextYear = str_pad((int)$currentYear + 1, 2, '0', STR_PAD_LEFT);
+        $this->studentSession = $currentYear . '/' . $nextYear;
         $this->lecturerYear = date('Y');
     }
 

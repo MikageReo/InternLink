@@ -70,7 +70,8 @@ class Dashboard extends Component
         $placementStats = [
             'total' => $placementApplications->count(),
             'pending' => $placementApplications->filter(function ($app) {
-                return $app->overall_status === 'Pending';
+                // Don't count as pending if student has already accepted
+                return $app->overall_status === 'Pending' && $app->studentAcceptance !== 'Accepted';
             })->count(),
             'accepted' => $placementApplications->where('studentAcceptance', 'Accepted')->count(),
             'rejected' => $placementApplications->filter(function ($app) {
@@ -117,8 +118,14 @@ class Dashboard extends Component
 
         return [
             'total' => $applications->count(),
-            'pending' => $applications->filter(fn($app) => $app->overall_status === 'Pending')->count(),
-            'approved' => $applications->filter(fn($app) => $app->overall_status === 'Approved')->count(),
+            'pending' => $applications->filter(function($app) {
+                // Don't count as pending if student has already accepted
+                return $app->overall_status === 'Pending' && $app->studentAcceptance !== 'Accepted';
+            })->count(),
+            'approved' => $applications->filter(function($app) {
+                // Don't count as approved if student has already accepted (it should show as accepted)
+                return $app->overall_status === 'Approved' && $app->studentAcceptance !== 'Accepted';
+            })->count(),
             'rejected' => $applications->filter(fn($app) => $app->overall_status === 'Rejected')->count(),
             'accepted' => $applications->where('studentAcceptance', 'Accepted')->count(),
         ];
@@ -229,6 +236,19 @@ class Dashboard extends Component
 
     private function getLatestPlacementApplication($student)
     {
+        // First, try to get the accepted application
+        $acceptedApplication = PlacementApplication::where('studentID', $student->studentID)
+            ->where('studentAcceptance', 'Accepted')
+            ->with(['committee.user', 'coordinator.user'])
+            ->latest('applicationDate')
+            ->first();
+
+        // If there's an accepted application, return it
+        if ($acceptedApplication) {
+            return $acceptedApplication;
+        }
+
+        // Otherwise, return the latest application
         return PlacementApplication::where('studentID', $student->studentID)
             ->with(['committee.user', 'coordinator.user'])
             ->latest('applicationDate')

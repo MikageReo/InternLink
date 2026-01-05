@@ -42,9 +42,6 @@ class SupervisorAssignmentTable extends Component
     public $recommendedSupervisors = [];
     public $selectedSupervisorID = null;
     public $assignmentNotes = '';
-    public $quotaOverride = false;
-    public $overrideReason = '';
-    public $showOverrideModal = false;
     public $editAssignmentID = null;
     public $newSupervisorID = null;
 
@@ -149,7 +146,7 @@ class SupervisorAssignmentTable extends Component
         $recommendations = $this->supervisorRecommendationService->getRecommendedSupervisors(
             $this->selectedStudent,
             10,
-            $this->quotaOverride
+            false // No quota override
         );
 
         // Convert to array format that Livewire can serialize
@@ -167,8 +164,6 @@ class SupervisorAssignmentTable extends Component
 
         $this->selectedSupervisorID = null;
         $this->assignmentNotes = '';
-        $this->quotaOverride = false;
-        $this->overrideReason = '';
         $this->showAssignModal = true;
     }
 
@@ -179,48 +174,18 @@ class SupervisorAssignmentTable extends Component
         $this->recommendedSupervisors = [];
         $this->selectedSupervisorID = null;
         $this->assignmentNotes = '';
-        $this->quotaOverride = false;
-        $this->overrideReason = '';
         $this->resetValidation();
     }
 
-    public function toggleQuotaOverride()
-    {
-        $this->quotaOverride = !$this->quotaOverride;
-
-        // Reload recommendations if student is selected
-        if ($this->selectedStudent) {
-            $recommendations = $this->supervisorRecommendationService->getRecommendedSupervisors(
-                $this->selectedStudent,
-                10,
-                $this->quotaOverride
-            );
-
-            // Convert to array format that Livewire can serialize
-            // Note: Lecturer models will be serialized by Livewire automatically
-            $this->recommendedSupervisors = $recommendations->map(function($rec) {
-                return [
-                    'lecturer' => $rec['lecturer'],
-                    'score' => $rec['score'],
-                    'breakdown' => $rec['breakdown'],
-                    'distance_km' => $rec['distance_km'],
-                    'distance' => $rec['distance_km'],
-                    'available_quota' => $rec['available_quota'],
-                ];
-            })->values()->toArray();
-        }
-    }
 
     public function assignSupervisor()
     {
         $this->validate([
             'selectedSupervisorID' => 'required|exists:lecturers,lecturerID',
             'assignmentNotes' => 'nullable|string|max:1000',
-            'overrideReason' => 'required_if:quotaOverride,true|nullable|string|max:500',
         ], [
             'selectedSupervisorID.required' => 'Please select a supervisor.',
             'selectedSupervisorID.exists' => 'Selected supervisor does not exist.',
-            'overrideReason.required_if' => 'Please provide a reason for quota override.',
         ]);
 
         try {
@@ -229,8 +194,8 @@ class SupervisorAssignmentTable extends Component
                 $this->selectedSupervisorID,
                 null, // Will use current coordinator
                 $this->assignmentNotes ?: null,
-                $this->quotaOverride,
-                $this->overrideReason ?: null
+                false, // No quota override
+                null // No override reason
             );
 
             session()->flash('success', 'Supervisor assigned successfully!');
@@ -251,12 +216,46 @@ class SupervisorAssignmentTable extends Component
     public function autoAssignSupervisor($studentID)
     {
         try {
-            $assignment = $this->supervisorAssignmentService->autoAssignNearestSupervisor($studentID);
+            // Get student with accepted placement
+            $student = Student::with(['user', 'acceptedPlacementApplication'])
+                ->findOrFail($studentID);
+
+            // Check if student has accepted placement
+            if (!$student->hasAcceptedPlacement()) {
+                session()->flash('error', 'Student must have an accepted placement application before assigning a supervisor.');
+                return;
+            }
+
+            // Get recommended supervisors using the scoring system (same as individual assign modal)
+            $recommendations = $this->supervisorRecommendationService->getRecommendedSupervisors(
+                $student,
+                1, // Only need the top recommendation
+                false // No quota override for auto assign
+            );
+
+            if ($recommendations->isEmpty()) {
+                session()->flash('error', 'No available supervisors found for auto-assignment.');
+                return;
+            }
+
+            // Get the top recommended supervisor (highest score)
+            $topRecommendation = $recommendations->first();
+            $supervisorID = $topRecommendation['lecturer']->lecturerID;
+
+            // Assign the supervisor using the assignment service
+            $assignment = $this->supervisorAssignmentService->assignSupervisor(
+                $studentID,
+                $supervisorID,
+                null, // Will use current coordinator
+                null, // No notes for auto assign
+                false, // No quota override
+                null // No override reason
+            );
 
             if ($assignment) {
                 session()->flash('success', 'Supervisor auto-assigned successfully!');
             } else {
-                session()->flash('error', 'No available supervisors found for auto-assignment.');
+                session()->flash('error', 'Failed to assign supervisor.');
             }
 
             $this->resetPage();
@@ -467,8 +466,49 @@ class SupervisorAssignmentTable extends Component
                         continue;
                     }
 
-                    // Try to auto-assign
-                    $assignment = $this->supervisorAssignmentService->autoAssignNearestSupervisor($studentID);
+                    // Get student with accepted placement
+                    $student = Student::with(['user', 'acceptedPlacementApplication'])
+                        ->find($studentID);
+
+                    if (!$student) {
+                        $this->bulkAssignResults['failed']++;
+                        $this->bulkAssignProgress++;
+                        continue;
+                    }
+
+                    // Check if student has accepted placement
+                    if (!$student->hasAcceptedPlacement()) {
+                        $this->bulkAssignResults['skipped']++;
+                        $this->bulkAssignProgress++;
+                        continue;
+                    }
+
+                    // Get recommended supervisors using the scoring system (same as individual assign)
+                    $recommendations = $this->supervisorRecommendationService->getRecommendedSupervisors(
+                        $student,
+                        1, // Only need the top recommendation
+                        false // No quota override for bulk assign
+                    );
+
+                    if ($recommendations->isEmpty()) {
+                        $this->bulkAssignResults['failed']++;
+                        $this->bulkAssignProgress++;
+                        continue;
+                    }
+
+                    // Get the top recommended supervisor (highest score)
+                    $topRecommendation = $recommendations->first();
+                    $supervisorID = $topRecommendation['lecturer']->lecturerID;
+
+                    // Assign the supervisor using the assignment service
+                    $assignment = $this->supervisorAssignmentService->assignSupervisor(
+                        $studentID,
+                        $supervisorID,
+                        null, // Will use current coordinator
+                        null, // No notes for bulk assign
+                        false, // No quota override
+                        null // No override reason
+                    );
 
                     if ($assignment) {
                         $this->bulkAssignResults['success']++;
@@ -563,19 +603,31 @@ class SupervisorAssignmentTable extends Component
 
     public function openEditModal($assignmentID)
     {
-        $assignment = SupervisorAssignment::with(['student.user', 'supervisor.user'])
+        $assignment = SupervisorAssignment::with(['student.user', 'student.acceptedPlacementApplication', 'supervisor.user'])
             ->findOrFail($assignmentID);
 
         $this->editAssignmentID = $assignmentID;
         $this->newSupervisorID = $assignment->supervisor->lecturerID;
         $this->assignmentNotes = $assignment->assignment_notes;
 
-        // Get recommended supervisors for reassignment
-        $this->recommendedSupervisors = $this->supervisorAssignmentService->getRecommendedSupervisors(
-            $assignment->studentID,
+        // Get recommended supervisors using the scoring system (same as assign modal)
+        $recommendations = $this->supervisorRecommendationService->getRecommendedSupervisors(
+            $assignment->student,
             10,
             true // Include full quota for editing
         );
+
+        // Convert to array format that Livewire can serialize (same format as assign modal)
+        $this->recommendedSupervisors = $recommendations->map(function($rec) {
+            return [
+                'lecturer' => $rec['lecturer'],
+                'score' => $rec['score'],
+                'breakdown' => $rec['breakdown'],
+                'distance_km' => $rec['distance_km'],
+                'distance' => $rec['distance_km'],
+                'available_quota' => $rec['available_quota'],
+            ];
+        })->values()->toArray();
 
         $this->showEditModal = true;
     }

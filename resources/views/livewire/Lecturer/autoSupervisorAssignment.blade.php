@@ -3,32 +3,32 @@
         <div class="w-full px-4 sm:px-6 lg:px-8">
             <!-- Page Header -->
             <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Auto Supervisor Assignment</h1>
-                <p class="text-gray-600">AI-powered supervisor recommendations based on coursework, travel preference, distance, and workload</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Auto Supervisor Assignment</h1>
+                <p class="text-gray-600 dark:text-gray-400">AI-powered supervisor recommendations based on coursework, travel preference, distance, and workload</p>
             </div>
 
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-yellow-100">
-                            <span class="text-yellow-600 text-2xl">⏳</span>
+                        <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                            <span class="text-yellow-600 dark:text-yellow-400 text-2xl">⏳</span>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Awaiting Assignment</p>
-                            <p class="text-3xl font-bold text-gray-900">{{ $stats['total_unassigned'] }}</p>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Awaiting Assignment</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ $stats['total_unassigned'] }}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-green-100">
-                            <span class="text-green-600 text-2xl">✅</span>
+                        <div class="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
+                            <span class="text-green-600 dark:text-green-400 text-2xl">✅</span>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Already Assigned</p>
-                            <p class="text-3xl font-bold text-gray-900">{{ $stats['total_assigned'] }}</p>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Already Assigned</p>
+                            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ $stats['total_assigned'] }}</p>
                         </div>
                     </div>
                 </div>
@@ -36,64 +36,64 @@
 
             <!-- Flash Messages -->
             @if (session()->has('success'))
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                    <p class="text-green-700">{{ session('success') }}</p>
+                <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
+                    <p class="text-green-700 dark:text-green-300">{{ session('success') }}</p>
                 </div>
             @endif
 
             @if (session()->has('error'))
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                    <p class="text-red-700">{{ session('error') }}</p>
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+                    <p class="text-red-700 dark:text-red-300">{{ session('error') }}</p>
                 </div>
             @endif
 
             <!-- Students List -->
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-lg font-medium text-gray-900">Students Awaiting Supervisor Assignment</h2>
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Students Awaiting Supervisor Assignment</h2>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Program</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Scope</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Program</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Company</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Job Scope</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($students as $student)
-                                <tr class="hover:bg-gray-50">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">{{ $student->user->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ $student->studentID }}</div>
+                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $student->user->name }}</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ $student->studentID }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-900">{{ $student->program ?? 'N/A' }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-100">{{ $student->program ?? 'N/A' }}</div>
                                     </td>
                                     <td class="px-6 py-4">
                                         @if($student->acceptedPlacementApplication)
-                                            <div class="text-sm text-gray-900">{{ $student->acceptedPlacementApplication->companyName }}</div>
-                                            <div class="text-sm text-gray-500">{{ $student->acceptedPlacementApplication->companyCity }}, {{ $student->acceptedPlacementApplication->companyState }}</div>
+                                            <div class="text-sm text-gray-900 dark:text-gray-100">{{ $student->acceptedPlacementApplication->companyName }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $student->acceptedPlacementApplication->companyCity }}, {{ $student->acceptedPlacementApplication->companyState }}</div>
                                         @else
-                                            <span class="text-sm text-gray-400">N/A</span>
+                                            <span class="text-sm text-gray-400 dark:text-gray-500">N/A</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
                                         @if($student->acceptedPlacementApplication && $student->acceptedPlacementApplication->jobscope)
-                                            <div class="text-sm text-gray-900 max-w-xs truncate" title="{{ $student->acceptedPlacementApplication->jobscope }}">
+                                            <div class="text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate" title="{{ $student->acceptedPlacementApplication->jobscope }}">
                                                 {{ $student->acceptedPlacementApplication->jobscope }}
                                             </div>
                                         @else
-                                            <span class="text-sm text-gray-400">N/A</span>
+                                            <span class="text-sm text-gray-400 dark:text-gray-500">N/A</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <button wire:click="openRecommendationModal('{{ $student->studentID }}')"
-                                            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                                            class="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-600 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-700">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                                             </svg>
@@ -103,8 +103,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <td colspan="5" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                         <p class="mt-2 text-lg font-semibold">All students have been assigned supervisors!</p>
@@ -118,7 +118,7 @@
 
                 <!-- Pagination -->
                 @if($students->hasPages())
-                    <div class="px-6 py-4 border-t border-gray-200">
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                         {{ $students->links() }}
                     </div>
                 @endif
@@ -128,23 +128,23 @@
 
     <!-- Recommendation Modal -->
     @if($showRecommendationModal && $selectedStudent)
-        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" wire:click="closeRecommendationModal">
-            <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white" wire:click.stop>
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50" wire:click="closeRecommendationModal">
+            <div class="relative top-10 mx-auto p-5 border border-gray-300 dark:border-gray-700 w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white dark:bg-gray-800" wire:click.stop>
                 <div class="mt-3">
                     <!-- Header -->
                     <div class="flex justify-between items-center mb-4">
                         <div>
-                            <h3 class="text-2xl font-bold text-gray-900">AI Supervisor Recommendations</h3>
-                            <p class="text-sm text-gray-600 mt-1">Based on coursework match, travel preference, proximity, and workload analysis</p>
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">AI Supervisor Recommendations</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Based on coursework match, travel preference, proximity, and workload analysis</p>
                         </div>
-                        <button wire:click="closeRecommendationModal" class="text-gray-400 hover:text-gray-500">
+                        <button wire:click="closeRecommendationModal" class="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400">
                             <span class="text-3xl">&times;</span>
                         </button>
                     </div>
 
                     <!-- Student Info -->
-                    <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                    <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
@@ -152,25 +152,25 @@
                         </h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <p class="text-sm text-gray-600">Name:</p>
-                                <p class="font-medium text-gray-900">{{ $selectedStudent->user->name }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Name:</p>
+                                <p class="font-medium text-gray-900 dark:text-gray-100">{{ $selectedStudent->user->name }}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-600">Student ID:</p>
-                                <p class="font-medium text-gray-900">{{ $selectedStudent->studentID }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Student ID:</p>
+                                <p class="font-medium text-gray-900 dark:text-gray-100">{{ $selectedStudent->studentID }}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-600">Program:</p>
-                                <p class="font-medium text-gray-900">{{ $selectedStudent->program ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Program:</p>
+                                <p class="font-medium text-gray-900 dark:text-gray-100">{{ $selectedStudent->program ?? 'N/A' }}</p>
                             </div>
                             @if($selectedStudent->acceptedPlacementApplication)
                                 <div>
-                                    <p class="text-sm text-gray-600">Company:</p>
-                                    <p class="font-medium text-gray-900">{{ $selectedStudent->acceptedPlacementApplication->companyName }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Company:</p>
+                                    <p class="font-medium text-gray-900 dark:text-gray-100">{{ $selectedStudent->acceptedPlacementApplication->companyName }}</p>
                                 </div>
                                 <div class="col-span-2">
-                                    <p class="text-sm text-gray-600">Job Scope:</p>
-                                    <p class="font-medium text-gray-900">{{ $selectedStudent->acceptedPlacementApplication->jobscope ?? 'N/A' }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Job Scope:</p>
+                                    <p class="font-medium text-gray-900 dark:text-gray-100">{{ $selectedStudent->acceptedPlacementApplication->jobscope ?? 'N/A' }}</p>
                                 </div>
                             @endif
                         </div>
@@ -178,13 +178,13 @@
 
                     <!-- Recommendations -->
                     @if(empty($recommendations))
-                        <div class="p-6 text-center bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <svg class="mx-auto h-12 w-12 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="p-6 text-center bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                            <svg class="mx-auto h-12 w-12 text-yellow-400 dark:text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                             </svg>
-                            <p class="mt-4 text-lg font-medium text-gray-900">No recommendations available</p>
-                            <p class="text-sm text-gray-600 mt-2">This could be due to:</p>
-                            <ul class="text-sm text-gray-600 mt-2 text-left max-w-md mx-auto">
+                            <p class="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">No recommendations available</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">This could be due to:</p>
+                            <ul class="text-sm text-gray-600 dark:text-gray-400 mt-2 text-left max-w-md mx-auto">
                                 <li>• All supervisors are at full capacity</li>
                                 <li>• No supervisors match the student's department</li>
                                 <li>• Missing location data for distance calculation</li>
@@ -210,51 +210,51 @@
 
                                     // Score color based on value
                                     $scorePercent = $score * 100;
-                                    if ($scorePercent >= 80) $scoreColor = 'text-green-600';
-                                    elseif ($scorePercent >= 60) $scoreColor = 'text-blue-600';
-                                    elseif ($scorePercent >= 40) $scoreColor = 'text-yellow-600';
-                                    else $scoreColor = 'text-gray-600';
+                                    if ($scorePercent >= 80) $scoreColor = 'text-green-600 dark:text-green-400';
+                                    elseif ($scorePercent >= 60) $scoreColor = 'text-blue-600 dark:text-blue-400';
+                                    elseif ($scorePercent >= 40) $scoreColor = 'text-yellow-600 dark:text-yellow-400';
+                                    else $scoreColor = 'text-gray-600 dark:text-gray-400';
                                 @endphp
 
-                                <div class="border-2 {{ $index === 0 ? 'border-indigo-500' : 'border-gray-200' }} rounded-lg p-5 hover:shadow-lg transition-shadow">
+                                <div class="border-2 {{ $index === 0 ? 'border-indigo-500 dark:border-indigo-600' : 'border-gray-200 dark:border-gray-700' }} rounded-lg p-5 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
                                     <div class="flex items-start justify-between mb-4">
                                         <div class="flex items-center space-x-3">
                                             <span class="inline-flex items-center justify-center h-10 w-10 rounded-full {{ $badgeColor }} font-bold text-lg">
                                                 #{{ $index + 1 }}
                                             </span>
                                             <div>
-                                                <h5 class="text-lg font-bold text-gray-900">{{ $lecturer->user->name }}</h5>
-                                                <p class="text-sm text-gray-600">{{ $lecturer->lecturerID }} • {{ $lecturer->department ?? 'N/A' }}</p>
+                                                <h5 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ $lecturer->user->name }}</h5>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $lecturer->lecturerID }} • {{ $lecturer->department ?? 'N/A' }}</p>
                                             </div>
                                         </div>
                                         <div class="text-right">
                                             <div class="text-3xl font-bold {{ $scoreColor }}">{{ number_format($score * 100, 1) }}%</div>
-                                            <div class="text-xs text-gray-500">Match Score</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">Match Score</div>
                                         </div>
                                     </div>
 
                                     <!-- Score Breakdown -->
                                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                        <div class="bg-blue-50 rounded p-3">
-                                            <div class="text-xs text-gray-600 mb-1">Course Match (40%)</div>
-                                            <div class="text-lg font-bold text-blue-600">{{ number_format($breakdown['course_match']['raw'] * 100) }}%</div>
+                                        <div class="bg-blue-50 dark:bg-blue-900/30 rounded p-3">
+                                            <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Course Match (40%)</div>
+                                            <div class="text-lg font-bold text-blue-600 dark:text-blue-400">{{ number_format($breakdown['course_match']['raw'] * 100) }}%</div>
                                         </div>
-                                        <div class="bg-green-50 rounded p-3">
-                                            <div class="text-xs text-gray-600 mb-1">Travel Pref (30%)</div>
-                                            <div class="text-lg font-bold text-green-600">{{ number_format($breakdown['preference_match']['raw'] * 100) }}%</div>
+                                        <div class="bg-green-50 dark:bg-green-900/30 rounded p-3">
+                                            <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Travel Pref (30%)</div>
+                                            <div class="text-lg font-bold text-green-600 dark:text-green-400">{{ number_format($breakdown['preference_match']['raw'] * 100) }}%</div>
                                         </div>
-                                        <div class="bg-purple-50 rounded p-3">
-                                            <div class="text-xs text-gray-600 mb-1">Distance (20%)</div>
-                                            <div class="text-lg font-bold text-purple-600">{{ number_format($breakdown['distance_score']['raw'] * 100) }}%</div>
+                                        <div class="bg-purple-50 dark:bg-purple-900/30 rounded p-3">
+                                            <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Distance (20%)</div>
+                                            <div class="text-lg font-bold text-purple-600 dark:text-purple-400">{{ number_format($breakdown['distance_score']['raw'] * 100) }}%</div>
                                         </div>
-                                        <div class="bg-orange-50 rounded p-3">
-                                            <div class="text-xs text-gray-600 mb-1">Workload (10%)</div>
-                                            <div class="text-lg font-bold text-orange-600">{{ number_format($breakdown['workload_score']['raw'] * 100) }}%</div>
+                                        <div class="bg-orange-50 dark:bg-orange-900/30 rounded p-3">
+                                            <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Workload (10%)</div>
+                                            <div class="text-lg font-bold text-orange-600 dark:text-orange-400">{{ number_format($breakdown['workload_score']['raw'] * 100) }}%</div>
                                         </div>
                                     </div>
 
                                     <!-- Details -->
-                                    <div class="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+                                    <div class="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                                         <div class="flex items-center">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -273,7 +273,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                             </svg>
                                             <strong>Workload:</strong>&nbsp;{{ $lecturer->current_assignments }}/{{ $lecturer->supervisor_quota }}
-                                            <span class="ml-1 text-green-600">({{ $availableQuota }} available)</span>
+                                            <span class="ml-1 text-green-600 dark:text-green-400">({{ $availableQuota }} available)</span>
                                         </div>
                                         @if($lecturer->program)
                                             <div class="flex items-center">
@@ -299,7 +299,7 @@
                                     <button wire:click="assignSupervisor('{{ $lecturer->lecturerID }}', {{ $score }})"
                                         wire:loading.attr="disabled"
                                         wire:target="assignSupervisor"
-                                        class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center">
+                                        class="w-full py-3 px-4 bg-indigo-600 dark:bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
@@ -312,20 +312,20 @@
 
                         <!-- Optional Notes -->
                         <div class="mt-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Additional Notes (Optional)
                             </label>
                             <textarea wire:model="assignmentNotes" rows="2"
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="Add any additional notes about the assignment..."></textarea>
-                            <p class="text-xs text-gray-500 mt-1">Note: System will automatically add recommendation details to the assignment.</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Note: System will automatically add recommendation details to the assignment.</p>
                         </div>
                     @endif
 
                     <!-- Close Button -->
                     <div class="mt-6 flex justify-end">
                         <button wire:click="closeRecommendationModal"
-                            class="px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
                             Close
                         </button>
                     </div>

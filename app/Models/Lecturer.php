@@ -52,15 +52,15 @@ class Lecturer extends Model
         'longitude'           => 'decimal:8',
     ];
 
-    // Lecturer status constants
-    public const STATUS_ACTIVE = 'active';
-    public const STATUS_SABBATICAL_LEAVE = 'sabbatical leave';
-    public const STATUS_MATERNITY_LEAVE = 'maternity leave';
-    public const STATUS_PILGRIMAGE_LEAVE = 'pilgrimage leave';
-    public const STATUS_TRANSFERRED = 'transferred';
-    public const STATUS_RESIGNED = 'resigned';
-    public const STATUS_INACTIVE = 'in-active';
-    public const STATUS_PASSED_AWAY = 'passed away';
+    // Lecturer status constants - Match database ENUM values
+    public const STATUS_ACTIVE = 'Active';
+    public const STATUS_SABBATICAL_LEAVE = 'Sabatical Leave';  // Note: typo in DB
+    public const STATUS_MATERNITY_LEAVE = 'Maternity Leave';
+    public const STATUS_PILGRIMAGE_LEAVE = 'Pligrimage Leave';  // Note: typo in DB
+    public const STATUS_TRANSFERRED = 'Transfered';  // Note: typo in DB
+    public const STATUS_RESIGNED = 'Resigned';
+    public const STATUS_INACTIVE = 'In-Active';
+    public const STATUS_PASSED_AWAY = 'Pass Away';
 
     /**
      * Get all available lecturer statuses
@@ -197,7 +197,8 @@ class Lecturer extends Model
             return false;
         }
 
-        return ($this->supervisor_quota - $this->current_assignments) > 0;
+        $currentAssignments = $this->current_assignments ?? 0;
+        return ($this->supervisor_quota - $currentAssignments) > 0;
     }
 
     /**
@@ -209,7 +210,8 @@ class Lecturer extends Model
             return 0;
         }
 
-        return max(0, $this->supervisor_quota - $this->current_assignments);
+        $currentAssignments = $this->current_assignments ?? 0;
+        return max(0, $this->supervisor_quota - $currentAssignments);
     }
 
     /**

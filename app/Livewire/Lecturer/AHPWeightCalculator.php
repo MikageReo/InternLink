@@ -40,6 +40,22 @@ class AHPWeightCalculator extends Component
         'workload_score' => 10.0,
     ];
 
+    // Importance levels: Very High, High, Medium, Low
+    public $importanceLevels = [
+        'course_match' => 'high',
+        'preference_match' => 'high',
+        'distance_score' => 'medium',
+        'workload_score' => 'low',
+    ];
+
+    // Importance level to weight mapping
+    protected $importanceWeights = [
+        'very_high' => 40.0,
+        'high' => 30.0,
+        'medium' => 20.0,
+        'low' => 10.0,
+    ];
+
     protected $ahpService;
 
     // Criteria labels for display
@@ -102,6 +118,9 @@ class AHPWeightCalculator extends Component
                 $this->directWeights[$key] = $weight * 100;
             }
         }
+
+        // Initialize importance levels from weights (for both cases)
+        $this->initializeImportanceLevels();
 
         // Ensure weights are calculated
         if (empty($this->calculatedWeights)) {
@@ -239,13 +258,69 @@ class AHPWeightCalculator extends Component
      */
     public function resetToEqual()
     {
-        // Reset direct weights to equal
-        foreach ($this->directWeights as $key => $value) {
-            $this->directWeights[$key] = 25.0;
+        // Reset all importance levels to medium (equal)
+        foreach ($this->importanceLevels as $key => $value) {
+            $this->importanceLevels[$key] = 'medium';
         }
+
+        // Update weights from importance levels
+        $this->updateWeightsFromImportance();
+        Session::flash('info', 'Weights reset to equal (25% each).');
+    }
+
+    /**
+     * Initialize importance levels from current weights
+     */
+    private function initializeImportanceLevels()
+    {
+        // Find the highest weight to determine importance levels
+        $maxWeight = max($this->directWeights);
+        $minWeight = min($this->directWeights);
+        $range = $maxWeight - $minWeight;
+
+        foreach ($this->directWeights as $key => $weight) {
+            if ($range == 0) {
+                // All equal, set to medium
+                $this->importanceLevels[$key] = 'medium';
+            } else {
+                $normalized = ($weight - $minWeight) / $range;
+                if ($normalized >= 0.75) {
+                    $this->importanceLevels[$key] = 'very_high';
+                } elseif ($normalized >= 0.5) {
+                    $this->importanceLevels[$key] = 'high';
+                } elseif ($normalized >= 0.25) {
+                    $this->importanceLevels[$key] = 'medium';
+                } else {
+                    $this->importanceLevels[$key] = 'low';
+                }
+            }
+        }
+    }
+
+    /**
+     * Update direct weights from importance levels
+     */
+    public function updateWeightsFromImportance()
+    {
+        // Convert importance levels to base weights
+        foreach ($this->importanceLevels as $key => $level) {
+            $this->directWeights[$key] = $this->importanceWeights[$level] ?? 20.0;
+        }
+
+        // Normalize to ensure they sum to 100
+        $this->normalizeDirectWeights();
+
+        // Convert to matrix and recalculate
         $this->convertDirectWeightsToMatrix();
         $this->calculateWeights();
-        Session::flash('info', 'Weights reset to equal (25% each).');
+    }
+
+    /**
+     * Handle importance level changes
+     */
+    public function updatedImportanceLevels($value, $key)
+    {
+        $this->updateWeightsFromImportance();
     }
 
     /**
@@ -353,6 +428,9 @@ class AHPWeightCalculator extends Component
      */
     public function saveWeights()
     {
+        // Ensure importance levels are synced with weights
+        $this->updateWeightsFromImportance();
+
         // Ensure weights are normalized before saving
         $this->normalizeDirectWeights();
 

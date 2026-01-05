@@ -137,15 +137,23 @@
                             </div>
 
                             <!-- Placement Application Status -->
-                            <div class="border-l-4 {{ $latestPlacementApplication ? ($latestPlacementApplication->overall_status === 'Approved' ? 'border-green-500' : ($latestPlacementApplication->overall_status === 'Pending' ? 'border-yellow-500' : 'border-red-500')) : 'border-gray-300' }} pl-4 py-2">
+                            <div class="border-l-4 {{ $latestPlacementApplication ? ($latestPlacementApplication->studentAcceptance === 'Accepted' ? 'border-green-500' : ($latestPlacementApplication->overall_status === 'Approved' ? 'border-green-500' : ($latestPlacementApplication->overall_status === 'Pending' ? 'border-yellow-500' : 'border-red-500'))) : 'border-gray-300' }} pl-4 py-2">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <h4 class="font-medium text-gray-900 dark:text-gray-100">Placement Application</h4>
                                         <p class="text-sm text-gray-600 dark:text-gray-400">
                                             @if($latestPlacementApplication)
                                                 Company: <span class="font-semibold">{{ $latestPlacementApplication->companyName }}</span>
-                                                <br>Status: <span class="font-semibold">{{ $latestPlacementApplication->overall_status }}</span>
-                                                @if($latestPlacementApplication->studentAcceptance)
+                                                <br>Status: <span class="font-semibold">
+                                                    @if($latestPlacementApplication->studentAcceptance === 'Accepted')
+                                                        Accepted
+                                                    @elseif($latestPlacementApplication->studentAcceptance === 'Declined')
+                                                        Declined
+                                                    @else
+                                                        {{ $latestPlacementApplication->overall_status }}
+                                                    @endif
+                                                </span>
+                                                @if($latestPlacementApplication->studentAcceptance && $latestPlacementApplication->studentAcceptance !== 'Accepted' && $latestPlacementApplication->studentAcceptance !== 'Declined')
                                                     <br>Your Response: <span class="font-semibold capitalize">{{ $latestPlacementApplication->studentAcceptance }}</span>
                                                 @endif
                                             @else
