@@ -69,12 +69,12 @@ class RequestDeferTable extends Component
         // Clear error messages about accepted placement applications (not relevant for defer requests)
         if (session()->has('error')) {
             $errorMessage = session('error');
-            if (str_contains($errorMessage, 'already have an accepted placement application') || 
+            if (str_contains($errorMessage, 'already have an accepted placement application') ||
                 str_contains($errorMessage, 'cannot submit additional applications')) {
                 session()->forget('error');
             }
         }
-        
+
         // Check if student can make defer requests (must have approved course verification)
         if (!$this->canStudentMakeRequest()) {
             session()->flash('warning', 'You must have an approved course verification before making defer requests.');
@@ -383,7 +383,7 @@ class RequestDeferTable extends Component
     public function getAnalyticsData()
     {
         $student = Auth::user()->student;
-        
+
         if (!$student) {
             return null;
         }

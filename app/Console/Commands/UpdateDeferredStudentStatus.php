@@ -25,7 +25,7 @@ class UpdateDeferredStudentStatus extends Command
 
     /**
      * Execute the console command.
-     * 
+     *
      * NOTE: This command has been disabled. Defer status should not be automatically changed to Active.
      * Students with defer status will be handled during next semester student creation process.
      */
@@ -33,7 +33,7 @@ class UpdateDeferredStudentStatus extends Command
     {
         $this->info("This command has been disabled. Defer status changes are now handled during next semester student creation.");
         $this->warn("Students with defer status will be created in the special student database for next semester, but their defer records will be preserved.");
-        
+
         return Command::SUCCESS;
     }
 }
