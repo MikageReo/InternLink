@@ -120,10 +120,6 @@
             <span class="info-label">Application Date:</span>
             <span class="info-value">{{ $request->applicationDate->format('F d, Y') }}</span>
         </div>
-        <div class="info-row">
-            <span class="info-label">Defer Period:</span>
-            <span class="info-value">{{ $request->startDate->format('F d, Y') }} to {{ $request->endDate->format('F d, Y') }}</span>
-        </div>
 
         <h3>📝 Your Reason</h3>
         <div class="reason-box">
@@ -167,8 +163,7 @@
             <h3>📌 Next Steps</h3>
             @if($overallStatus === 'Approved')
                 <p><strong>Congratulations!</strong> Your defer request has been approved by both the committee and coordinator.</p>
-                <p>Please note the approved defer period: <strong>{{ $request->startDate->format('F d, Y') }} to {{ $request->endDate->format('F d, Y') }}</strong></p>
-                <p>You may proceed with your defer arrangements according to the approved timeline.</p>
+                <p>You may proceed with your defer arrangements for the next semester.</p>
             @elseif($overallStatus === 'Rejected')
                 <p>Unfortunately, your defer request has been rejected.</p>
                 <p>Please review the remarks above for the reason(s) for rejection.</p>

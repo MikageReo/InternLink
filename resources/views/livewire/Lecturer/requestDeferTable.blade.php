@@ -298,13 +298,6 @@
                                     REASON
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    <button wire:click="sortBy('startDate')"
-                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
-                                        <span>DEFER PERIOD</span>
-                                        <span class="ml-1">{{ $sortField === 'startDate' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
-                                    </button>
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     <button wire:click="sortBy('applicationDate')"
                                         class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
                                         <span>APPLICATION DATE</span>
@@ -352,10 +345,6 @@
                                         <div class="max-w-xs truncate" title="{{ $request->reason }}">
                                             {{ $request->reason }}
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        <div>{{ $request->startDate->format('M d, Y') }}</div>
-                                        <div class="text-gray-500 dark:text-gray-400">to {{ $request->endDate->format('M d, Y') }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ $request->applicationDate->format('M d, Y') }}

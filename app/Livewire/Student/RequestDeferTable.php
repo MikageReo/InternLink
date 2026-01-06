@@ -35,8 +35,6 @@ class RequestDeferTable extends Component
 
     // Defer request form data
     public $reason = '';
-    public $startDate = '';
-    public $endDate = '';
 
     // File uploads (multiple files)
     public $applicationFiles = [];
@@ -52,8 +50,6 @@ class RequestDeferTable extends Component
 
     protected $rules = [
         'reason' => 'required|string|min:10',
-        'startDate' => 'required|date|after:today',
-        'endDate' => 'required|date|after:startDate',
         'applicationFiles' => 'required|array|min:1',
         'applicationFiles.*' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120', // 5MB max
     ];
@@ -61,10 +57,6 @@ class RequestDeferTable extends Component
     protected $messages = [
         'reason.required' => 'Please provide a reason for the defer request.',
         'reason.min' => 'Reason must be at least 10 characters.',
-        'startDate.required' => 'Start date is required.',
-        'startDate.after' => 'Start date must be after today.',
-        'endDate.required' => 'End date is required.',
-        'endDate.after' => 'End date must be after start date.',
         'applicationFiles.required' => 'At least one supporting document is required.',
         'applicationFiles.min' => 'At least one supporting document is required.',
         'applicationFiles.*.required' => 'Each file is required.',
@@ -162,8 +154,6 @@ class RequestDeferTable extends Component
     {
         $this->reset([
             'reason',
-            'startDate',
-            'endDate',
             'applicationFiles',
             'existingFiles'
         ]);
@@ -209,8 +199,6 @@ class RequestDeferTable extends Component
 
         $this->editingId = $id;
         $this->reason = $request->reason;
-        $this->startDate = $request->startDate instanceof \Carbon\Carbon ? $request->startDate->format('Y-m-d') : '';
-        $this->endDate = $request->endDate instanceof \Carbon\Carbon ? $request->endDate->format('Y-m-d') : '';
 
         // Load existing files for display
         $this->existingFiles = $request->files->toArray();
@@ -240,8 +228,6 @@ class RequestDeferTable extends Component
 
             $data = [
                 'reason' => $this->reason,
-                'startDate' => $this->startDate,
-                'endDate' => $this->endDate,
                 'applicationDate' => now()->format('Y-m-d'),
                 'studentID' => $student->studentID,
             ];
@@ -387,7 +373,7 @@ class RequestDeferTable extends Component
         }
 
         // Apply sorting
-        if (in_array($this->sortField, ['deferID', 'applicationDate', 'startDate', 'endDate'])) {
+        if (in_array($this->sortField, ['deferID', 'applicationDate'])) {
             $query->orderBy($this->sortField, $this->sortDirection);
         }
 

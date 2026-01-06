@@ -28,8 +28,6 @@ class SupervisorAssignmentService
      * @param string $supervisorID
      * @param string|null $assignedBy Coordinator lecturer ID (defaults to current user)
      * @param string|null $notes Assignment notes
-     * @param bool $quotaOverride Override quota limit
-     * @param string|null $overrideReason Reason for quota override
      * @return SupervisorAssignment
      * @throws \Exception
      */
@@ -37,9 +35,7 @@ class SupervisorAssignmentService
         string $studentID,
         string $supervisorID,
         ?string $assignedBy = null,
-        ?string $notes = null,
-        bool $quotaOverride = false,
-        ?string $overrideReason = null
+        ?string $notes = null
     ): SupervisorAssignment {
         // Validate student
         $student = Student::findOrFail($studentID);
@@ -74,9 +70,9 @@ class SupervisorAssignmentService
             throw new \Exception('Supervisor cannot be assigned as they hold an administrative position (' . $supervisor->position . ').');
         }
 
-        // Check quota unless override
-        if (!$quotaOverride && !$supervisor->hasAvailableQuota()) {
-            throw new \Exception('Supervisor has reached their quota limit. Use quota override if necessary.');
+        // Check quota
+        if (!$supervisor->hasAvailableQuota()) {
+            throw new \Exception('Supervisor has reached their quota limit.');
         }
 
         // Note: Department restriction removed - supervisors can supervise any student regardless of department
@@ -125,8 +121,6 @@ class SupervisorAssignmentService
                 'status' => SupervisorAssignment::STATUS_ASSIGNED,
                 'assignment_notes' => $notes,
                 'distance_km' => $distance,
-                'quota_override' => $quotaOverride,
-                'override_reason' => $quotaOverride ? $overrideReason : null,
                 'assigned_at' => now(),
             ]);
 
@@ -140,7 +134,6 @@ class SupervisorAssignmentService
                 'supervisor_id' => $supervisorID,
                 'assigned_by' => $assignedBy,
                 'distance_km' => $distance,
-                'quota_override' => $quotaOverride,
             ]);
 
             // Send email notification to student
@@ -208,9 +201,7 @@ class SupervisorAssignmentService
                     $studentID,
                     $supervisor->lecturerID,
                     $assignedBy,
-                    'Auto-assigned based on nearest available supervisor.',
-                    false,
-                    null
+                    'Auto-assigned based on nearest available supervisor.'
                 );
             } catch (\Exception $e) {
                 // Try next supervisor

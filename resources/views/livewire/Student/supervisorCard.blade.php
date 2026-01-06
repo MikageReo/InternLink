@@ -13,17 +13,11 @@
                 <!-- Supervisor Info -->
                 <div class="flex items-start space-x-4">
                     <div class="flex-shrink-0">
-                        @if ($supervisorAssignment->supervisor->profile_photo)
-                            <img src="{{ asset('storage/' . $supervisorAssignment->supervisor->profile_photo) }}"
-                                alt="{{ $supervisorAssignment->supervisor->user->name }}"
-                                class="h-16 w-16 rounded-full object-cover">
-                        @else
-                            <div class="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
-                                <span class="text-indigo-600 text-xl font-semibold">
-                                    {{ substr($supervisorAssignment->supervisor->user->name, 0, 1) }}
-                                </span>
-                            </div>
-                        @endif
+                        <div class="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span class="text-indigo-600 text-xl font-semibold">
+                                {{ substr($supervisorAssignment->supervisor->user->name, 0, 1) }}
+                            </span>
+                        </div>
                     </div>
                     <div class="flex-1">
                         <h4 class="text-lg font-medium text-gray-900">

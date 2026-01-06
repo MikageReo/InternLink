@@ -8,6 +8,7 @@ use Livewire\WithFileUploads;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\Lecturer;
+use App\Models\RequestDefer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -1213,6 +1214,14 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 $academicAdvisorID = $result['advisorID'];
             }
 
+            // Check if student has an approved defer request
+            // If yes, set status to 'Deferred' for next semester
+            $studentStatus = 'Active';
+            if (RequestDefer::hasApprovedDeferRequest($data['studentID'] ?? '')) {
+                $studentStatus = 'Deferred';
+                Log::info("Student {$data['studentID']} has approved defer request. Setting status to Deferred for next semester.");
+            }
+
             // Use form values for session, courseCode, and internship dates (not from CSV)
             Student::create([
                 'studentID' => $data['studentID'] ?? '',
@@ -1233,7 +1242,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'internship_start_date' => $this->bulkInternshipStartDate,
                 'internship_end_date' => $this->bulkInternshipEndDate,
                 'academicAdvisorID' => $academicAdvisorID,
-                'status' => 'Active',
+                'status' => $studentStatus,
             ]);
 
             DB::commit();
@@ -1385,6 +1394,14 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 }
             }
 
+            // Check if student has an approved defer request
+            // If yes, set status to 'Deferred' for next semester
+            $studentStatus = 'Active';
+            if (RequestDefer::hasApprovedDeferRequest($this->studentID)) {
+                $studentStatus = 'Deferred';
+                Log::info("Student {$this->studentID} has approved defer request. Setting status to Deferred for next semester.");
+            }
+
             Student::create([
                 'studentID' => $this->studentID,
                 'user_id' => $user->id,
@@ -1404,7 +1421,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
                 'internship_start_date' => $this->studentInternshipStartDate,
                 'internship_end_date' => $this->studentInternshipEndDate,
                 'academicAdvisorID' => $this->studentAcademicAdvisorID ?: null,
-                'status' => 'Active',
+                'status' => $studentStatus,
             ]);
 
             DB::commit();

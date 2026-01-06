@@ -285,6 +285,13 @@ class CourseVerificationTable extends Component
             $this->selectedApplication = CourseVerification::with(['student.user', 'lecturer', 'academicAdvisor', 'files'])
                 ->findOrFail($id);
 
+            // Update student status from Deferred to Active if they pass course verification
+            $student = $this->selectedApplication->student;
+            if ($student && $student->status === 'Deferred') {
+                $student->update(['status' => 'Active']);
+                Log::info("Student {$student->studentID} status updated from Deferred to Active after course verification approval.");
+            }
+
             // Send email notification to student
             try {
                 $this->selectedApplication->student->user->notify(
@@ -768,6 +775,14 @@ class CourseVerificationTable extends Component
                             'remarks' => $this->remarks ?: 'Approved',
                         ]);
 
+                        // Update student status from Deferred to Active if they pass course verification
+                        $application->load('student');
+                        $student = $application->student;
+                        if ($student && $student->status === 'Deferred') {
+                            $student->update(['status' => 'Active']);
+                            Log::info("Student {$student->studentID} status updated from Deferred to Active after course verification approval (bulk).");
+                        }
+
                         // Send notification
                         try {
                             $application->load('student.user');
@@ -820,6 +835,14 @@ class CourseVerificationTable extends Component
                             'lecturerID' => $lecturer->lecturerID,
                             'remarks' => $this->remarks ?: 'Approved',
                         ]);
+
+                        // Update student status from Deferred to Active if they pass course verification
+                        $application->load('student');
+                        $student = $application->student;
+                        if ($student && $student->status === 'Deferred') {
+                            $student->update(['status' => 'Active']);
+                            Log::info("Student {$student->studentID} status updated from Deferred to Active after course verification approval (bulk).");
+                        }
 
                         // Send notification
                         try {

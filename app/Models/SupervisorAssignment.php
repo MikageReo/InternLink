@@ -14,8 +14,6 @@ class SupervisorAssignment extends Model
         'status',
         'assignment_notes',
         'distance_km',
-        'quota_override',
-        'override_reason',
         'assigned_at',
         'completed_at',
     ];
@@ -24,7 +22,6 @@ class SupervisorAssignment extends Model
         'assigned_at' => 'datetime',
         'completed_at' => 'datetime',
         'distance_km' => 'decimal:2',
-        'quota_override' => 'boolean',
     ];
 
     // Status constants

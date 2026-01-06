@@ -32,8 +32,6 @@
                         <h4 class="font-semibold text-gray-900 mb-3">Request Information</h4>
                         <div class="space-y-2 text-sm">
                             <p class="text-gray-900"><strong class="text-gray-700">Request ID:</strong> <span class="text-gray-900">#{{ $selectedRequest->deferID }}</span></p>
-                            <p class="text-gray-900"><strong class="text-gray-700">Start Date:</strong> <span class="text-gray-900">{{ $selectedRequest->startDate->format('M d, Y') }}</span></p>
-                            <p class="text-gray-900"><strong class="text-gray-700">End Date:</strong> <span class="text-gray-900">{{ $selectedRequest->endDate->format('M d, Y') }}</span></p>
                             <p class="text-gray-900"><strong class="text-gray-700">Application Date:</strong> <span class="text-gray-900">{{ $selectedRequest->applicationDate->format('M d, Y') }}</span></p>
                         </div>
                     </div>

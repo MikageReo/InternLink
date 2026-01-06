@@ -88,9 +88,7 @@ class AutoSupervisorAssignment extends Component
                 $this->selectedStudent->studentID,
                 $lecturerID,
                 null, // Will use current coordinator
-                $autoNotes,
-                false, // No quota override
-                null
+                $autoNotes
             );
 
             session()->flash('success', 'Supervisor assigned successfully! ' . $lecturer->user->name . ' has been assigned to ' . $this->selectedStudent->user->name);

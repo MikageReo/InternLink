@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Mail\ChangeRequestStatusNotification;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -845,25 +846,187 @@ class ChangeRequestTable extends Component
 
     private function generatePDF($requests)
     {
+        $logoPath = public_path('LOGO IL.png');
+        $logoBase64 = '';
+        if (file_exists($logoPath)) {
+            $logoData = file_get_contents($logoPath);
+            $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
+        }
+
         $html = '<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Change Requests Report</title>
     <style>
-        body { font-family: Arial, sans-serif; font-size: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        .filters { margin-bottom: 20px; }
-        .filters p { margin: 2px 0; }
+        @page {
+            margin: 20mm 15mm;
+            footer: html_footer;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 9px;
+            color: #1f2937;
+            line-height: 1.4;
+        }
+        .header {
+            background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+            color: white;
+            padding: 20px 25px;
+            margin: -20mm -15mm 20px -15mm;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            flex: 1;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+        .header .subtitle {
+            font-size: 12px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        .logo {
+            max-height: 60px;
+            max-width: 120px;
+            margin-left: 20px;
+        }
+        .report-info {
+            background: #f8fafc;
+            border-left: 4px solid #f97316;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .report-info p {
+            margin: 4px 0;
+            font-size: 10px;
+            color: #4b5563;
+        }
+        .report-info strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        .filters-box {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin: 15px 0;
+        }
+        .filters-box p {
+            margin: 3px 0;
+            font-size: 9px;
+            color: #6b7280;
+        }
+        .filters-box strong {
+            color: #374151;
+            font-weight: 600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        thead {
+            background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+            color: white;
+        }
+        th {
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #c2410c;
+        }
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        tbody tr:hover {
+            background-color: #f3f4f6;
+        }
+        td {
+            padding: 8px;
+            font-size: 8.5px;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+        .reason-cell {
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .status-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .footer {
+            text-align: center;
+            font-size: 8px;
+            color: #6b7280;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 20px;
+        }
+        .page-number {
+            font-weight: 600;
+            color: #374151;
+        }
     </style>
 </head>
 <body>
-    <h1>Change Requests Report</h1>
-    <div class="filters">
-        <p><strong>Generated:</strong> ' . now()->format('Y-m-d H:i:s') . '</p>
-        <p><strong>Total Records:</strong> ' . $requests->count() . '</p>';
+    <div class="header">
+        <div class="header-content">
+            <h1>Change Requests Report</h1>
+            <div class="subtitle">InternLink Management System</div>
+        </div>';
+
+        if ($logoBase64) {
+            $html .= '<img src="' . $logoBase64 . '" alt="InternLink Logo" class="logo" />';
+        }
+
+        $html .= '</div>
+
+    <div class="report-info">
+        <p><strong>Generated:</strong> ' . now()->format('F d, Y \a\t H:i:s') . '</p>
+        <p><strong>Total Records:</strong> ' . $requests->count() . ' request(s)</p>
+        <p><strong>Generated By:</strong> ' . (Auth::user()->name ?? 'System') . '</p>
+    </div>';
 
         $filters = [];
         if ($this->statusFilter) $filters['Status'] = $this->statusFilter;
@@ -876,51 +1039,61 @@ class ChangeRequestTable extends Component
         if ($this->dateTo) $filters['Date To'] = $this->dateTo;
 
         if (!empty($filters)) {
-            $html .= '<p><strong>Applied Filters:</strong></p>';
+            $html .= '<div class="filters-box">
+                <p><strong>Applied Filters:</strong></p>';
             foreach ($filters as $key => $value) {
-                $html .= '<p>' . $key . ': ' . $value . '</p>';
+                $html .= '<p>' . htmlspecialchars($key) . ': <strong>' . htmlspecialchars($value) . '</strong></p>';
             }
+            $html .= '</div>';
         }
 
-        $html .= '</div>
-    <table>
+        $html .= '<table>
         <thead>
             <tr>
-                <th>Justification ID</th>
-                <th>Application ID</th>
+                <th>Request ID</th>
+                <th>App ID</th>
                 <th>Student ID</th>
                 <th>Student Name</th>
-                <th>Company Name</th>
+                <th>Company</th>
                 <th>Reason</th>
                 <th>Request Date</th>
-                <th>Committee Status</th>
-                <th>Coordinator Status</th>
+                <th>Committee</th>
+                <th>Coordinator</th>
                 <th>Program</th>
-                <th>Semester</th>
+                <th>Sem</th>
                 <th>Session</th>
             </tr>
         </thead>
         <tbody>';
 
         foreach ($requests as $request) {
+            $committeeStatusClass = 'status-' . strtolower($request->committeeStatus ?? 'pending');
+            $coordinatorStatusClass = 'status-' . strtolower($request->coordinatorStatus ?? 'pending');
+
             $html .= '<tr>
-                <td>' . ($request->justificationID ?? '') . '</td>
-                <td>' . ($request->placementApplication->applicationID ?? '') . '</td>
-                <td>' . ($request->placementApplication->student->studentID ?? '') . '</td>
-                <td>' . ($request->placementApplication->student->user->name ?? '') . '</td>
-                <td>' . ($request->placementApplication->companyName ?? '') . '</td>
-                <td>' . ($request->reason ?? '') . '</td>
-                <td>' . ($request->requestDate ? \Carbon\Carbon::parse($request->requestDate)->format('Y-m-d') : '') . '</td>
-                <td>' . ($request->committeeStatus ?? '') . '</td>
-                <td>' . ($request->coordinatorStatus ?? '') . '</td>
-                <td>' . ($request->placementApplication->student->program ?? '') . '</td>
-                <td>' . ($request->placementApplication->student->semester ?? '') . '</td>
-                <td>' . ($request->placementApplication->student->session ?? '') . '</td>
+                <td><strong>' . htmlspecialchars($request->justificationID ?? '') . '</strong></td>
+                <td>' . htmlspecialchars($request->placementApplication->applicationID ?? '') . '</td>
+                <td>' . htmlspecialchars($request->placementApplication->student->studentID ?? '') . '</td>
+                <td>' . htmlspecialchars($request->placementApplication->student->user->name ?? '') . '</td>
+                <td>' . htmlspecialchars($request->placementApplication->companyName ?? '') . '</td>
+                <td class="reason-cell">' . htmlspecialchars(Str::limit($request->reason ?? '', 100)) . '</td>
+                <td>' . ($request->requestDate ? \Carbon\Carbon::parse($request->requestDate)->format('M d, Y') : '') . '</td>
+                <td><span class="status-badge ' . $committeeStatusClass . '">' . htmlspecialchars($request->committeeStatus ?? 'Pending') . '</span></td>
+                <td><span class="status-badge ' . $coordinatorStatusClass . '">' . htmlspecialchars($request->coordinatorStatus ?? 'Pending') . '</span></td>
+                <td>' . htmlspecialchars($request->placementApplication->student->program ?? '') . '</td>
+                <td>' . htmlspecialchars($request->placementApplication->student->semester ?? '') . '</td>
+                <td>' . htmlspecialchars($request->placementApplication->student->session ?? '') . '</td>
             </tr>';
         }
 
         $html .= '</tbody>
     </table>
+
+    <div class="footer">
+        <p>This is an official report generated from InternLink Management System</p>
+        <p class="page-number">Page {PAGENO} of {nbpg}</p>
+        <p>© ' . date('Y') . ' InternLink. All rights reserved.</p>
+    </div>
 </body>
 </html>';
 

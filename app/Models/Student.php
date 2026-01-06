@@ -31,7 +31,6 @@ class Student extends Model
         'session',
         'internship_start_date',
         'internship_end_date',
-        'profilePhoto',
         'status',
         'academicAdvisorID',
     ];

@@ -255,11 +255,11 @@
 
             <!-- Change Request Detail Modal -->
             @if ($showDetailModal && $selectedRequest)
-        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" wire:click="closeDetailModal">
-            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white" wire:click.stop>
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50" wire:click="closeDetailModal">
+            <div class="relative top-20 mx-auto p-5 border border-gray-300 dark:border-gray-700 w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800" wire:click.stop>
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-900">Change Request Details #{{ $selectedRequest->justificationID }}</h3>
-                    <button wire:click="closeDetailModal" class="text-gray-400 hover:text-gray-600">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Change Request Details #{{ $selectedRequest->justificationID }}</h3>
+                    <button wire:click="closeDetailModal" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
                         <span class="sr-only">Close</span>
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -269,93 +269,93 @@
 
                 <div class="space-y-6">
                     <!-- Current Placement Application -->
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <h4 class="font-semibold text-blue-800 mb-2">📋 Current Placement Application</h4>
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                        <h4 class="font-semibold text-blue-800 dark:text-blue-300 mb-2">📋 Current Placement Application</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div>
-                                <span class="font-medium text-blue-700">Application ID:</span>
-                                <span class="text-blue-900">#{{ $selectedRequest->placementApplication->applicationID }}</span>
+                                <span class="font-medium text-blue-700 dark:text-blue-400">Application ID:</span>
+                                <span class="text-blue-900 dark:text-blue-200">#{{ $selectedRequest->placementApplication->applicationID }}</span>
                             </div>
                             <div>
-                                <span class="font-medium text-blue-700">Company:</span>
-                                <span class="text-blue-900">{{ $selectedRequest->placementApplication->companyName }}</span>
+                                <span class="font-medium text-blue-700 dark:text-blue-400">Company:</span>
+                                <span class="text-blue-900 dark:text-blue-200">{{ $selectedRequest->placementApplication->companyName }}</span>
                             </div>
                             <div>
-                                <span class="font-medium text-blue-700">Position:</span>
-                                <span class="text-blue-900">{{ $selectedRequest->placementApplication->position }}</span>
+                                <span class="font-medium text-blue-700 dark:text-blue-400">Position:</span>
+                                <span class="text-blue-900 dark:text-blue-200">{{ $selectedRequest->placementApplication->position }}</span>
                             </div>
                             <div>
-                                <span class="font-medium text-blue-700">Work Method:</span>
-                                <span class="text-blue-900">{{ $selectedRequest->placementApplication->method_of_work_display }}</span>
+                                <span class="font-medium text-blue-700 dark:text-blue-400">Work Method:</span>
+                                <span class="text-blue-900 dark:text-blue-200">{{ $selectedRequest->placementApplication->method_of_work_display }}</span>
                             </div>
                             <div>
-                                <span class="font-medium text-blue-700">Duration:</span>
-                                <span class="text-blue-900">
+                                <span class="font-medium text-blue-700 dark:text-blue-400">Duration:</span>
+                                <span class="text-blue-900 dark:text-blue-200">
                                     {{ $selectedRequest->placementApplication->startDate->format('M d, Y') }} -
                                     {{ $selectedRequest->placementApplication->endDate->format('M d, Y') }}
                                 </span>
                             </div>
                             <div>
-                                <span class="font-medium text-blue-700">Application Status:</span>
-                                <span class="text-blue-900">{{ $selectedRequest->placementApplication->overall_status }}</span>
+                                <span class="font-medium text-blue-700 dark:text-blue-400">Application Status:</span>
+                                <span class="text-blue-900 dark:text-blue-200">{{ $selectedRequest->placementApplication->overall_status }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Change Request Information -->
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold text-gray-800 mb-2">🔄 Change Request Information</h4>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">🔄 Change Request Information</h4>
                         <div class="space-y-3">
                             <div>
-                                <span class="font-medium text-gray-700">Request Date:</span>
-                                <span class="text-gray-900">{{ $selectedRequest->requestDate->format('M d, Y') }}</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Request Date:</span>
+                                <span class="text-gray-900 dark:text-gray-100">{{ $selectedRequest->requestDate->format('M d, Y') }}</span>
                             </div>
                             <div>
-                                <span class="font-medium text-gray-700">Reason for Change:</span>
-                                <div class="text-gray-900 mt-1 p-3 bg-white rounded border">
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Reason for Change:</span>
+                                <div class="text-gray-900 dark:text-gray-100 mt-1 p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
                                     {{ $selectedRequest->reason }}
                                 </div>
                             </div>
                             @if($selectedRequest->decisionDate)
                                 <div>
-                                    <span class="font-medium text-gray-700">Decision Date:</span>
-                                    <span class="text-gray-900">{{ $selectedRequest->decisionDate->format('M d, Y') }}</span>
+                                    <span class="font-medium text-gray-700 dark:text-gray-300">Decision Date:</span>
+                                    <span class="text-gray-900 dark:text-gray-100">{{ $selectedRequest->decisionDate->format('M d, Y') }}</span>
                                 </div>
                             @endif
                         </div>
                     </div>
 
                     <!-- Approval Status -->
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold text-gray-800 mb-2">📊 Approval Status</h4>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">📊 Approval Status</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <span class="font-medium text-gray-700">Committee Status:</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Committee Status:</span>
                                 <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    @if($selectedRequest->committeeStatus === 'Approved') bg-green-100 text-green-800
-                                    @elseif($selectedRequest->committeeStatus === 'Rejected') bg-red-100 text-red-800
-                                    @else bg-yellow-100 text-yellow-800 @endif">
+                                    @if($selectedRequest->committeeStatus === 'Approved') bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300
+                                    @elseif($selectedRequest->committeeStatus === 'Rejected') bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300
+                                    @else bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 @endif">
                                     {{ $selectedRequest->committeeStatus }}
                                 </span>
                                 @if($selectedRequest->committee)
-                                    <div class="text-sm text-gray-600 mt-1">
+                                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                         Reviewed by: {{ $selectedRequest->committee->user->name }}
                                     </div>
                                 @endif
                             </div>
                             <div>
-                                <span class="font-medium text-gray-700">Coordinator Status:</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Coordinator Status:</span>
                                 <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    @if($selectedRequest->coordinatorStatus === 'Approved') bg-green-100 text-green-800
-                                    @elseif($selectedRequest->coordinatorStatus === 'Rejected') bg-red-100 text-red-800
-                                    @else bg-yellow-100 text-yellow-800 @endif">
+                                    @if($selectedRequest->coordinatorStatus === 'Approved') bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300
+                                    @elseif($selectedRequest->coordinatorStatus === 'Rejected') bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300
+                                    @else bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 @endif">
                                     {{ $selectedRequest->coordinatorStatus }}
                                     @if($selectedRequest->committeeStatus === 'Rejected' && $selectedRequest->coordinatorStatus === 'Rejected' && !$selectedRequest->coordinatorID)
                                         <span class="ml-1" title="Auto-rejected due to committee rejection">*</span>
                                     @endif
                                 </span>
                                 @if($selectedRequest->coordinator)
-                                    <div class="text-sm text-gray-600 mt-1">
+                                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                         Reviewed by: {{ $selectedRequest->coordinator->user->name }}
                                     </div>
                                 @endif
@@ -365,22 +365,22 @@
 
                     <!-- Supporting Documents -->
                     @if($selectedRequest->files->count() > 0)
-                        <div class="bg-green-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-green-800 mb-2">📎 Supporting Documents</h4>
+                        <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-800 dark:text-green-300 mb-2">📎 Supporting Documents</h4>
                             <div class="space-y-2">
                                 @foreach($selectedRequest->files as $file)
-                                    <div class="flex items-center justify-between bg-white p-3 rounded border">
+                                    <div class="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-600">
                                         <div class="flex items-center">
-                                            <span class="text-green-600 mr-2">📄</span>
+                                            <span class="text-green-600 dark:text-green-400 mr-2">📄</span>
                                             <div>
-                                                <div class="font-medium text-green-800">{{ $file->original_name }}</div>
-                                                <div class="text-sm text-green-600">
+                                                <div class="font-medium text-green-800 dark:text-green-300">{{ $file->original_name }}</div>
+                                                <div class="text-sm text-green-600 dark:text-green-400">
                                                     {{ number_format($file->file_size / 1024, 1) }} KB
                                                 </div>
                                             </div>
                                         </div>
                                         <button wire:click="downloadFile({{ $file->id }})"
-                                            class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                                            class="px-3 py-1 bg-green-600 dark:bg-green-700 text-white rounded text-sm hover:bg-green-700 dark:hover:bg-green-800">
                                             Download
                                         </button>
                                     </div>
@@ -391,9 +391,9 @@
 
                     <!-- Lecturer Remarks -->
                     @if($selectedRequest->remarks)
-                        <div class="bg-purple-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-purple-800 mb-2">💬 Lecturer Remarks</h4>
-                            <div class="text-purple-900 p-3 bg-white rounded border">
+                        <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                            <h4 class="font-semibold text-purple-800 dark:text-purple-300 mb-2">💬 Lecturer Remarks</h4>
+                            <div class="text-purple-900 dark:text-purple-200 p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
                                 {{ $selectedRequest->remarks }}
                             </div>
                         </div>
@@ -401,12 +401,12 @@
 
                     <!-- Next Steps -->
                     @if($selectedRequest->overall_status === 'Approved')
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                             <div class="flex items-center">
-                                <span class="text-blue-500 text-xl mr-3">ℹ️</span>
+                                <span class="text-blue-500 dark:text-blue-400 text-xl mr-3">ℹ️</span>
                                 <div>
-                                    <h4 class="font-semibold text-blue-800">Change Request Approved!</h4>
-                                    <p class="text-blue-700 mt-1">
+                                    <h4 class="font-semibold text-blue-800 dark:text-blue-300">Change Request Approved!</h4>
+                                    <p class="text-blue-700 dark:text-blue-300 mt-1">
                                         Your change request has been approved by both committee and coordinator.
                                         You can now submit a new placement application from the
                                         <a href="{{ route('student.placementApplications') }}" class="underline font-medium">
@@ -417,12 +417,12 @@
                             </div>
                         </div>
                     @elseif($selectedRequest->overall_status === 'Rejected')
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                             <div class="flex items-center">
-                                <span class="text-red-500 text-xl mr-3">❌</span>
+                                <span class="text-red-500 dark:text-red-400 text-xl mr-3">❌</span>
                                 <div>
-                                    <h4 class="font-semibold text-red-800">Change Request Rejected</h4>
-                                    <p class="text-red-700 mt-1">
+                                    <h4 class="font-semibold text-red-800 dark:text-red-300">Change Request Rejected</h4>
+                                    <p class="text-red-700 dark:text-red-300 mt-1">
                                         Your change request has been rejected. Please review the lecturer remarks above for feedback.
                                         Your current placement application remains active.
                                     </p>
@@ -430,12 +430,12 @@
                             </div>
                         </div>
                     @else
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                             <div class="flex items-center">
-                                <span class="text-yellow-500 text-xl mr-3">⏳</span>
+                                <span class="text-yellow-500 dark:text-yellow-400 text-xl mr-3">⏳</span>
                                 <div>
-                                    <h4 class="font-semibold text-yellow-800">Change Request Under Review</h4>
-                                    <p class="text-yellow-700 mt-1">
+                                    <h4 class="font-semibold text-yellow-800 dark:text-yellow-300">Change Request Under Review</h4>
+                                    <p class="text-yellow-700 dark:text-yellow-300 mt-1">
                                         Your change request is currently being reviewed by the committee and coordinator.
                                         You will receive an email notification once a decision is made.
                                     </p>
@@ -448,7 +448,7 @@
                 <!-- Modal Footer -->
                 <div class="mt-6 flex justify-end">
                     <button wire:click="closeDetailModal"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                        class="px-4 py-2 bg-gray-500 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-600 dark:hover:bg-gray-700">
                         Close
                     </button>
                 </div>

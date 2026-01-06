@@ -667,14 +667,14 @@
             wire:click="closeForm"></div>
         <div
             style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51; max-height: 90vh; overflow-y: auto;">
-            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4">
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-medium text-gray-900">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                             {{ $editingId ? 'Edit Application' : 'New Internship Application' }}
                         </h3>
-                        <button wire:click="closeForm" class="text-gray-400 hover:text-gray-600">
+                        <button wire:click="closeForm" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
                             ✖
                         </button>
                     </div>
@@ -684,7 +684,7 @@
                 <div class="px-6 py-4 relative">
                     <!-- Loading Overlay -->
                     <div wire:loading wire:target="submit"
-                        class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded">
+                        class="absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-75 dark:bg-opacity-75 flex items-center justify-center z-10 rounded">
                         <div class="flex flex-col items-center">
                             <svg class="animate-spin h-8 w-8 text-blue-600 mb-2" xmlns="http://www.w3.org/2000/svg"
                                 fill="none" viewBox="0 0 24 24">
@@ -695,21 +695,21 @@
                                 </path>
                             </svg>
                             <span
-                                class="text-sm text-gray-600">{{ $editingId ? 'Updating application...' : 'Submitting application...' }}</span>
+                                class="text-sm text-gray-600 dark:text-gray-300">{{ $editingId ? 'Updating application...' : 'Submitting application...' }}</span>
                         </div>
                     </div>
 
                     <!-- Information Box -->
                     @if (!$editingId)
-                        <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                             <div class="flex items-start">
-                                <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor"
+                                <svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mr-3 mt-0.5 flex-shrink-0" fill="currentColor"
                                     viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
                                         d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
                                         clip-rule="evenodd" />
                                 </svg>
-                                <div class="text-sm text-blue-800">
+                                <div class="text-sm text-blue-800 dark:text-blue-300">
                                     <p class="font-semibold mb-2">📝 Before you start, make sure you have:</p>
                                     <ul class="list-disc list-inside space-y-1 ml-2">
                                         <li>Company's complete contact information and address</li>
@@ -727,17 +727,17 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Company Information Section -->
                             <div class="md:col-span-2">
-                                <h4 class="text-md font-semibold text-gray-900 mb-3">Company Information</h4>
+                                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Company Information</h4>
                             </div>
 
                             <!-- Company Name -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company Name *</label>
                                 <div class="space-y-2">
                                     @if (!$isNewCompany)
                                         <div class="space-y-2">
                                             <select wire:model.live="selectedCompanyId"
-                                                class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                                                 <option value="">- Select existing company -</option>
                                                 @foreach ($existingCompanies as $company)
                                                     <option value="{{ $company['id'] }}">{{ $company['name'] }}
@@ -745,15 +745,15 @@
                                                 @endforeach
                                             </select>
                                             @if ($selectedCompanyId && $companyName)
-                                                <div class="bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
-                                                    <p class="text-sm text-blue-700">
+                                                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
+                                                    <p class="text-sm text-blue-700 dark:text-blue-300">
                                                         <strong>Selected:</strong> {{ $companyName }}
                                                     </p>
                                                 </div>
                                             @endif
                                             <div class="flex items-center">
                                                 <button type="button" wire:click="$set('isNewCompany', true)"
-                                                    class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
+                                                    class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 focus:outline-none">
                                                     Enter New Company Name
                                                 </button>
                                             </div>
@@ -761,11 +761,11 @@
                                     @else
                                         <div class="space-y-2">
                                             <div
-                                                class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
-                                                <span class="text-sm text-gray-700">Entering new company</span>
+                                                class="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-md px-3 py-2">
+                                                <span class="text-sm text-gray-700 dark:text-gray-300">Entering new company</span>
                                                 <button type="button"
                                                     wire:click="$set('isNewCompany', false); $set('companyName', ''); $set('selectedCompanyId', null)"
-                                                    class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
+                                                    class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 focus:outline-none">
                                                     Select from existing
                                                 </button>
                                             </div>
@@ -773,77 +773,77 @@
                                                 placeholder="e.g., Tech Solutions Sdn Bhd"
                                                 maxlength="50"
                                                 required
-                                                class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                         </div>
                                     @endif
                                 </div>
                                 @error('companyName')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <!-- Company Email -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Company Email *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company Email *</label>
                                 <input type="email" wire:model="companyEmail" placeholder="e.g., hr@company.com"
                                     maxlength="50"
                                     required
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('companyEmail')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <!-- Company Address -->
                             <!-- Company Address Information -->
                             <div class="md:col-span-2">
-                                <h4 class="text-md font-medium text-gray-700 mb-2">Company Address</h4>
+                                <h4 class="text-md font-medium text-gray-700 dark:text-gray-300 mb-2">Company Address</h4>
                             </div>
 
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Street Address *</label>
                                 <input type="text" wire:model="companyAddressLine"
                                     placeholder="e.g., No. 123, Jalan Technology Park 2, Bukit Jalil"
                                     maxlength="255"
                                     required
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('companyAddressLine')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City *</label>
                                 <input type="text" wire:model="companyCity"
                                     placeholder="e.g., Kuala Lumpur, Johor Bahru"
                                     maxlength="20"
                                     required
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('companyCity')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Postcode *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Postcode *</label>
                                 <input type="text" wire:model="companyPostcode" placeholder="e.g., 50400"
                                     pattern="[0-9]{1,10}"
                                     maxlength="10"
                                     required
                                     inputmode="numeric"
                                     onkeypress="return /[0-9]/i.test(event.key)"
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('companyPostcode')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Numbers only, maximum 10 digits</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Numbers only, maximum 10 digits</p>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State *</label>
                                 <select wire:model="companyState"
                                     required
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                                     <option value="">Select State</option>
                                     <option value="Johor">Johor</option>
                                     <option value="Kedah">Kedah</option>
@@ -864,14 +864,14 @@
                                     <option value="Outside Malaysia">Outside Malaysia</option>
                                 </select>
                                 @error('companyState')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Country</label>
                                 <select wire:model="companyCountry"
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                                     <option value="">Select Country</option>
                                     <option value="Malaysia">Malaysia</option>
                                     <option value="Afghanistan">Afghanistan</option>
@@ -951,7 +951,7 @@
 
                             <!-- Company Phone -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Company Phone *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company Phone *</label>
                                 <input type="text" wire:model="companyNumber"
                                     placeholder="e.g., 60312345678 or 01112345678"
                                     pattern="[0-9]{1,15}"
@@ -959,16 +959,16 @@
                                     required
                                     inputmode="numeric"
                                     onkeypress="return /[0-9]/i.test(event.key)"
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('companyNumber')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Numbers only, maximum 15 digits</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Numbers only, maximum 15 digits</p>
                             </div>
 
                             <!-- Monthly Allowance -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Allowance
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Allowance
                                     (RM) *</label>
                                 <input type="text" wire:model="allowance"
                                     placeholder="e.g., 800"
@@ -977,35 +977,35 @@
                                     required
                                     inputmode="numeric"
                                     onkeypress="return /[0-9]/i.test(event.key)"
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('allowance')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Numbers only, maximum 5 digits</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Numbers only, maximum 5 digits</p>
                             </div>
 
                             <!-- Industry Supervisor Information Section -->
                             <div class="md:col-span-2 mt-4">
-                                <h4 class="text-md font-semibold text-gray-900 mb-3">Industry Supervisor Information
+                                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Industry Supervisor Information
                                 </h4>
                             </div>
 
                             <!-- Industry Supervisor Name -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Name *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Supervisor Name *</label>
                                 <input type="text" wire:model="industrySupervisorName"
                                     placeholder="e.g., Dr. Ahmad bin Abdullah"
                                     maxlength="50"
                                     required
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('industrySupervisorName')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <!-- Industry Supervisor Contact -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Contact Number
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Supervisor Contact Number
                                     *</label>
                                 <input type="text" wire:model="industrySupervisorContact"
                                     placeholder="e.g., 60312345678 or 01112345678"
@@ -1014,49 +1014,49 @@
                                     required
                                     inputmode="numeric"
                                     onkeypress="return /[0-9]/i.test(event.key)"
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('industrySupervisorContact')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Numbers only, maximum 15 digits</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Numbers only, maximum 15 digits</p>
                             </div>
 
                             <!-- Industry Supervisor Email -->
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Supervisor Email *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Supervisor Email *</label>
                                 <input type="email" wire:model="industrySupervisorEmail"
                                     placeholder="e.g., ahmad.abdullah@company.com"
                                     maxlength="50"
                                     required
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('industrySupervisorEmail')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <!-- Position Information Section -->
                             <div class="md:col-span-2 mt-4">
-                                <h4 class="text-md font-semibold text-gray-900 mb-3">Position Details</h4>
+                                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Position Details</h4>
                             </div>
 
                             <!-- Position -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Position *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Position *</label>
                                 <input type="text" wire:model="position"
                                     placeholder="e.g., Software Developer Intern, Marketing Intern"
                                     maxlength="50"
                                     required
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400">
                                 @error('position')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <!-- Method of Work -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Method of Work *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Method of Work *</label>
                                 <select wire:model="methodOfWork"
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                                     <option value="">Select method of work</option>
                                     <option value="WFO">🏢 Work From Office (WFO)</option>
                                     <option value="WOS">🏗️ Work On Site (WOS)</option>
@@ -1065,59 +1065,59 @@
                                     <option value="WFO & WFH">🔄 Hybrid (Office & Home)</option>
                                 </select>
                                 @error('methodOfWork')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <!-- Job Scope -->
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Job Scope *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Job Scope *</label>
                                 <textarea wire:model="jobscope" rows="5"
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400"
                                     placeholder="Describe your main responsibilities and tasks during the internship. For example:&#10;• Assist in developing web applications using Laravel and Vue.js&#10;• Collaborate with team members on software projects&#10;• Participate in code reviews and testing&#10;• Document development processes"></textarea>
                                 @error('jobscope')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Be specific and detailed about your
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Be specific and detailed about your
                                     responsibilities</p>
                             </div>
 
                             <!-- Duration Section -->
                             <div class="md:col-span-2 mt-4">
-                                <h4 class="text-md font-semibold text-gray-900 mb-3">Internship Duration</h4>
+                                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Internship Duration</h4>
                             </div>
 
                             <!-- Start Date -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date *</label>
                                 <input type="date" wire:model="startDate"
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                                 @error('startDate')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Internship start date</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Internship start date</p>
                             </div>
 
                             <!-- End Date -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date *</label>
                                 <input type="date" wire:model="endDate"
-                                    class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                                 @error('endDate')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror
-                                <p class="text-xs text-gray-500 mt-1">Internship end date (must be after start date)
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Internship end date (must be after start date)
                                 </p>
                             </div>
 
                             <!-- File Upload Section -->
                             <div class="md:col-span-2 mt-4">
-                                <h4 class="text-md font-semibold text-gray-900 mb-3">Supporting Documents</h4>
+                                <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Supporting Documents</h4>
                                 <div
-                                    class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         <span class="flex items-center">
-                                            <svg class="w-5 h-5 mr-2 text-gray-400" fill="none"
+                                            <svg class="w-5 h-5 mr-2 text-gray-400 dark:text-gray-500" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
@@ -1128,59 +1128,59 @@
                                     </label>
                                     <input type="file" wire:model="applicationFiles" multiple
                                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                        class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                        class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50">
                                     <div class="mt-2 flex items-start space-x-2">
-                                        <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor"
+                                        <svg class="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor"
                                             viewBox="0 0 20 20">
                                             <path fill-rule="evenodd"
                                                 d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
                                                 clip-rule="evenodd" />
                                         </svg>
-                                        <div class="text-xs text-gray-600">
+                                        <div class="text-xs text-gray-600 dark:text-gray-400">
                                             <p class="font-medium">Documents:</p>
                                             <ul class="list-disc list-inside mt-1 space-y-0.5">
                                                 <li>Offer Letter from the company</li>
                                                 <li>Reply Form</li>
                                             </ul>
-                                            <p class="mt-2 text-gray-500">Accepted formats: PDF, DOC, DOCX, JPG, JPEG,
+                                            <p class="mt-2 text-gray-500 dark:text-gray-400">Accepted formats: PDF, DOC, DOCX, JPG, JPEG,
                                                 PNG • Max: 5MB per file</p>
                                         </div>
                                     </div>
                                     @error('applicationFiles')
-                                        <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                                            <p class="text-red-800 text-sm font-medium mb-1">File Upload Error:</p>
+                                        <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                                            <p class="text-red-800 dark:text-red-300 text-sm font-medium mb-1">File Upload Error:</p>
                                             @if (is_array($message))
-                                                <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                                                <ul class="list-disc list-inside text-red-700 dark:text-red-400 text-sm space-y-1">
                                                     @foreach ($message as $error)
                                                         <li>{{ $error }}</li>
                                                     @endforeach
                                                 </ul>
                                             @else
-                                                <p class="text-red-700 text-sm">{{ $message }}</p>
+                                                <p class="text-red-700 dark:text-red-400 text-sm">{{ $message }}</p>
                                             @endif
                                         </div>
                                     @enderror
                                     @error('applicationFiles.*')
-                                        <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
+                                        <p class="text-red-600 dark:text-red-400 text-sm mt-2">{{ $message }}</p>
                                     @enderror
                                 </div>
 
                                 <!-- Show existing files if editing -->
                                 @if ($editingId && !empty($existingFiles))
                                     <div class="mt-4">
-                                        <p class="text-sm font-medium text-gray-700 mb-2">Current Files:</p>
+                                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Files:</p>
                                         <div class="space-y-2">
                                             @foreach ($existingFiles as $file)
-                                                <div class="flex items-center space-x-2 text-sm text-gray-600">
+                                                <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                                                     <span>📄</span>
                                                     <span>{{ $file['original_name'] ?? 'File' }}</span>
                                                     <span
-                                                        class="text-gray-400">({{ number_format($file['file_size'] / 1024, 1) }}
+                                                        class="text-gray-400 dark:text-gray-500">({{ number_format($file['file_size'] / 1024, 1) }}
                                                         KB)</span>
                                                 </div>
                                             @endforeach
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-2">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                             Note: Uploading new files will replace existing files.
                                         </p>
                                     </div>
@@ -1188,9 +1188,9 @@
                             </div>
 
                             <!-- Form Footer -->
-                            <div class="md:col-span-2 pt-4 border-t border-gray-200 flex justify-end space-x-3">
+                            <div class="md:col-span-2 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
                                 <button wire:click="closeForm" type="button"
-                                    class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     Cancel
                                 </button>
                                 <button type="submit"
@@ -1428,13 +1428,13 @@
                 onclick="document.body.classList.remove('modal-open');"></div>
             <div
                 style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 51;">
-                <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4">
                     <!-- Modal Header -->
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                             Request Application Change
                         </h3>
-                    <p class="text-sm text-gray-600 mt-1">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Application #{{ $changeRequestApplicationID }} -
                         {{ $selectedApplicationForChange?->companyName ?? '' }}
                     </p>
@@ -1445,16 +1445,16 @@
                     <form wire:submit.prevent="submitChangeRequest">
                         <!-- Current Application Info -->
                         @if ($selectedApplicationForChange)
-                            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                                <h4 class="font-medium text-gray-900 mb-2">Current Application Details</h4>
+                            <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Current Application Details</h4>
                                 <div class="grid grid-cols-2 gap-4 text-sm">
-                                    <div><strong>Company:</strong> {{ $selectedApplicationForChange->companyName }}
+                                    <div class="text-gray-700 dark:text-gray-300"><strong>Company:</strong> {{ $selectedApplicationForChange->companyName }}
                                     </div>
-                                    <div><strong>Position:</strong> {{ $selectedApplicationForChange->position }}
+                                    <div class="text-gray-700 dark:text-gray-300"><strong>Position:</strong> {{ $selectedApplicationForChange->position }}
                                     </div>
-                                    <div><strong>Method:</strong> {{ $selectedApplicationForChange->methodOfWork }}
+                                    <div class="text-gray-700 dark:text-gray-300"><strong>Method:</strong> {{ $selectedApplicationForChange->methodOfWork }}
                                     </div>
-                                    <div><strong>Duration:</strong>
+                                    <div class="text-gray-700 dark:text-gray-300"><strong>Duration:</strong>
                                         {{ $selectedApplicationForChange->startDate->format('M d, Y') }} -
                                         {{ $selectedApplicationForChange->endDate->format('M d, Y') }}</div>
                                 </div>
@@ -1463,55 +1463,55 @@
 
                         <!-- Reason for Change -->
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Reason for Change Request *
                             </label>
                             <textarea wire:model="changeRequestReason" rows="4"
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm @error('changeRequestReason') border-red-500 @enderror"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 @error('changeRequestReason') border-red-500 dark:border-red-500 @enderror"
                                 placeholder="Please provide a detailed justification for requesting changes to your approved application. Explain what changes you need and why they are necessary..."></textarea>
                             @error('changeRequestReason')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                <p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ $message }}</p>
                             @enderror
-                            <p class="text-xs text-gray-500 mt-1">Minimum 20 characters, maximum 1000 characters</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum 20 characters, maximum 1000 characters</p>
                         </div>
 
                         <!-- Supporting Documents -->
                         <div class="mb-4"></div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Supporting Documents *</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Supporting Documents *</label>
                             <input type="file" wire:model="changeRequestFiles" multiple
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm @error('changeRequestFiles.*') border-red-500 @enderror"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 @error('changeRequestFiles.*') border-red-500 dark:border-red-500 @enderror"
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
-                            <p class="text-xs text-gray-500 mt-1">Upload documents supporting your change request (PDF,
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload documents supporting your change request (PDF,
                                 DOC, DOCX, JPG, PNG). Max 5MB each.</p>
                             @error('changeRequestFiles')
-                                <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                                    <p class="text-red-800 text-sm font-medium mb-1">File Upload Error:</p>
+                                <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                                    <p class="text-red-800 dark:text-red-300 text-sm font-medium mb-1">File Upload Error:</p>
                                     @if (is_array($message))
-                                        <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                                        <ul class="list-disc list-inside text-red-700 dark:text-red-400 text-sm space-y-1">
                                             @foreach ($message as $error)
                                                 <li>{{ $error }}</li>
                                             @endforeach
                                         </ul>
                                     @else
-                                        <p class="text-red-700 text-sm">{{ $message }}</p>
+                                        <p class="text-red-700 dark:text-red-400 text-sm">{{ $message }}</p>
                                     @endif
                                 </div>
                             @enderror
                             @error('changeRequestFiles.*')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                <p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ $message }}</p>
                             @enderror
 
                             <!-- File upload progress -->
                             @if ($changeRequestFiles)
                                 <div class="mt-3">
-                                    <p class="text-sm font-medium text-gray-700 mb-2">Files to upload:</p>
+                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Files to upload:</p>
                                     <div class="space-y-1">
                                         @foreach ($changeRequestFiles as $file)
-                                            <div class="flex items-center space-x-2 text-sm text-gray-600">
+                                            <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                                                 <span>📄</span>
                                                 <span>{{ $file->getClientOriginalName() }}</span>
                                                 <span
-                                                    class="text-gray-400">({{ number_format($file->getSize() / 1024, 1) }}
+                                                    class="text-gray-400 dark:text-gray-500">({{ number_format($file->getSize() / 1024, 1) }}
                                                     KB)</span>
                                             </div>
                                         @endforeach
@@ -1521,10 +1521,10 @@
                         </div>
 
                         <!-- Important Notice -->
-                        <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                             <div class="flex items-start">
-                                <span class="text-yellow-600 text-lg mr-2">⚠️</span>
-                                <div class="text-sm text-yellow-800">
+                                <span class="text-yellow-600 dark:text-yellow-400 text-lg mr-2">⚠️</span>
+                                <div class="text-sm text-yellow-800 dark:text-yellow-300">
                                     <p class="font-medium mb-1">Important Notice:</p>
                                     <ul class="list-disc list-inside space-y-1">
                                         <li>Change requests require approval from both committee and coordinator</li>
@@ -1540,14 +1540,14 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-2">
+                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2">
                     <button wire:click="closeChangeRequestForm" type="button"
                         onclick="document.body.classList.remove('modal-open');"
-                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                         Cancel
                     </button>
                     <button wire:click="submitChangeRequest" type="button"
-                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 dark:bg-orange-700 hover:bg-orange-700 dark:hover:bg-orange-800 disabled:opacity-50 disabled:cursor-not-allowed"
                         wire:loading.attr="disabled" wire:target="submitChangeRequest">
                         <span wire:loading.remove wire:target="submitChangeRequest">
                             Submit Change Request

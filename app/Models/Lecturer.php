@@ -25,7 +25,6 @@ class Lecturer extends Model
         'country',
         'latitude',
         'longitude',
-        'profile_photo',
         'status',
         'researchGroup',
         'department',

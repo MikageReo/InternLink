@@ -140,27 +140,27 @@
                 @if ($showGuide)
                 <div class="mt-4 space-y-4">
                     <!-- Step 1 -->
-                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
-                                <span class="text-blue-600 font-semibold text-sm">1</span>
+                            <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 dark:text-blue-400 font-semibold text-sm">1</span>
                             </div>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900 mb-2">
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                                     Fill in the course verification form with your current credit information.
                                 </p>
                                 <div class="flex flex-wrap gap-2 mt-2">
                                     <a href="{{ asset('documents/Course-Verification-Form-Eng.docx') }}"
                                        target="_blank"
                                        download
-                                       class="inline-flex items-center px-3 py-1.5 border border-blue-400 rounded-md text-xs font-medium text-blue-700 bg-white hover:bg-blue-50">
+                                       class="inline-flex items-center px-3 py-1.5 border border-blue-400 dark:border-blue-600 rounded-md text-xs font-medium text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30">
                                         <i class="fa fa-download mr-1.5"></i>
                                         English Version
                                     </a>
                                     <a href="{{ asset('documents/Course-Verification-Form-Malay.docx') }}"
                                        target="_blank"
                                        download
-                                       class="inline-flex items-center px-3 py-1.5 border border-blue-400 rounded-md text-xs font-medium text-blue-700 bg-white hover:bg-blue-50">
+                                       class="inline-flex items-center px-3 py-1.5 border border-blue-400 dark:border-blue-600 rounded-md text-xs font-medium text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30">
                                         <i class="fa fa-download mr-1.5"></i>
                                         Malay Version
                                     </a>
@@ -170,13 +170,13 @@
                     </div>
 
                     <!-- Step 2 -->
-                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
-                                <span class="text-blue-600 font-semibold text-sm">2</span>
+                            <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 dark:text-blue-400 font-semibold text-sm">2</span>
                             </div>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                     Please ask your academic advisor for the <strong>List of Taken / Untaken Courses</strong>.
                                 </p>
                             </div>
@@ -184,20 +184,20 @@
                     </div>
 
                     <!-- Step 3 -->
-                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
-                                <span class="text-blue-600 font-semibold text-sm">3</span>
+                            <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 dark:text-blue-400 font-semibold text-sm">3</span>
                             </div>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900 mb-2">
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                                     Screenshot the <strong>Registered Courses</strong> in E-COMMUNITY (My Course Results → Course Structure).
                                 </p>
                                 <div class="mt-2">
                                     <a href="{{ asset('documents/Registered-Course-Guide.pdf') }}"
                                        target="_blank"
                                        download
-                                       class="inline-flex items-center px-3 py-1.5 border border-blue-400 rounded-md text-xs font-medium text-blue-700 bg-white hover:bg-blue-50">
+                                       class="inline-flex items-center px-3 py-1.5 border border-blue-400 dark:border-blue-600 rounded-md text-xs font-medium text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/30">
                                         <i class="fa fa-download mr-1.5"></i>
                                         Screenshot Guide
                                     </a>
@@ -207,32 +207,32 @@
                     </div>
 
                     <!-- Step 4 -->
-                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
-                                <span class="text-blue-600 font-semibold text-sm">4</span>
+                            <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 dark:text-blue-400 font-semibold text-sm">4</span>
                             </div>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900 mb-2">
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                                     Once approved, please merge the <strong>List of Taken / Untaken Courses</strong> and <strong>Registered Courses</strong> together with verification form and save the file as PDF or ZIP file.
                                 </p>
-                                <p class="text-sm text-gray-700 mt-2">
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mt-2">
                                     <strong>File naming convention:</strong><br>
-                                    For PDF: <code class="bg-gray-100 px-2 py-1 rounded text-xs">{{ Auth::user()->student->studentID ?? 'matricID' }}_CClist.pdf</code><br>
-                                    For ZIP: <code class="bg-gray-100 px-2 py-1 rounded text-xs">{{ Auth::user()->student->studentID ?? 'matricID' }}_CClist.zip</code>
+                                    For PDF: <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs text-gray-900 dark:text-gray-100">{{ Auth::user()->student->studentID ?? 'matricID' }}_CClist.pdf</code><br>
+                                    For ZIP: <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs text-gray-900 dark:text-gray-100">{{ Auth::user()->student->studentID ?? 'matricID' }}_CClist.zip</code>
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Step 5 -->
-                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
-                                <span class="text-blue-600 font-semibold text-sm">5</span>
+                            <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 dark:text-blue-400 font-semibold text-sm">5</span>
                             </div>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                     Submit the merged verification form at the course verification form below.
                                 </p>
                             </div>
@@ -240,39 +240,39 @@
                     </div>
 
                     <!-- Step 6 - Approval Process -->
-                    <div class="bg-white rounded-lg p-4 border-2 border-green-200 bg-green-50">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border-2 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 bg-green-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
-                                <span class="text-green-600 font-semibold text-sm">6</span>
+                            <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                                <span class="text-green-600 dark:text-green-400 font-semibold text-sm">6</span>
                             </div>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900 mb-2">
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                                     <strong>Approval Process (Two-Step Review):</strong>
                                 </p>
                                 <div class="space-y-2 mt-2">
                                     <div class="flex items-start">
-                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold mr-2 mt-0.5">A</span>
+                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-semibold mr-2 mt-0.5">A</span>
                                         <div>
-                                            <p class="text-sm font-medium text-gray-900">Academic Advisor Review</p>
-                                            <p class="text-xs text-gray-600 mt-1">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Academic Advisor Review</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                                 Your academic advisor will review your application to determine if it is <strong>eligible</strong> for coordinator approval.
                                                 You will be notified once the review is complete.
                                             </p>
                                         </div>
                                     </div>
                                     <div class="flex items-start">
-                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 text-purple-600 text-xs font-semibold mr-2 mt-0.5">B</span>
+                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-semibold mr-2 mt-0.5">B</span>
                                         <div>
-                                            <p class="text-sm font-medium text-gray-900">Coordinator Review</p>
-                                            <p class="text-xs text-gray-600 mt-1">
+                                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Coordinator Review</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                                 If approved by your academic advisor, the application will be forwarded to the coordinator for <strong>final approval</strong>.
                                                 You will receive a final notification once the coordinator makes a decision.
                                             </p>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-                                    <p class="text-xs text-yellow-800">
+                                <div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                                    <p class="text-xs text-yellow-800 dark:text-yellow-300">
                                         <i class="fa fa-info-circle mr-1"></i>
                                         <strong>Note:</strong> You can track the status of your application in the table below.
                                         The status will show both Academic Advisor and Coordinator review stages.
@@ -284,8 +284,8 @@
                 </div>
 
                 <!-- Credit Requirements Info -->
-                <div class="mt-4 pt-4 border-t border-blue-200">
-                    <p class="text-sm text-blue-700">
+                <div class="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+                    <p class="text-sm text-blue-700 dark:text-blue-300">
                         <strong>Total Credits Required:</strong> {{ $totalCreditRequired }} credits
                     </p>
                 </div>
@@ -308,14 +308,14 @@
                         ];
                     @endphp
                     <div
-                        class="border rounded-lg p-4 {{ $statusClasses[$currentApplication->status] ?? 'bg-gray-50 border-gray-200 text-gray-800' }}">
+                        class="border rounded-lg p-4 {{ $statusClasses[$currentApplication->status] ?? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200' }}">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
                                 <i class="fa {{ $statusIcons[$currentApplication->status] ?? 'fa-file' }} text-xl"></i>
                             </div>
                             <div class="ml-3 flex-1">
-                                <h3 class="text-lg font-medium">Current Application Status</h3>
-                                <p class="text-sm mt-1">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Current Application Status</h3>
+                                <p class="text-sm mt-1 text-gray-700 dark:text-gray-300">
                                     Application ID: {{ $currentApplication->courseVerificationID }} |
                                     Submitted: {{ $currentApplication->applicationDate->format('M d, Y') }} |
                                     Credits: {{ $currentApplication->currentCredit }}/{{ $totalCreditRequired }}
@@ -373,25 +373,25 @@
                                 <!-- Status Messages -->
                                 @if ($currentApplication->status === 'pending')
                                     @if($currentApplication->academicAdvisorStatus === null)
-                                        <p class="text-sm mt-3 text-yellow-700">
+                                        <p class="text-sm mt-3 text-yellow-700 dark:text-yellow-300">
                                             <strong>Your application is awaiting academic advisor review.</strong> You cannot submit a new application while this one is pending.
                                         </p>
                                     @elseif($currentApplication->academicAdvisorStatus === 'approved')
-                                        <p class="text-sm mt-3 text-yellow-700">
+                                        <p class="text-sm mt-3 text-yellow-700 dark:text-yellow-300">
                                             <strong>Your application has been approved by your academic advisor and is now awaiting coordinator review.</strong> You cannot submit a new application while this one is pending.
                                         </p>
                                     @endif
                                 @elseif($currentApplication->status === 'approved')
-                                    <p class="text-sm mt-3 text-green-700">
+                                    <p class="text-sm mt-3 text-green-700 dark:text-green-300">
                                         <strong>Congratulations!</strong> Your course verification has been fully approved. No further action is needed.
                                     </p>
                                 @elseif($currentApplication->status === 'rejected')
                                     @if ($hasApprovedApplication)
-                                        <p class="text-sm mt-3 text-red-700">
+                                        <p class="text-sm mt-3 text-red-700 dark:text-red-300">
                                             <strong>This application was rejected.</strong> However, you have a previously approved verification and cannot submit new applications.
                                         </p>
                                     @else
-                                        <p class="text-sm mt-3 text-red-700">
+                                        <p class="text-sm mt-3 text-red-700 dark:text-red-300">
                                             <strong>Your application was rejected.</strong> You can submit a new application with updated information.
                                         </p>
                                     @endif

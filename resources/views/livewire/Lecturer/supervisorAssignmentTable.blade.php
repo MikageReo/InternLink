@@ -526,7 +526,7 @@
                             </div>
                         @else
                             <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                                <p class="text-sm text-yellow-800 dark:text-yellow-300">No available supervisors found. Please check quota settings or enable override.</p>
+                                <p class="text-sm text-yellow-800 dark:text-yellow-300">No available supervisors found. Please check quota settings.</p>
                             </div>
                         @endif
                     </div>
@@ -805,12 +805,6 @@
                         <p class="text-gray-700 dark:text-gray-300"><strong>Position:</strong> {{ $selectedAssignment['supervisor_position'] ?? 'N/A' }}</p>
                         @if($selectedAssignment['distance_km'])
                             <p class="text-gray-700 dark:text-gray-300"><strong>Distance:</strong> {{ number_format($selectedAssignment['distance_km'], 2) }} km</p>
-                        @endif
-                        @if($selectedAssignment['quota_override'])
-                            <p class="text-yellow-600 dark:text-yellow-400"><strong>⚠️ Quota Override Applied</strong></p>
-                            @if($selectedAssignment['override_reason'])
-                                <p class="text-sm text-gray-600 dark:text-gray-400"><strong>Reason:</strong> {{ $selectedAssignment['override_reason'] }}</p>
-                            @endif
                         @endif
                     </div>
 

@@ -78,18 +78,7 @@ new #[Layout('layouts.guest')] class extends Component
         <!-- Logo Section -->
         <div class="mb-8 text-center">
             <div class="flex items-center justify-center mb-4">
-                <!-- Book Logo with Stylized Design -->
-                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="dark:opacity-90">
-                    <!-- Stylized Book -->
-                    <rect x="20" y="25" width="40" height="50" rx="2" fill="#3b82f6" class="dark:fill-blue-400"/>
-                    <rect x="25" y="30" width="30" height="40" fill="#ffffff" class="dark:fill-gray-800"/>
-                    <line x1="45" y1="30" x2="45" y2="70" stroke="#3b82f6" stroke-width="1" class="dark:stroke-blue-400"/>
-                    <line x1="30" y1="45" x2="55" y2="45" stroke="#3b82f6" stroke-width="1" class="dark:stroke-blue-400"/>
-
-                    <!-- Stylized Crest/Flower above book -->
-                    <circle cx="40" cy="15" r="8" fill="#fbbf24" class="dark:fill-yellow-400"/>
-                    <path d="M40 7 L42 12 L47 12 L43 16 L45 21 L40 17 L35 21 L37 16 L33 12 L38 12 Z" fill="#ffffff" class="dark:fill-gray-800"/>
-                </svg>
+                <img src="{{ asset('LOGO IL.png') }}" alt="InternLink Logo" class="h-40 w-auto dark:opacity-90" />
             </div>
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">InternLink</h2>
         </div>

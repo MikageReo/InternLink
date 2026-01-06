@@ -12,8 +12,6 @@ class RequestDefer extends Model
 
     protected $fillable = [
         'reason',
-        'startDate',
-        'endDate',
         'applicationDate',
         'remarks',
         'studentID',
@@ -24,10 +22,19 @@ class RequestDefer extends Model
     ];
 
     protected $casts = [
-        'startDate' => 'date',
-        'endDate' => 'date',
         'applicationDate' => 'date',
     ];
+
+    /**
+     * Check if student has an approved defer request
+     */
+    public static function hasApprovedDeferRequest($studentID): bool
+    {
+        return self::where('studentID', $studentID)
+            ->where('committeeStatus', 'Approved')
+            ->where('coordinatorStatus', 'Approved')
+            ->exists();
+    }
 
     /**
      * Get the student who submitted this defer request.

@@ -171,20 +171,6 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Reason
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    <button wire:click="sortBy('startDate')"
-                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
-                                        <span>Start Date</span>
-                                        <span class="ml-1">{{ $sortField === 'startDate' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
-                                    </button>
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    <button wire:click="sortBy('endDate')"
-                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-200">
-                                        <span>End Date</span>
-                                        <span class="ml-1">{{ $sortField === 'endDate' ? ($sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</span>
-                                    </button>
-                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <button wire:click="sortBy('applicationDate')"
@@ -211,12 +197,6 @@
                                         <div class="max-w-xs truncate" title="{{ $request->reason }}">
                                             {{ $request->reason }}
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        {{ $request->startDate->format('M d, Y') }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        {{ $request->endDate->format('M d, Y') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                         {{ $request->applicationDate->format('M d, Y') }}
@@ -279,7 +259,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                         <div class="flex flex-col items-center">
                                             <i class="fa fa-file text-4xl text-gray-300 dark:text-gray-600 mb-4"></i>
                                             <p class="text-lg font-medium mb-2">No defer requests found</p>
@@ -456,25 +436,6 @@
                             @enderror
                         </div>
 
-                        <!-- Start Date -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Defer Start Date *</label>
-                            <input type="date" wire:model="startDate"
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm @error('startDate') border-red-500 @enderror">
-                            @error('startDate')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- End Date -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Defer End Date *</label>
-                            <input type="date" wire:model="endDate"
-                                class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm @error('endDate') border-red-500 @enderror">
-                            @error('endDate')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
 
                         <!-- File Upload -->
                         <div class="mb-4">
@@ -596,10 +557,9 @@
                             <h4 class="font-semibold text-gray-900 mb-3">Request Information</h4>
                             <div class="space-y-2 text-sm">
                                 <p><strong>Request ID:</strong> #{{ $viewingRequest->deferID }}</p>
-                                <p><strong>Start Date:</strong> {{ $viewingRequest->startDate->format('M d, Y') }}</p>
-                                <p><strong>End Date:</strong> {{ $viewingRequest->endDate->format('M d, Y') }}</p>
                                 <p><strong>Application Date:</strong>
                                     {{ $viewingRequest->applicationDate->format('M d, Y') }}</p>
+                                <p><strong>Note:</strong> This defer request is for the next semester internship period.</p>
                             </div>
                         </div>
 

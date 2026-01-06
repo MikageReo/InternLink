@@ -193,9 +193,7 @@ class SupervisorAssignmentTable extends Component
                 $this->selectedStudent->studentID,
                 $this->selectedSupervisorID,
                 null, // Will use current coordinator
-                $this->assignmentNotes ?: null,
-                false, // No quota override
-                null // No override reason
+                $this->assignmentNotes ?: null
             );
 
             session()->flash('success', 'Supervisor assigned successfully!');
@@ -247,9 +245,7 @@ class SupervisorAssignmentTable extends Component
                 $studentID,
                 $supervisorID,
                 null, // Will use current coordinator
-                null, // No notes for auto assign
-                false, // No quota override
-                null // No override reason
+                null // No notes for auto assign
             );
 
             if ($assignment) {
@@ -505,9 +501,7 @@ class SupervisorAssignmentTable extends Component
                         $studentID,
                         $supervisorID,
                         null, // Will use current coordinator
-                        null, // No notes for bulk assign
-                        false, // No quota override
-                        null // No override reason
+                        null // No notes for bulk assign
                     );
 
                     if ($assignment) {
@@ -585,8 +579,6 @@ class SupervisorAssignmentTable extends Component
                 'status_display' => $assignment->status_display,
                 'assigned_at' => $assignment->assigned_at->format('Y-m-d H:i:s'),
                 'distance_km' => $assignment->distance_km,
-                'quota_override' => $assignment->quota_override,
-                'override_reason' => $assignment->override_reason,
                 'assignment_notes' => $assignment->assignment_notes,
             ];
 
@@ -877,3 +869,4 @@ class SupervisorAssignmentTable extends Component
         ]);
     }
 }
+
