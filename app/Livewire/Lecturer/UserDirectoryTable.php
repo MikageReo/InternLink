@@ -1075,15 +1075,39 @@ xmlns="http://www.w3.org/TR/REC-html40">
         ]);
 
         try {
-            $csvData = array_map('str_getcsv', file($this->csvFile->getRealPath()));
+            // Parse CSV properly handling multi-line fields
+            $csvData = [];
+            $file = fopen($this->csvFile->getRealPath(), 'r');
 
-            if (empty($csvData)) {
-                session()->flash('error', 'CSV file is empty or could not be read.');
+            if ($file === false) {
+                session()->flash('error', 'CSV file could not be opened.');
                 return;
             }
 
-            $header = array_shift($csvData);
+            // Read header row
+            $header = fgetcsv($file);
+            if ($header === false) {
+                fclose($file);
+                session()->flash('error', 'CSV file is empty or could not be read.');
+                return;
+            }
             $header = array_map('trim', $header);
+            $headerCount = count($header);
+
+            // Read data rows
+            while (($row = fgetcsv($file)) !== false) {
+                // Skip completely empty rows
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+                $csvData[] = $row;
+            }
+            fclose($file);
+
+            if (empty($csvData)) {
+                session()->flash('error', 'CSV file contains no data rows.');
+                return;
+            }
 
             // Auto-detect file type by header
             if (in_array('studentID', $header)) {
@@ -1109,6 +1133,14 @@ xmlns="http://www.w3.org/TR/REC-html40">
             foreach ($csvData as $index => $row) {
                 try {
                     if (empty(array_filter($row))) {
+                        continue;
+                    }
+
+                    // Check if row has same number of columns as header
+                    $rowCount = count($row);
+                    if ($rowCount !== $headerCount) {
+                        $errorCount++;
+                        $errors[] = "Row " . ($index + 2) . ": Column count mismatch. Expected {$headerCount} columns but found {$rowCount}. This may be due to multi-line fields in the CSV.";
                         continue;
                     }
 
@@ -1449,10 +1481,10 @@ xmlns="http://www.w3.org/TR/REC-html40">
     {
         // Custom validation: at least one permission must be selected
         $atLeastOnePermission = $this->lecturerIsAcademicAdvisor ||
-                               $this->lecturerIsSupervisorFaculty ||
-                               $this->lecturerIsCommittee ||
-                               $this->lecturerIsCoordinator ||
-                               $this->lecturerIsAdmin;
+            $this->lecturerIsSupervisorFaculty ||
+            $this->lecturerIsCommittee ||
+            $this->lecturerIsCoordinator ||
+            $this->lecturerIsAdmin;
 
         $this->validate([
             'lecturerName' => 'required|string|max:50',
@@ -1759,10 +1791,10 @@ xmlns="http://www.w3.org/TR/REC-html40">
 
         // Custom validation: at least one permission must be selected
         $atLeastOnePermission = $this->lecturerIsAcademicAdvisor ||
-                               $this->lecturerIsSupervisorFaculty ||
-                               $this->lecturerIsCommittee ||
-                               $this->lecturerIsCoordinator ||
-                               $this->lecturerIsAdmin;
+            $this->lecturerIsSupervisorFaculty ||
+            $this->lecturerIsCommittee ||
+            $this->lecturerIsCoordinator ||
+            $this->lecturerIsAdmin;
 
         $this->validate([
             'lecturerName' => 'required|string|max:50',

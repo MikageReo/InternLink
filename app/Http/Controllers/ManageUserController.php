@@ -100,6 +100,9 @@ class ManageUserController extends Controller
      */
     public function registerUsers(Request $request)
     {
+        // Increase execution time for large CSV files (5 minutes)
+        set_time_limit(300);
+
         $request->validate([
             'csv_file' => 'required|file|mimes:csv,txt|max:2048',
             'semester' => 'required|in:1,2',
@@ -112,15 +115,39 @@ class ManageUserController extends Controller
 
         // Read CSV file
         try {
-            $csvData = array_map('str_getcsv', file($file->getRealPath()));
+            // Parse CSV properly handling multi-line fields
+            $csvData = [];
+            $csvFile = fopen($file->getRealPath(), 'r');
 
-            if (empty($csvData)) {
+            if ($csvFile === false) {
+                return redirect()->route('lecturer.userDirectory')
+                    ->with('error', 'CSV file could not be opened.');
+            }
+
+            // Read header row
+            $header = fgetcsv($csvFile);
+            if ($header === false) {
+                fclose($csvFile);
                 return redirect()->route('lecturer.userDirectory')
                     ->with('error', 'CSV file is empty or could not be read.');
             }
-
-            $header = array_shift($csvData); // Get header row
             $header = array_map('trim', $header);
+            $headerCount = count($header);
+
+            // Read data rows
+            while (($row = fgetcsv($csvFile)) !== false) {
+                // Skip completely empty rows
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+                $csvData[] = $row;
+            }
+            fclose($csvFile);
+
+            if (empty($csvData)) {
+                return redirect()->route('lecturer.userDirectory')
+                    ->with('error', 'CSV file contains no data rows.');
+            }
 
             // 🔹 Auto-detect file type by header
             if (in_array('studentID', $header)) {
@@ -151,15 +178,16 @@ class ManageUserController extends Controller
                 // Trim whitespace from row data
                 $row = array_map('trim', $row);
 
-                // Map CSV columns to user data
-                $userData = array_combine($header, $row);
-
-                // Check if array_combine failed
-                if ($userData === false) {
+                // Check if row has same number of columns as header
+                $rowCount = count($row);
+                if ($rowCount !== $headerCount) {
                     $errorCount++;
-                    $errors[] = "Row " . ($index + 2) . ": Invalid number of columns.";
+                    $errors[] = "Row " . ($index + 2) . ": Column count mismatch. Expected {$headerCount} columns but found {$rowCount}. This may be due to multi-line fields in the CSV.";
                     continue;
                 }
+
+                // Map CSV columns to user data
+                $userData = array_combine($header, $row);
 
                 DB::beginTransaction();
 
